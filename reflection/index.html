@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reflection — NLP Hub</title>
+  <meta name="description" content="A personal reflection on the learning journey, challenges, and insights gained during the development of the NLP knowledge repository.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'reflection',
+      depth: 1,
+      breadcrumbs: [{ label: 'Reflection' }],
+    };
+  </script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <div class="page-hero">
+            <div class="page-badge">📓 Reflection</div>
+            <h1 class="page-title">Learning Reflection</h1>
+            <p class="page-subtitle">A thoughtful compilation of our learning process, challenges encountered, and key insights gained while building this NLP repository.</p>
+          </div>
+
+          <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:1rem;padding:1.5rem;margin-bottom:2rem;display:flex;align-items:center;gap:1rem;">
+            <div style="width:4rem;height:4rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:#fff;flex-shrink:0;">NLP</div>
+            <div>
+              <h2 style="font-size:1rem;font-weight:700;color:var(--text);margin:0 0 .25rem;">Atharva &amp; Aarya</h2>
+              <p style="font-size:.875rem;color:var(--text-sec);margin:0;">Academic Year 2025–26 · NLP Knowledge Repository Project</p>
+            </div>
+          </div>
+
+          <section aria-labelledby="reflection-journey">
+            <h2 id="reflection-journey" class="section-title">The Learning Journey</h2>
+            <div class="callout callout-note" style="margin-bottom:1.5rem;">
+              <span class="callout-icon">📓</span>
+              <div>
+                <h4>Why We Built This</h4>
+                <p>Natural Language Processing is one of the fastest-evolving fields of Computer Engineering. For undergraduates, the jump from traditional computational models to self-attention and LLMs can feel overwhelming. We built this hub to bridge that gap with clear, interactive explanation paths.</p>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:1.5rem;">
+              <div>
+                <h3 style="font-size:1.125rem;font-weight:600;color:var(--text);margin-bottom:.5rem;">Phase 1: Foundations &amp; Preprocessing</h3>
+                <p style="font-size:.9rem;color:var(--text-sec);line-height:1.6;margin:0;">
+                  Our journey started with classical text operations. Understanding how raw strings are broken down into clean tokens, normalized through stemming or lemmatization, and filtered of noise (stop words) showed us that clean data is just as critical as complex architectures.
+                </p>
+              </div>
+
+              <div>
+                <h3 style="font-size:1.125rem;font-weight:600;color:var(--text);margin-bottom:.5rem;">Phase 2: Word Representation &amp; Embeddings</h3>
+                <p style="font-size:.9rem;color:var(--text-sec);line-height:1.6;margin:0;">
+                  Moving from discrete Bag-of-Words and TF-IDF tables to continuous dense vector spaces (Word2Vec, GloVe, FastText) was a major conceptual leap. Seeing how mathematical distance (cosine similarity) correlates with semantic meaning was a breakthrough in our intuition.
+                </p>
+              </div>
+
+              <div>
+                <h3 style="font-size:1.125rem;font-weight:600;color:var(--text);margin-bottom:.5rem;">Phase 3: Deep sequence modeling &amp; Transformers</h3>
+                <p style="font-size:.9rem;color:var(--text-sec);line-height:1.6;margin:0;">
+                  Studying RNNs and LSTMs highlighted the historical limitations of sequence lengths and computation. Transitioning to the Transformer architecture's self-attention layers helped us understand how massive parallel training became possible, paving the way for models like BERT and GPT.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section aria-labelledby="key-takeaways" style="margin-top:2.5rem;">
+            <h2 id="key-takeaways" class="section-title">Key Insights &amp; Takeaways</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
+              <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;">
+                <div style="font-size:1.5rem;margin-bottom:.5rem;">🧠</div>
+                <h3 style="font-size:.9375rem;font-weight:600;color:var(--text);margin:0 0 .375rem;">Theoretical Intuition First</h3>
+                <p style="font-size:.875rem;color:var(--text-sec);margin:0;line-height:1.5;">API calls are simple, but understanding loss functions, dimensional vectors, and attention matrices is what separates developers from engineers.</p>
+              </div>
+              <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;">
+                <div style="font-size:1.5rem;margin-bottom:.5rem;">🌐</div>
+                <h3 style="font-size:.9375rem;font-weight:600;color:var(--text);margin:0 0 .375rem;">Open Source Synergy</h3>
+                <p style="font-size:.875rem;color:var(--text-sec);margin:0;line-height:1.5;">Hugging Face, PyTorch, spaCy, and NLTK have democratized state-of-the-art NLP, making research immediately accessible for practical deployment.</p>
+              </div>
+              <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;">
+                <div style="font-size:1.5rem;margin-bottom:.5rem;">🌱</div>
+                <h3 style="font-size:.9375rem;font-weight:600;color:var(--text);margin:0 0 .375rem;">Environmental Responsibility</h3>
+                <p style="font-size:.875rem;color:var(--text-sec);margin:0;line-height:1.5;">With model training scaling exponentially, green AI practices like model distillation and quantization must be part of our standard engineering pipeline.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="callout callout-tip" style="margin-top:2rem;">
+            <span class="callout-icon">💡</span>
+            <div>
+              <h4>Reflective Summary</h4>
+              <p>Building this repository helped solidify our team's grasp of NLP, transforming abstract formulas into visual, structured code repositories we can carry into our engineering careers.</p>
+            </div>
+          </div>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

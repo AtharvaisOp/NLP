@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repository Dashboard — NLP Hub</title>
+  <meta name="description" content="Browse and search all NLP concepts organized by category and difficulty level.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'repository',
+      depth: 1,
+      breadcrumbs: [{ label: 'Repository' }],
+    };
+  </script>
+  <style>
+    .filter-bar {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: .75rem; padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border-solid);
+      margin-bottom: 1.5rem;
+    }
+    .filter-select {
+      padding: .375rem .875rem;
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .5rem; font-size: .8125rem;
+      color: var(--text-sec); cursor: pointer; outline: none;
+      transition: border-color .15s;
+    }
+    .filter-select:focus { border-color: var(--primary); }
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .concept-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .875rem; padding: 1.25rem;
+      display: flex; flex-direction: column; gap: .625rem;
+      text-decoration: none; color: inherit;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .concept-card:hover {
+      border-color: rgba(99,102,241,.5);
+      box-shadow: 0 0 0 1px rgba(99,102,241,.2), 0 8px 24px rgba(0,0,0,.4);
+      transform: translateY(-2px);
+    }
+    .concept-card-header { display: flex; align-items: center; justify-content: space-between; }
+    .concept-card-title { font-size: .9375rem; font-weight: 600; color: var(--text); margin: 0; }
+    .concept-card-desc { font-size: .8125rem; color: var(--text-sec); margin: 0; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .concept-card-footer { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: auto; padding-top: .5rem; border-top: 1px solid var(--border-solid); }
+    .stat-chip { display: inline-flex; align-items: center; gap: .25rem; font-size: .6875rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+
+        <main id="main-content" tabindex="-1">
+          <!-- Page Hero -->
+          <div class="page-hero">
+            <div class="page-badge">📚 Browse</div>
+            <h1 class="page-title">Repository Dashboard</h1>
+            <p class="page-subtitle">
+              Explore our comprehensive database of 21 core Natural Language Processing concepts organized by category and difficulty.
+            </p>
+          </div>
+
+          <!-- Stats bar -->
+          <div style="display:flex;gap:1.25rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+            <span class="stat-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span id="stats-total">21</span> Concepts
+            </span>
+            <span class="stat-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              4 Categories
+            </span>
+            <span class="badge badge-beginner">13 Beginner</span>
+            <span class="badge badge-intermediate">5 Intermediate</span>
+            <span class="badge badge-advanced">3 Advanced</span>
+          </div>
+
+          <!-- Filters -->
+          <div class="filter-bar" role="search" aria-label="Filter concepts">
+            <select class="filter-select" aria-label="Filter by category" id="filter-category">
+              <option value="all">All Categories</option>
+              <option value="Text Preprocessing">Text Preprocessing</option>
+              <option value="Feature Engineering">Feature Engineering</option>
+              <option value="Language Representation">Language Representation</option>
+              <option value="Language Models">Language Models</option>
+            </select>
+            <select class="filter-select" aria-label="Filter by difficulty" id="filter-difficulty">
+              <option value="all">All Difficulties</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+            <select class="filter-select" aria-label="Sort concepts" id="filter-sort">
+              <option value="recommended">Sort: Recommended</option>
+              <option value="az">Sort: A–Z</option>
+              <option value="readtime">Sort: Read Time</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="NLP.Search.open()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Search
+            </button>
+          </div>
+
+          <!-- Concept cards grid -->
+          <section aria-labelledby="concepts-heading">
+            <h2 id="concepts-heading" class="sr-only">All Concepts</h2>
+            <div class="concept-grid" id="concept-cards-grid">
+              <!-- Dynamically populated -->
+            </div>
+          </section>
+
+          <!-- Fallback empty state -->
+          <div id="empty-state" style="display:none;padding:3rem 1.5rem;text-align:center;color:var(--text-muted);">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">🔍</div>
+            <h3 style="font-size:1.125rem;font-weight:600;color:var(--text);margin:0 0 .5rem;">No concepts match your filter</h3>
+            <p style="font-size:.875rem;margin:0;">Try selecting a different category or difficulty setting.</p>
+          </div>
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+  <script src="../assets/js/concepts-data.js"></script>
+
+  <!-- Dynamic Dashboard Script -->
+  <script>
+    (function () {
+      'use strict';
+
+      const db = window.NLP.Database || {};
+      const grid = document.getElementById('concept-cards-grid');
+      const emptyState = document.getElementById('empty-state');
+
+      // Deduplicate concepts to list of unique concept objects
+      const seen = new Set();
+      const concepts = [];
+      Object.entries(db).forEach(([id, obj]) => {
+        if (!seen.has(obj.title)) {
+          seen.add(obj.title);
+          concepts.push({ id, ...obj });
+        }
+      });
+
+      // Difficulty ranking for sort
+      const diffRank = { Beginner: 1, Intermediate: 2, Advanced: 3 };
+
+      function render() {
+        const catVal  = document.getElementById('filter-category').value;
+        const diffVal = document.getElementById('filter-difficulty').value;
+        const sortVal = document.getElementById('filter-sort').value;
+
+        // 1. Filter
+        let filtered = concepts.filter(c => {
+          const matchCat  = (catVal === 'all'  || c.category === catVal);
+          const matchDiff = (diffVal === 'all' || c.difficulty === diffVal);
+          return matchCat && matchDiff;
+        });
+
+        // 2. Sort
+        if (sortVal === 'az') {
+          filtered.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortVal === 'readtime') {
+          filtered.sort((a, b) => {
+            const getMins = str => parseInt(str) || 0;
+            return getMins(a.readTime) - getMins(b.readTime);
+          });
+        }
+        // 'recommended' uses raw insertion order from database
+
+        // 3. Render Cards
+        if (filtered.length === 0) {
+          grid.style.display = 'none';
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        grid.style.display = 'grid';
+        emptyState.style.display = 'none';
+
+        grid.innerHTML = filtered.map(c => {
+          // Determine badge color
+          let catBadgeClass = 'badge-success';
+          if (c.category === 'Feature Engineering') catBadgeClass = 'badge-cyan';
+          else if (c.category === 'Language Representation') catBadgeClass = 'badge-primary';
+          else if (c.category === 'Language Models') catBadgeClass = 'badge-violet';
+
+          let diffBadgeClass = 'badge-beginner';
+          if (c.difficulty === 'Intermediate') diffBadgeClass = 'badge-intermediate';
+          else if (c.difficulty === 'Advanced') diffBadgeClass = 'badge-advanced';
+
+          // Extract tags from references or categories
+          const tags = c.references && c.references.length > 0 
+            ? `<span class="tag">${c.references[0].split(',')[0]}</span>`
+            : '';
+
+          return `
+          <a href="../concept/index.html?id=${c.id}" class="concept-card">
+            <div class="concept-card-header">
+              <span class="badge ${catBadgeClass}" style="font-size:.6875rem;">${c.category}</span>
+              <span class="badge ${diffBadgeClass}">${c.difficulty}</span>
+            </div>
+            <h3 class="concept-card-title">${c.title}</h3>
+            <p class="concept-card-desc">${c.definition}</p>
+            <div class="concept-card-footer">
+              <span class="stat-chip">⏱ ${c.readTime} read</span>
+              ${tags}
+            </div>
+          </a>`;
+        }).join('');
+
+        // Update total counter
+        const totalEl = document.getElementById('stats-total');
+        if (totalEl) totalEl.textContent = filtered.length;
+      }
+
+      // Add event listeners
+      document.getElementById('filter-category').addEventListener('change', render);
+      document.getElementById('filter-difficulty').addEventListener('change', render);
+      document.getElementById('filter-sort').addEventListener('change', render);
+
+      // Initial render
+      render();
+    })();
+  </script>
+</body>
+</html>

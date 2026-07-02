@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Library — NLP Hub</title>
+  <meta name="description" content="Interactive NLP pipeline visualizations: text preprocessing, feature engineering, and text-to-vector transformation workflows.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'workflows',
+      depth: 1,
+      breadcrumbs: [{ label: 'Workflows' }],
+    };
+  </script>
+  <style>
+    /* Tabs styling */
+    .tab-bar {
+      display: flex; gap: .5rem; border-bottom: 1px solid var(--border-solid);
+      padding-bottom: 1px; margin-bottom: 2rem; flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: .625rem 1.25rem; font-size: .875rem; font-weight: 500;
+      color: var(--text-sec); border-bottom: 2px solid transparent;
+      background: transparent; cursor: pointer; transition: all .15s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--primary); border-bottom-color: var(--primary);
+      background: rgba(99, 102, 241, 0.04);
+    }
+
+    /* Diagram Viewport & Scale Panel */
+    .viewport-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: 1rem; overflow: hidden; position: relative; margin-bottom: 2rem;
+    }
+    .viewport-header {
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-solid);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+    }
+    .viewport-title { font-size: .9375rem; font-weight: 600; color: var(--text); margin: 0; }
+    .zoom-controls { display: flex; gap: .25rem; align-items: center; }
+    .zoom-btn {
+      width: 28px; height: 28px; border-radius: .375rem;
+      border: 1px solid var(--border-solid); background: var(--bg-elevated);
+      color: var(--text-sec); display: flex; align-items: center; justify-content: center;
+      font-size: .875rem; cursor: pointer; transition: all .15s;
+    }
+    .zoom-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .viewport-canvas {
+      padding: 2.5rem 1.5rem; overflow: auto; display: flex; justify-content: center;
+      min-height: 280px; position: relative; background: radial-gradient(circle, rgba(255,255,255,0.01) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    .viewport-canvas svg {
+      transition: transform 0.2s ease; transform-origin: center center;
+      max-width: 100%; height: auto;
+    }
+
+    /* Legend Box */
+    .legend-row { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .75rem; color: var(--text-muted); }
+    .legend-item { display: flex; align-items: center; gap: .375rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* Interactive Node States */
+    .svg-node { cursor: pointer; }
+    .svg-node rect, .svg-node circle {
+      fill: var(--bg-elevated); stroke: var(--border-solid); stroke-width: 1.5px;
+      transition: all 0.2s;
+    }
+    .svg-node text {
+      fill: var(--text-sec); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
+      transition: fill 0.2s;
+    }
+    .svg-node:hover rect, .svg-node:hover circle {
+      stroke: var(--primary); fill: rgba(99, 102, 241, 0.08);
+      filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.3));
+    }
+    .svg-node:hover text { fill: var(--text); }
+    
+    .svg-node.active rect, .svg-node.active circle {
+      stroke: var(--primary); fill: rgba(99, 102, 241, 0.2);
+      stroke-width: 2px;
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+    }
+    .svg-node.active text { fill: var(--text); font-weight: 600; }
+
+    .svg-edge { stroke: var(--border-hover); stroke-width: 1.5px; fill: none; }
+    .svg-arrow { fill: var(--border-hover); }
+
+    /* Step detail panel */
+    .step-detail-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;
+    }
+    .step-detail-title { font-size: 1.125rem; font-weight: 700; color: var(--text); margin: 0 0 .5rem; }
+    .step-detail-desc { font-size: .9rem; color: var(--text-sec); line-height: 1.6; margin: 0 0 1.25rem; }
+
+    .io-row { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    @media (min-width: 768px) {
+      .io-row { grid-template-columns: 1fr 1fr; }
+    }
+    .io-box { background: var(--bg-surface); border: 1px solid var(--border-solid); border-radius: .75rem; padding: 1rem; }
+    .io-label { font-family: 'JetBrains Mono', monospace; font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .5rem; }
+    .io-content { font-family: 'JetBrains Mono', monospace; font-size: .8125rem; color: var(--text-sec); word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <div class="page-hero">
+            <div class="page-badge">🔄 Interactive</div>
+            <h1 class="page-title">NLP Workflow Library</h1>
+            <p class="page-subtitle">Interactive pipeline workflows demonstrating text transformation sequences. Click any node to inspect data states, mathematical logic, and code.</p>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tab-bar" role="tablist" aria-label="Select workflow pipeline">
+            <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchPipeline(1)" id="tab-p1">1. Text Preprocessing</button>
+            <button class="tab-btn" role="tab" aria-selected="false" onclick="switchPipeline(2)" id="tab-p2">2. Feature Engineering</button>
+            <button class="tab-btn" role="tab" aria-selected="false" onclick="switchPipeline(3)" id="tab-p3">3. Text-to-Vector Mapping</button>
+          </div>
+
+          <!-- Viewport Card -->
+          <div class="viewport-card">
+            <div class="viewport-header">
+              <h2 id="pipeline-title" class="viewport-title">Text Preprocessing Pipeline</h2>
+              
+              <!-- Zoom Controls -->
+              <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoom(-0.1)" aria-label="Zoom out">-</button>
+                <button class="zoom-btn" onclick="zoom(0.1)" aria-label="Zoom in">+</button>
+                <button class="zoom-btn" onclick="resetZoom()" aria-label="Reset zoom">↺</button>
+              </div>
+            </div>
+
+            <!-- SVG Viewport canvas -->
+            <div class="viewport-canvas">
+              <svg id="workflow-svg" width="800" height="150" viewBox="0 0 800 150">
+                <!-- Dynamically populated SVG components -->
+              </svg>
+            </div>
+
+            <!-- Footer legend bar -->
+            <div style="padding: .75rem 1.25rem; border-top:1px solid var(--border-solid); background: rgba(0,0,0,0.1);">
+              <div class="legend-row" aria-label="Diagram legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#38BDF8;"></div><span>Input Node</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#818CF8;"></div><span>Transformation Stage</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#34D399;"></div><span>Output Vector / Token</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step Detail Panel -->
+          <div class="step-detail-card" role="tabpanel">
+            <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:.5rem;">
+              <h3 id="step-title" class="step-detail-title">Pipeline Step</h3>
+              <span id="step-badge" class="badge">Category</span>
+            </header>
+            
+            <p id="step-desc" class="step-detail-desc">Click any node in the SVG diagram above to load details.</p>
+
+            <div class="io-row">
+              <div class="io-box">
+                <div class="io-label">Input Representation</div>
+                <div id="step-input" class="io-content"></div>
+              </div>
+              <div class="io-box">
+                <div class="io-label">Output Representation</div>
+                <div id="step-output" class="io-content"></div>
+              </div>
+            </div>
+
+            <!-- Code block -->
+            <h4 style="font-size: .875rem; font-weight: 600; color: var(--text); margin-bottom: .5rem;">Python Implementation</h4>
+            <div class="code-block">
+              <div class="code-header">
+                <span class="code-lang">Python</span>
+                <button class="code-copy">Copy</button>
+              </div>
+              <pre><code id="step-code-block" style="color:var(--text-sec);"></code></pre>
+            </div>
+
+            <!-- Related concepts -->
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-solid);">
+              <h4 style="font-size: .8125rem; font-family:'JetBrains Mono', monospace; text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem;">Related Concept</h4>
+              <div id="step-related-links">
+                <!-- Injected link tags -->
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+
+  <!-- Interactive Pipelines Data & Rendering Logic -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── Pipeline Data Store ───────────────────────────────── */
+      const PIPELINES = {
+        // Pipeline 1: Text Preprocessing Pipeline
+        1: {
+          title: "Text Preprocessing Pipeline",
+          nodes: [
+            { id: "p1-n1", x: 45, y: 75, r: 24, label: "Raw HTML", type: "input", title: "Noise Removal", cat: "Preprocessing", desc: "HTML parsing and BeautifulSoup loading filters structural markup, tags, script panels, and non-text tags before tokenization.", input: '"<div>NLP is cool! &amp; fun. <a href=\'#\'>Link</a></div>"', output: '"NLP is cool! & fun. Link"', code: 'from bs4 import BeautifulSoup\nsoup = BeautifulSoup(html_text, "html.parser")\ncleaned = soup.get_text()', link: 'noise-removal' },
+            { id: "p1-n2", x: 145, y: 75, r: 24, label: "Cleaning", type: "transform", title: "Text Cleaning & Expansion", cat: "Preprocessing", desc: "Corrects contractions, expands slang terms, strips emojis, and regularizes multiple spaces.", input: '"I can\'t wait!!! 🚀 NLP is amazing."', output: '"I cannot wait NLP is amazing."', code: 'text = text.replace("can\'t", "cannot")\ntext = re.sub(r\'[^a-zA-Z0-9\\s]\', \'\', text)\ntext = re.sub(r\'\\s+\', \' \', text).strip()', link: 'text-cleaning' },
+            { id: "p1-n3", x: 245, y: 75, r: 24, label: "Case Norm", type: "transform", title: "Case Normalization", cat: "Preprocessing", desc: "Normalizes letter characters to lowercase to combine identical semantic units (e.g. mapping 'NLP' and 'nlp' to the same vocabulary slots).", input: '"Natural Language Processing"', output: '"natural language processing"', code: 'normalized = text.lower()', link: 'case-normalization' },
+            { id: "p1-n4", x: 345, y: 75, r: 24, label: "Sentence", type: "transform", title: "Sentence Segmentation", cat: "Preprocessing", desc: "Slices continuous document texts into sentences using punctuation filters and abbreviation databases (like NLTK Punkt).", input: '"Dr. Jones arrived. Did he meet the diplomat?"', output: '["Dr. Jones arrived.", "Did he meet the diplomat?"]', code: 'from nltk.tokenize import sent_tokenize\nsentences = sent_tokenize(text)', link: 'sentence-segmentation' },
+            { id: "p1-n5", x: 445, y: 75, r: 24, label: "Tokenize", type: "transform", title: "Word Tokenization", cat: "Preprocessing", desc: "Splits strings into discrete list tokens (words, subwords, or punctuation symbols).", input: '"We are learning NLP."', output: "['We', 'are', 'learning', 'NLP', '.']", code: 'import spacy\nnlp = spacy.load("en_core_web_sm")\ntokens = [t.text for t in nlp(text)]', link: 'tokenization' },
+            { id: "p1-n6", x: 545, y: 75, r: 24, label: "Stop Words", type: "transform", title: "Stop-word Removal", cat: "Preprocessing", desc: "Filters high-frequency function words (like 'the', 'is', 'and') that carry low information weights.", input: "['this', 'is', 'a', 'sample', 'sentence']", output: "['sample', 'sentence']", code: 'stop_words = set(stopwords.words("english"))\nfiltered = [w for w in tokens if w not in stop_words]', link: 'stop-word-removal' },
+            { id: "p1-n7", x: 645, y: 75, r: 24, label: "Lemmatize", type: "transform", title: "Lemmatization", cat: "Preprocessing", desc: "Reduces inflected tokens to their true grammatical lemma using dictionaries and POS context tags.", input: "['children', 'were', 'playing']", output: "['child', 'be', 'play']", code: 'lemmas = [token.lemma_ for token in nlp(text)]', link: 'lemmatization' },
+            { id: "p1-n8", x: 745, y: 75, r: 24, label: "Tokens Out", type: "output", title: "Clean Tokens Output", cat: "Preprocessing", desc: "The final clean, normalized token list ready for feature mapping.", input: '"Children were playing."', output: "['child', 'play']", code: '# Output token sequence passes to feature vector layers.', link: 'repository' }
+          ]
+        },
+        // Pipeline 2: Feature Engineering Pipeline
+        2: {
+          title: "Feature Engineering Pipeline (TF-IDF)",
+          nodes: [
+            { id: "p2-n1", x: 60, y: 75, r: 24, label: "Tokens In", type: "input", title: "Input Tokens", cat: "Features", desc: "Receives cleaned, normalized tokens from the preprocessing layers.", input: "['text', 'classification', 'text']", output: "['text', 'classification', 'text']", code: 'corpus = [["text", "classification", "text"], ["learn", "nlp"]]', link: 'tokenization' },
+            { id: "p2-n2", x: 180, y: 75, r: 24, label: "BoW Counts", type: "transform", title: "Bag of Words (Counts)", cat: "Features", desc: "Computes raw term counts. Disregards grammar and word sequence structure.", input: "['text', 'classification', 'text']", output: '{"text": 2, "classification": 1}', code: 'from sklearn.feature_extraction.text import CountVectorizer\nvec = CountVectorizer()\nX = vec.fit_transform(corpus)', link: 'bag-of-words' },
+            { id: "p2-n3", x: 300, y: 75, r: 24, label: "Term Freq", type: "transform", title: "Term Frequency (TF)", cat: "Features", desc: "Computes density weights. Normalizes counts by document length to prevent long-document biases.", input: '{"text": 2, "classification": 1} (len: 3)', output: '{"text": 2/3 = 0.67, "classification": 1/3 = 0.33}', code: 'tf_normalized = count / total_tokens', link: 'tf' },
+            { id: "p2-n4", x: 420, y: 75, r: 24, label: "Doc Freq", type: "transform", title: "Document Frequency (DF)", cat: "Features", desc: "Scans vocabulary across the entire corpus to count how many documents contain each word.", input: 'Word "text" in 10-doc corpus', output: 'DF("text") = 8 docs', code: '# Computed globally during model fitting on training corpus', link: 'idf' },
+            { id: "p2-n5", x: 540, y: 75, r: 24, label: "Inv Doc Freq", type: "transform", title: "Inverse Document Frequency (IDF)", cat: "Features", desc: "Calculates the log inverse ratio of document counts, weighting rare words higher and dampening common words.", input: 'N = 10 docs, DF("text") = 8 docs', output: 'IDF("text") = log(10 / 8) = 0.22', code: 'import math\nidf = math.log(num_docs / (1 + doc_freq))', link: 'idf' },
+            { id: "p2-n6", x: 660, y: 75, r: 24, label: "TF-IDF Weight", type: "transform", title: "TF-IDF Weighted Feature", cat: "Features", desc: "Multiplies Term Frequency by Inverse Document Frequency to construct local significance scores.", input: 'TF = 0.67, IDF = 0.22', output: 'TF-IDF = 0.15', code: 'tf_idf = tf * idf', link: 'tf-idf' },
+            { id: "p2-n7", x: 740, y: 75, r: 24, label: "Vector", type: "output", title: "TF-IDF Normalized Vector", cat: "Features", desc: "Standardizes features using L2 normalization to output the final unit vector representation.", input: '[0.15, 0.44]', output: '[0.32, 0.94] (L2 normalized vector)', code: 'from sklearn.feature_extraction.text import TfidfVectorizer\ntfidf = TfidfVectorizer()\nX = tfidf.fit_transform(corpus)', link: 'tf-idf' }
+          ]
+        },
+        // Pipeline 3: Text-to-Vector Pipeline
+        3: {
+          title: "Text-to-Vector Transformation Pipeline",
+          nodes: [
+            { id: "p3-n1", x: 100, y: 75, r: 24, label: "Token In", type: "input", title: "Token Input", cat: "Representation", desc: "Token string matches a word position in vocabulary.", input: '"embeddings"', output: '"embeddings" (index: 42 in 1000-size vocabulary)', code: 'vocab = {"word": 0, "embeddings": 42}', link: 'one-hot-encoding' },
+            { id: "p3-n2", x: 300, y: 25, r: 22, label: "One-Hot", type: "transform", title: "One-Hot Encoding", cat: "Representation", desc: "Generates high-dimensional, sparse binary vectors. Features no semantic correlation.", input: 'Index 42 of 1000 size', output: '[0, 0, 0, ..., 1 (at index 42), ..., 0]', code: 'vector = np.zeros(vocab_size)\nvector[index] = 1', link: 'one-hot-encoding' },
+            { id: "p3-n3", x: 300, y: 75, r: 22, label: "Static Embeds", type: "transform", title: "Static Word Embeddings (Word2Vec)", cat: "Representation", desc: "Retrieves dense continuous representations. Geometric distance represents lexical similarities.", input: 'Index 42', output: '[0.21, -0.42, 0.88] (length: 300)', code: 'from gensim.models import Word2Vec\nvector = model.wv["embeddings"]', link: 'word2vec' },
+            { id: "p3-n4", x: 300, y: 125, r: 22, label: "Contextual", type: "transform", title: "Contextual Embeddings (Transformer)", cat: "Representation", desc: "Self-attention layers compute dynamic representations based on surrounding context words.", input: '"river bank" vs "money bank"', output: '"bank" outputs different vectors depending on neighbor states', code: 'outputs = model(**tokenizer(text, return_tensors="pt"))\ncontext_vectors = outputs.last_hidden_state', link: 'contextual-embeddings' },
+            { id: "p3-n5", x: 600, y: 75, r: 24, label: "Matrix Out", type: "output", title: "Continuous Embeddings Tensor", cat: "Representation", desc: "Constructs dense coordinate maps ready for neural layer computations.", input: '["attention", "is", "needed"]', output: 'Tensor matrix shape: (sequence_length × dimensions)', code: '# Ready for classification, parsing, or generation layers.', link: 'transformer-representations' }
+          ]
+        }
+      };
+
+      /* ── Zoom State ────────────────────────────────────────── */
+      let currentScale = 1.0;
+      let activePipeline = 1;
+
+      /* ── Zoom Functions ────────────────────────────────────── */
+      window.zoom = function (amount) {
+        currentScale = Math.max(0.6, Math.min(1.8, currentScale + amount));
+        applyZoom();
+      };
+
+      window.resetZoom = function () {
+        currentScale = 1.0;
+        applyZoom();
+      };
+
+      function applyZoom() {
+        const svg = document.getElementById('workflow-svg');
+        if (svg) svg.style.transform = `scale(${currentScale})`;
+      }
+
+      /* ── Node Selection Logic ──────────────────────────────── */
+      window.selectNode = function (nodeId) {
+        // Clear active class from all SVG nodes
+        document.querySelectorAll('.svg-node').forEach(el => el.classList.remove('active'));
+
+        // Highlight selected node in SVG
+        const activeNode = document.getElementById(nodeId);
+        if (activeNode) activeNode.classList.add('active');
+
+        // Retrieve node configuration
+        const list = PIPELINES[activePipeline].nodes;
+        const node = list.find(n => n.id === nodeId);
+        if (!node) return;
+
+        // Populate detail panels
+        document.getElementById('step-title').textContent = node.title;
+        document.getElementById('step-desc').textContent  = node.desc;
+        document.getElementById('step-input').textContent = node.input;
+        document.getElementById('step-output').textContent = node.output;
+        document.getElementById('step-code-block').textContent = node.code;
+
+        // Setup badge color
+        const badge = document.getElementById('step-badge');
+        if (badge) {
+          badge.textContent = node.cat;
+          badge.className = node.cat === 'Preprocessing' ? 'badge badge-success' : 'badge badge-primary';
+        }
+
+        // Setup related concepts links
+        const linkContainer = document.getElementById('step-related-links');
+        if (linkContainer && node.link) {
+          const formattedLabel = node.link.replace(/-/g, ' ').toUpperCase();
+          if (node.link === 'repository') {
+            linkContainer.innerHTML = `<a href="../repository/index.html" class="tag">REPOSITORY HOME</a>`;
+          } else {
+            linkContainer.innerHTML = `<a href="../concept/index.html?id=${node.link}" class="tag">${formattedLabel}</a>`;
+          }
+        }
+      };
+
+      /* ── Switch Pipelines ──────────────────────────────────── */
+      window.switchPipeline = function (num) {
+        activePipeline = num;
+        currentScale = 1.0;
+        applyZoom();
+
+        // Update active tab styles
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+          btn.classList.toggle('active', i === num - 1);
+          btn.setAttribute('aria-selected', i === num - 1 ? 'true' : 'false');
+        });
+
+        // Set title
+        document.getElementById('pipeline-title').textContent = PIPELINES[num].title;
+
+        // Render SVG elements
+        renderSVG();
+      };
+
+      /* ── Render SVG elements ───────────────────────────────── */
+      function renderSVG() {
+        const svg = document.getElementById('workflow-svg');
+        if (!svg) return;
+
+        const data = PIPELINES[activePipeline];
+        const nodes = data.nodes;
+
+        // SVG header setup
+        svg.setAttribute('viewBox', activePipeline === 3 ? '0 0 800 200' : '0 0 800 150');
+        svg.setAttribute('height', activePipeline === 3 ? '200' : '150');
+
+        let html = '';
+
+        // Draw connections (edges) first so they render under the nodes
+        if (activePipeline === 3) {
+          // Diagram 3: Split flow mapping
+          // Project to One-hot, Static, and Contextual
+          html += `<path class="svg-edge" d="M124 75 L180 75 L200 25 L278 25" />`;
+          html += `<path class="svg-edge" d="M124 75 L278 75" />`;
+          html += `<path class="svg-edge" d="M124 75 L180 75 L200 125 L278 125" />`;
+          // Merge to output matrix
+          html += `<path class="svg-edge" d="M322 25 L400 25 L450 75 L576 75" />`;
+          html += `<path class="svg-edge" d="M322 75 L576 75" />`;
+          html += `<path class="svg-edge" d="M322 125 L400 125 L450 75 L576 75" />`;
+          // Arrows
+          html += `<polygon class="svg-arrow" points="278,25 272,21 272,29" />`;
+          html += `<polygon class="svg-arrow" points="278,75 272,71 272,79" />`;
+          html += `<polygon class="svg-arrow" points="278,125 272,121 272,129" />`;
+          html += `<polygon class="svg-arrow" points="576,75 570,71 570,79" />`;
+        } else {
+          // Standard horizontal lines
+          for (let i = 0; i < nodes.length - 1; i++) {
+            const n1 = nodes[i];
+            const n2 = nodes[i + 1];
+            // Line from right edge of n1 to left edge of n2
+            const x1 = n1.x + n1.r;
+            const x2 = n2.x - n2.r;
+            html += `<line class="svg-edge" x1="${x1}" y1="${n1.y}" x2="${x2}" y2="${n2.y}" />`;
+            // Add arrows pointing to n2
+            html += `<polygon class="svg-arrow" points="${x2},${n2.y} ${x2 - 6},${n2.y - 4} ${x2 - 6},${n2.y + 4}" />`;
+          }
+        }
+
+        // Draw nodes
+        nodes.forEach(n => {
+          let nodeColor = '#0F172A'; // base
+          let strokeColor = 'var(--border-solid)';
+
+          if (n.type === 'input') {
+            strokeColor = '#38BDF8'; // Sky blue input
+          } else if (n.type === 'output') {
+            strokeColor = '#34D399'; // Emerald output
+          } else {
+            strokeColor = '#818CF8'; // Indigo transformation
+          }
+
+          html += `
+          <g class="svg-node" id="${n.id}" onclick="selectNode('${n.id}')" role="button" aria-label="Inspection stage: ${n.label}">
+            <circle cx="${n.x}" cy="${n.y}" r="${n.r}" style="fill:${nodeColor}; stroke:${strokeColor};" />
+            <text x="${n.x}" y="${n.y + 4}" text-anchor="middle" style="font-size:10px;">${n.label}</text>
+          </g>`;
+        });
+
+        svg.innerHTML = html;
+
+        // Auto-select first node in pipeline
+        selectNode(nodes[0].id);
+      }
+
+      // Initial load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderSVG);
+      } else {
+        setTimeout(renderSVG, 0);
+      }
+
+    })();
+  </script>
+</body>
+</html>

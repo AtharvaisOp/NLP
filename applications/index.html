@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-World NLP Applications — NLP Hub</title>
+  <meta name="description" content="Explore real-world NLP applications including Search Engines, Chatbots, Sentiment Analysis, Machine Translation, and Summarization.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'applications',
+      depth: 1,
+      breadcrumbs: [{ label: 'Applications' }],
+    };
+  </script>
+  <style>
+    /* Article typography */
+    .article h2 {
+      font-size: 1.375rem; font-weight: 700; margin: 2.5rem 0 .75rem;
+      letter-spacing: -.02em; color: var(--text);
+      padding-top: 1rem; border-top: 1px solid var(--border-solid);
+    }
+    .article h3 { font-size: 1.125rem; font-weight: 600; margin: 1.75rem 0 .5rem; color: var(--text); }
+    .article p { font-size: .9375rem; line-height: 1.75; color: var(--text-sec); margin: 0 0 1rem; }
+    .article ul { margin: .5rem 0 1rem 1.25rem; }
+    .article li { font-size: .9375rem; line-height: 1.7; color: var(--text-sec); margin-bottom: .375rem; }
+
+    .app-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .875rem; padding: 1.5rem; margin-bottom: 2rem;
+    }
+    .wf-step {
+      display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1rem;
+    }
+    .wf-step-num {
+      width: 24px; height: 24px; border-radius: 50%; background: var(--primary);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700; flex-shrink: 0; margin-top: .125rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+          <div class="doc-layout">
+
+            <!-- ── Main Article ─────────────────────────── -->
+            <article class="article" aria-labelledby="apps-title">
+              <header style="margin-bottom:2rem;">
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.875rem;">
+                  <span class="badge badge-primary">🌐 Real-World NLP</span>
+                  <span style="font-size:.8125rem;color:var(--text-muted);margin-left:.25rem;">⏱ 12 min read</span>
+                </div>
+                <h1 id="apps-title" class="page-title" style="font-size:1.875rem;margin:0 0 .75rem;">
+                  NLP Applications Showcase
+                </h1>
+                <p style="font-size:1rem;color:var(--text-sec);line-height:1.7;margin:0;">
+                  Discover how core natural language processing algorithms are combined to solve complex real-world tasks across industries.
+                </p>
+              </header>
+
+              <!-- ── Search Engines ── -->
+              <section id="sec-search" aria-labelledby="title-search" class="app-card">
+                <span class="badge badge-success" style="font-size:.6875rem; margin-bottom:.5rem;">Search Relevance</span>
+                <h2 id="title-search" style="margin-top:0; border:none; padding:0;">1. Search Engines</h2>
+                
+                <h3>Problem</h3>
+                <p>Users enter unstructured, keyword-sparse, or misspelled queries (e.g., "how to fix a flat tire") and expect the most conceptually relevant pages out of billions of documents, sorted instantly by semantic match score.</p>
+                
+                <h3>NLP Concepts Used</h3>
+                <div style="display:flex; gap:.375rem; flex-wrap:wrap; margin-bottom:1rem;">
+                  <a href="../concept/?id=tokenization" class="tag">Tokenization</a>
+                  <a href="../concept/?id=lemmatization" class="tag">Lemmatization</a>
+                  <a href="../concept/?id=tf-idf" class="tag">TF-IDF</a>
+                  <a href="../concept/?id=word-embeddings" class="tag">Word Embeddings</a>
+                  <a href="../concept/?id=contextual-embeddings" class="tag">Contextual Embeddings</a>
+                </div>
+
+                <h3>Workflow</h3>
+                <div style="margin: 1rem 0;">
+                  <div class="wf-step">
+                    <div class="wf-step-num">1</div>
+                    <div>
+                      <strong>Query Preprocessing:</strong> Tokenize query, remove stop words, and normalize case/spelling.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">2</div>
+                    <div>
+                      <strong>Semantic Representation:</strong> Map query to a dense contextual embedding (using models like BERT) to capture search intent.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">3</div>
+                    <div>
+                      <strong>Index Retrieval:</strong> Search vector database indexes using Cosine Similarity or BM25 keyword metrics.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">4</div>
+                    <div>
+                      <strong>Ranking:</strong> Re-rank matched pages based on page authority (PageRank) and semantic match density.
+                    </div>
+                  </div>
+                </div>
+
+                <h3>Benefits</h3>
+                <ul>
+                  <li><strong>Semantic Matching:</strong> Understands synonyms (e.g. searching "dog" returns "canine" articles).</li>
+                  <li><strong>Intent Awareness:</strong> Differentiates queries (e.g. "apple stock price" vs "apple pie recipe").</li>
+                  <li><strong>Typo Resilience:</strong> Recovers intent from spelling mistakes via edit distance or character n-grams.</li>
+                </ul>
+
+                <h3>Industry Examples</h3>
+                <p>Google Search (utilizing BERT and MUM), Bing (using Microsoft Turing models), and Elasticsearch (using BM25 and vector search plugins).</p>
+              </section>
+
+              <!-- ── Chatbots ── -->
+              <section id="sec-chatbots" aria-labelledby="title-chatbots" class="app-card">
+                <span class="badge badge-cyan" style="font-size:.6875rem; margin-bottom:.5rem;">Conversational AI</span>
+                <h2 id="title-chatbots" style="margin-top:0; border:none; padding:0;">2. Chatbots &amp; Virtual Assistants</h2>
+                
+                <h3>Problem</h3>
+                <p>Customer support departments face massive ticket backlogs. Chatbots must parse user questions, categorize intent, extract key entities, and generate accurate context-aware responses in real-time.</p>
+                
+                <h3>NLP Concepts Used</h3>
+                <div style="display:flex; gap:.375rem; flex-wrap:wrap; margin-bottom:1rem;">
+                  <a href="../concept/?id=sentence-segmentation" class="tag">Sentence Segmentation</a>
+                  <a href="../concept/?id=one-hot-encoding" class="tag">One-Hot Encoding</a>
+                  <a href="../concept/?id=neural-language-models" class="tag">Neural LMs</a>
+                  <a href="../concept/?id=transformer-representations" class="tag">Transformer Reps</a>
+                </div>
+
+                <h3>Workflow</h3>
+                <div style="margin: 1rem 0;">
+                  <div class="wf-step">
+                    <div class="wf-step-num">1</div>
+                    <div>
+                      <strong>Intent Classification:</strong> Determine user goal (e.g., "refund_request", "track_package") using classification layers.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">2</div>
+                    <div>
+                      <strong>Named Entity Recognition (NER):</strong> Extract slots like dates, order numbers, and email addresses.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">3</div>
+                    <div>
+                      <strong>Dialogue State Management:</strong> Track conversation state and query database APIs.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">4</div>
+                    <div>
+                      <strong>NLG (Response Generation):</strong> Formulate an answer using structured templates or LLM autoregressive decoder passes.
+                    </div>
+                  </div>
+                </div>
+
+                <h3>Benefits</h3>
+                <ul>
+                  <li><strong>24/7 Availability:</strong> Instant customer response scaling with zero wait times.</li>
+                  <li><strong>Operational Efficiency:</strong> Automates up to 80% of routine service queries.</li>
+                  <li><strong>Omnichannel:</strong> Deploys same logic across web, SMS, WhatsApp, and email.</li>
+                </ul>
+
+                <h3>Industry Examples</h3>
+                <p>OpenAI ChatGPT, Google Assistant, Rasa Conversational AI, and LivePerson enterprise support systems.</p>
+              </section>
+
+              <!-- ── Sentiment Analysis ── -->
+              <section id="sec-sentiment" aria-labelledby="title-sentiment" class="app-card">
+                <span class="badge badge-primary" style="font-size:.6875rem; margin-bottom:.5rem;">Opinion Mining</span>
+                <h2 id="title-sentiment" style="margin-top:0; border:none; padding:0;">3. Sentiment Analysis</h2>
+                
+                <h3>Problem</h3>
+                <p>Companies receive millions of product reviews, social media mentions, and support surveys. Manually classifying emotional tone is impossible at scale, yet vital for PR alert pipelines and product reviews.</p>
+                
+                <h3>NLP Concepts Used</h3>
+                <div style="display:flex; gap:.375rem; flex-wrap:wrap; margin-bottom:1rem;">
+                  <a href="../concept/?id=case-normalization" class="tag">Case Normalization</a>
+                  <a href="../concept/?id=stop-word-removal" class="tag">Stop-word Removal</a>
+                  <a href="../concept/?id=n-grams" class="tag">N-Grams</a>
+                  <a href="../concept/?id=tf-idf" class="tag">TF-IDF</a>
+                  <a href="../concept/?id=contextual-embeddings" class="tag">Contextual Embeddings</a>
+                </div>
+
+                <h3>Workflow</h3>
+                <div style="margin: 1rem 0;">
+                  <div class="wf-step">
+                    <div class="wf-step-num">1</div>
+                    <div>
+                      <strong>Normalizing:</strong> Remove special noise, strip HTML tags, and lowercase the tokens.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">2</div>
+                    <div>
+                      <strong>Feature Mapping:</strong> Represent sentences using N-grams (to capture negation like "not good") or TF-IDF weights.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">3</div>
+                    <div>
+                      <strong>Model Scoring:</strong> Pass representations to classifier networks (Naive Bayes, SVM, or pre-trained Transformers).
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">4</div>
+                    <div>
+                      <strong>Sentiment Output:</strong> Output classification probabilities: positive, negative, or neutral.
+                    </div>
+                  </div>
+                </div>
+
+                <h3>Benefits</h3>
+                <ul>
+                  <li><strong>Real-time Tracking:</strong> Instantly monitors social media shifts during product launches.</li>
+                  <li><strong>Prioritization:</strong> Flags angry reviews immediately to prioritize customer support queues.</li>
+                  <li><strong>Aggregated Insights:</strong> Breaks down feature feedback (e.g. "battery life is bad" vs "screen is great").</li>
+                </ul>
+
+                <h3>Industry Examples</h3>
+                <p>Brandwatch social listening, Salesforce Einstein Sentiment API, and Amazon Comprehend Sentiment Analysis.</p>
+              </section>
+
+              <!-- ── Machine Translation ── -->
+              <section id="sec-translation" aria-labelledby="title-translation" class="app-card">
+                <span class="badge badge-violet" style="font-size:.6875rem; margin-bottom:.5rem;">Seq2Seq Translation</span>
+                <h2 id="title-translation" style="margin-top:0; border:none; padding:0;">4. Machine Translation</h2>
+                
+                <h3>Problem</h3>
+                <p>Translating text between languages is difficult because word order rules, grammatical gender, idioms, and context vary heavily. Simple word-for-word substitutions lead to broken, unreadable translations.</p>
+                
+                <h3>NLP Concepts Used</h3>
+                <div style="display:flex; gap:.375rem; flex-wrap:wrap; margin-bottom:1rem;">
+                  <a href="../concept/?id=tokenization" class="tag">Tokenization</a>
+                  <a href="../concept/?id=word-embeddings" class="tag">Word Embeddings</a>
+                  <a href="../concept/?id=transformer-representations" class="tag">Transformer Reps</a>
+                </div>
+
+                <h3>Workflow</h3>
+                <div style="margin: 1rem 0;">
+                  <div class="wf-step">
+                    <div class="wf-step-num">1</div>
+                    <div>
+                      <strong>Subword Tokenizing:</strong> Split source sentence into subwords (Byte-Pair Encoding) to handle rare words.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">2</div>
+                    <div>
+                      <strong>Encoder Processing:</strong> Build bidirectional contextual embeddings using the Encoder layers.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">3</div>
+                    <div>
+                      <strong>Cross-Attention Mapping:</strong> Decoder aligns target words with relevant elements of the source vector structure.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">4</div>
+                    <div>
+                      <strong>Autoregressive Generation:</strong> Predict target words sequentially until the end-of-sentence token is hit.
+                    </div>
+                  </div>
+                </div>
+
+                <h3>Benefits</h3>
+                <ul>
+                  <li><strong>Contextual Accuracy:</strong> Preserves meaning and local grammar structure.</li>
+                  <li><strong>Global Scaling:</strong> Translates millions of words per second across 100+ languages.</li>
+                  <li><strong>Domain Customization:</strong> Can be fine-tuned on legal, medical, or technical glossaries.</li>
+                </ul>
+
+                <h3>Industry Examples</h3>
+                <p>Google Translate, DeepL Translator, and Systran Enterprise translation pipelines.</p>
+              </section>
+
+              <!-- ── Text Summarization ── -->
+              <section id="sec-summarization" aria-labelledby="title-summarization" class="app-card">
+                <span class="badge badge-warning" style="font-size:.6875rem; margin-bottom:.5rem;">Summarization</span>
+                <h2 id="title-summarization" style="margin-top:0; border:none; padding:0;">5. Text Summarization</h2>
+                
+                <h3>Problem</h3>
+                <p>Users are overwhelmed by long-form research papers, books, meetings, and legal documents. They need brief, accurate summaries without losing core arguments or introducing factual errors.</p>
+                
+                <h3>NLP Concepts Used</h3>
+                <div style="display:flex; gap:.375rem; flex-wrap:wrap; margin-bottom:1rem;">
+                  <a href="../concept/?id=sentence-segmentation" class="tag">Sentence Segmentation</a>
+                  <a href="../concept/?id=tf-idf" class="tag">TF-IDF</a>
+                  <a href="../concept/?id=neural-language-models" class="tag">Neural LMs</a>
+                  <a href="../concept/?id=transformer-representations" class="tag">Transformer Reps</a>
+                </div>
+
+                <h3>Workflow</h3>
+                <div style="margin: 1rem 0;">
+                  <div class="wf-step">
+                    <div class="wf-step-num">1</div>
+                    <div>
+                      <strong>Preprocessing:</strong> Segment document into sentence blocks and tokenize.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">2</div>
+                    <div>
+                      <strong>Method Selection:</strong>
+                      <br>• <em>Extractive:</em> Score sentence relevance (using TF-IDF or PageRank on sentence similarity) and extract top sentences.
+                      <br>• <em>Abstractive:</em> Feed whole document into Seq2Seq model (BART/T5) to generate new summarizing sentences.
+                    </div>
+                  </div>
+                  <div class="wf-step">
+                    <div class="wf-step-num">3</div>
+                    <div>
+                      <strong>Generation &amp; Clean:</strong> Generate summary tokens and format spacing.
+                    </div>
+                  </div>
+                </div>
+
+                <h3>Benefits</h3>
+                <ul>
+                  <li><strong>Speed Reading:</strong> Shrinks long texts to 10% of their length in seconds.</li>
+                  <li><strong>Information Compression:</strong> Extracts key metrics, actions, and milestones automatically.</li>
+                  <li><strong>Synthesis:</strong> Combines multiple news reports into a unified narrative.</li>
+                </ul>
+
+                <h3>Industry Examples</h3>
+                <p>Notion AI summarizer, Zoom Meeting Summaries, TL;DR newsletter tools, and legal contract digest engines.</p>
+              </section>
+
+            </article>
+
+            <!-- Table of Contents sidebar -->
+            <aside aria-label="Table of contents" class="toc-sidebar">
+              <p class="toc-title">On this page</p>
+              <a href="#sec-search"        class="toc-link active">1. Search Engines</a>
+              <a href="#sec-chatbots"      class="toc-link">2. Chatbots &amp; Assistants</a>
+              <a href="#sec-sentiment"     class="toc-link">3. Sentiment Analysis</a>
+              <a href="#sec-translation"   class="toc-link">4. Machine Translation</a>
+              <a href="#sec-summarization" class="toc-link">5. Text Summarization</a>
+            </aside>
+          </div>
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

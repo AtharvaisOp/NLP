@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research &amp; Industry Insights — NLP Hub</title>
+  <meta name="description" content="Explore recent research developments in NLP (RAG, MoE), industrial applications (AI Overviews, Copilot), and open-source frameworks.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'research',
+      depth: 1,
+      breadcrumbs: [{ label: 'Research & Insights' }],
+    };
+  </script>
+  <style>
+    /* Article typography */
+    .article h2 {
+      font-size: 1.375rem; font-weight: 700; margin: 2.5rem 0 .75rem;
+      letter-spacing: -.02em; color: var(--text);
+      padding-top: 1rem; border-top: 1px solid var(--border-solid);
+    }
+    .article h3 { font-size: 1.125rem; font-weight: 600; margin: 1.75rem 0 .5rem; color: var(--text); }
+    .article p { font-size: .9375rem; line-height: 1.75; color: var(--text-sec); margin: 0 0 1rem; }
+    .article ul { margin: .5rem 0 1rem 1.25rem; }
+    .article li { font-size: .9375rem; line-height: 1.7; color: var(--text-sec); margin-bottom: .375rem; }
+
+    .research-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .875rem; padding: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .citation-bracket {
+      font-weight: 600; color: var(--primary); font-family: 'JetBrains Mono', monospace; font-size: .8125rem; cursor: pointer;
+    }
+    .ref-list li {
+      font-size: .8125rem; line-height: 1.6; color: var(--text-sec); margin-bottom: .5rem; list-style-type: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+          <div class="doc-layout">
+
+            <!-- ── Main Article ─────────────────────────── -->
+            <article class="article" aria-labelledby="research-title">
+              <header style="margin-bottom:2rem;">
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.875rem;">
+                  <span class="badge badge-violet">🔬 Research &amp; Trends</span>
+                  <span style="font-size:.8125rem;color:var(--text-muted);margin-left:.25rem;">⏱ 10 min read</span>
+                </div>
+                <h1 id="research-title" class="page-title" style="font-size:1.875rem;margin:0 0 .75rem;">
+                  Research &amp; Industry Insights
+                </h1>
+                <p style="font-size:1rem;color:var(--text-sec);line-height:1.7;margin:0;">
+                  An exploration of cutting-edge NLP research developments, industry adoptions, and standard open-source libraries driving innovation.
+                </p>
+              </header>
+
+              <!-- Recent Research Developments -->
+              <section id="sec-developments" aria-labelledby="heading-developments">
+                <h2 id="heading-developments">1. Recent NLP Research Developments</h2>
+                <p>Large Language Models face issues with hallucinations and high training compute. Two key research milestones have emerged to tackle these challenges.</p>
+
+                <!-- RAG -->
+                <div class="research-card">
+                  <span class="badge badge-primary" style="font-size:.6875rem; margin-bottom:.5rem;">Research</span>
+                  <h3>Retrieval-Augmented Generation (RAG)</h3>
+                  <p>
+                    Retrieval-Augmented Generation (RAG) is a paradigm that combines dense vector retrieval databases with generative pre-trained language models <a href="#ref-1" class="citation-bracket">[1]</a>.
+                    Instead of relying solely on parametric memory (weights), the model queries an external database for relevant document facts, passes the retrieved contexts to the transformer encoder/decoder, and generates answers.
+                  </p>
+                  <p>
+                    This drastically reduces factual hallucinations, allows real-time data updates without model retraining, and enables verifiable source attribution.
+                  </p>
+                </div>
+
+                <!-- MoE -->
+                <div class="research-card">
+                  <span class="badge badge-primary" style="font-size:.6875rem; margin-bottom:.5rem;">Research</span>
+                  <h3>Mixture of Experts (MoE) Architectures</h3>
+                  <p>
+                    As models scale to hundreds of billions of parameters, dense training becomes financially and environmentally unfeasible. Mixture of Experts (MoE) replaces dense feedforward neural network layers with a sparse set of parallel "expert" networks <a href="#ref-2" class="citation-bracket">[2]</a>.
+                  </p>
+                  <p>
+                    A gating routing network evaluates each input token and dynamically directs it to the top 1 or 2 most relevant experts. This enables scaling parameter capacity by 10× while keeping the active training and inference compute costs constant.
+                  </p>
+                </div>
+              </section>
+
+              <!-- Industrial NLP Applications -->
+              <section id="sec-industrial" aria-labelledby="heading-industrial">
+                <h2 id="heading-industrial">2. Industrial NLP Applications</h2>
+                <p>NLP models have transitioned from labs into ubiquitous utility services powering enterprise software.</p>
+
+                <!-- Google SGE / AI Overviews -->
+                <div class="research-card">
+                  <span class="badge badge-success" style="font-size:.6875rem; margin-bottom:.5rem;">Industry</span>
+                  <h3>Google AI Overviews (formerly SGE)</h3>
+                  <p>
+                    Google has integrated multi-turn conversational agents directly into its search engine results page <a href="#ref-3" class="citation-bracket">[3]</a>.
+                    AI Overviews utilize a custom multimodal transformer pipeline that reads search query intent, performs web context extraction, synthesizes facts, and generates structured summarizations with link citations.
+                  </p>
+                  <p>
+                    This represents a major shift from classic index matching to direct semantic answers.
+                  </p>
+                </div>
+
+                <!-- GitHub Copilot -->
+                <div class="research-card">
+                  <span class="badge badge-success" style="font-size:.6875rem; margin-bottom:.5rem;">Industry</span>
+                  <h3>GitHub Copilot</h3>
+                  <p>
+                    GitHub Copilot is an AI programmer assistant that generates code suggestions directly inside the IDE <a href="#ref-4" class="citation-bracket">[4]</a>.
+                    It uses OpenAI Codex (a GPT-based decoder-only architecture) trained on massive public source code repositories.
+                  </p>
+                  <p>
+                    By parsing context from preceding files, comments, and open tabs, Copilot predicts and generates code sequences, boosting developer speed by up to 55%.
+                  </p>
+                </div>
+              </section>
+
+              <!-- Open Source NLP Framework -->
+              <section id="sec-opensource" aria-labelledby="heading-opensource">
+                <h2 id="heading-opensource">3. Open-Source NLP Framework</h2>
+                
+                <div class="research-card">
+                  <span class="badge badge-cyan" style="font-size:.6875rem; margin-bottom:.5rem;">Open Source</span>
+                  <h3>Hugging Face Transformers Library</h3>
+                  <p>
+                    The <code>transformers</code> Python package by Hugging Face has democratized natural language processing research <a href="#ref-5" class="citation-bracket">[5]</a>.
+                    It standardizes interface classes for loading, fine-tuning, and evaluating state-of-the-art architectures (BERT, GPT, T5, LLaMA) in PyTorch, TensorFlow, and JAX.
+                  </p>
+                  <p>
+                    Combined with the Hugging Face Hub (which hosts over 500,000 pre-trained models and datasets), the library has reduced the barrier of entry for NLP, enabling students and startups to deploy state-of-the-art pipelines in minutes.
+                  </p>
+                </div>
+              </section>
+
+              <!-- Bibliography References -->
+              <section id="sec-references" aria-labelledby="heading-references">
+                <h2 id="heading-references">References &amp; Citations</h2>
+                <ul class="ref-list">
+                  <li id="ref-1">
+                    <span class="citation-bracket">[1]</span> Lewis, P., et al. (2020). <em>Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</em>. Advances in Neural Information Processing Systems (NeurIPS), 33, 9459-9474.
+                  </li>
+                  <li id="ref-2">
+                    <span class="citation-bracket">[2]</span> Shazeer, N., et al. (2017). <em>Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer</em>. arXiv preprint arXiv:1701.06538.
+                  </li>
+                  <li id="ref-3">
+                    <span class="citation-bracket">[3]</span> Google AI. (2024). <em>Generative AI in Search: Designing Search Overviews</em>. Google Research blog.
+                  </li>
+                  <li id="ref-4">
+                    <span class="citation-bracket">[4]</span> Chen, M., et al. (2021). <em>Evaluating Large Language Models Trained on Code</em>. arXiv preprint arXiv:2107.03374. (GitHub Copilot / Codex Paper).
+                  </li>
+                  <li id="ref-5">
+                    <span class="citation-bracket">[5]</span> Wolf, T., et al. (2020). <em>Transformers: State-of-the-Art Natural Language Processing</em>. Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), 38-45.
+                  </li>
+                </ul>
+              </section>
+
+            </article>
+
+            <!-- Table of Contents sidebar -->
+            <aside aria-label="Table of contents" class="toc-sidebar">
+              <p class="toc-title">On this page</p>
+              <a href="#sec-developments"   class="toc-link active">1. Research Developments</a>
+              <a href="#sec-industrial"     class="toc-link">2. Industrial Applications</a>
+              <a href="#sec-opensource"     class="toc-link">3. OS NLP Framework</a>
+              <a href="#sec-references"     class="toc-link">References &amp; Citations</a>
+            </aside>
+          </div>
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

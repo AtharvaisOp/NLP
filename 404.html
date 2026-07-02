@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Page Not Found · NLP Hub</title>
+  <meta name="description" content="This page got lost in the embedding space.">
+  <meta name="robots" content="noindex">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+  <link rel="manifest" href="./site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="./assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = { page: '404', depth: 0, breadcrumbs: [] };
+  </script>
+  <style>
+    /* Token chips animation */
+    .token-strip {
+      display: flex; align-items: center; gap: .5rem;
+      flex-wrap: wrap; justify-content: center;
+      margin: 1.5rem 0;
+    }
+    .token {
+      padding: .25rem .75rem;
+      border: 1px solid var(--border-solid);
+      border-radius: 0.375rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8125rem;
+      color: var(--text-sec);
+      background: var(--bg-card);
+      animation: fadeUp .5s ease both;
+    }
+    .token-error {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(239,68,68,.1);
+      box-shadow: 0 0 8px rgba(239,68,68,.3);
+      font-weight: 600;
+    }
+    .error-code-block {
+      background: #0d0d15;
+      border: 1px solid var(--border-solid);
+      border-radius: .75rem;
+      padding: 1.25rem 1.5rem;
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8125rem;
+      line-height: 1.7;
+      max-width: 480px;
+      width: 100%;
+      color: #e4e1ed;
+    }
+    .err-red    { color: #FCA5A5; }
+    .err-yellow { color: #FCD34D; }
+    .err-green  { color: #6EE7B7; }
+    .err-muted  { color: var(--text-muted); }
+    .quick-links { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; margin-top: .75rem; }
+    .quick-link {
+      padding: .375rem .875rem;
+      border: 1px solid var(--border-solid);
+      border-radius: 9999px;
+      font-size: .8125rem;
+      color: var(--text-sec);
+      text-decoration: none;
+      transition: all .15s;
+    }
+    .quick-link:hover { border-color: var(--primary); color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper">
+    <div class="content-area">
+      <main class="error-page" id="main-content" tabindex="-1" aria-labelledby="error-code-heading">
+
+        <!-- Background -->
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-dots" aria-hidden="true"></div>
+
+        <!-- 404 number -->
+        <p id="error-code-heading" class="error-code" aria-label="Error 404">404</p>
+
+        <!-- NLP-themed subtitle -->
+        <p class="error-token" aria-label="Error: Token not found">
+          <span aria-hidden="true">[TOKEN NOT FOUND]</span>
+        </p>
+
+        <p class="error-message">
+          Looks like this page got lost in the embedding space — it has
+          a cosine similarity of <code>0.00</code> with any known document.
+        </p>
+
+        <!-- Token strip -->
+        <div class="token-strip" role="presentation" aria-hidden="true">
+          <span class="token" style="animation-delay:.05s">[the]</span>
+          <span class="token" style="animation-delay:.10s">[page]</span>
+          <span class="token" style="animation-delay:.15s">[you]</span>
+          <span class="token" style="animation-delay:.20s">[were]</span>
+          <span class="token" style="animation-delay:.25s">[looking]</span>
+          <span class="token" style="animation-delay:.30s">[for]</span>
+          <span class="token token-error" style="animation-delay:.40s">[404]</span>
+        </div>
+
+        <!-- Python error traceback -->
+        <div class="error-code-block" role="presentation" aria-label="Humorous Python traceback">
+          <span class="err-muted"># Traceback (most recent call last):</span><br>
+          <span class="err-muted">#   File "router.py", line 404</span><br>
+          &nbsp;&nbsp;<span class="err-yellow">page</span> = navigate_to(<span class="err-green">"<span id="404-url"></span>"</span>)<br>
+          <span class="err-red">PageNotFoundError</span>: <span class="err-muted">No document in corpus.</span><br>
+          <span class="err-muted"># Hint: Try cosine similarity search ↓</span>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin-top:2rem;">
+          <a href="./index.html" class="btn btn-primary">
+            ← Go Home
+          </a>
+          <a href="./repository/index.html" class="btn btn-ghost">
+            Browse Repository
+          </a>
+        </div>
+
+        <!-- Quick links -->
+        <div class="quick-links" aria-label="Quick navigation">
+          <a href="./repository/index.html"    class="quick-link">Repository</a>
+          <a href="./applications/index.html"  class="quick-link">Applications</a>
+          <a href="./compare/index.html"       class="quick-link">Compare</a>
+          <a href="./research/index.html"      class="quick-link">Research</a>
+          <a href="./workflows/index.html"     class="quick-link">Workflows</a>
+        </div>
+
+      </main>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="./assets/js/components.js"></script>
+  <script src="./assets/js/main.js"></script>
+  <script src="./assets/js/search.js"></script>
+  <script>
+    // Show the attempted URL in the fake traceback
+    document.getElementById('404-url').textContent = location.pathname;
+  </script>
+</body>
+</html>

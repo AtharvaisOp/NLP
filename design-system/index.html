@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design System — NLP Hub</title>
+  <meta name="description" content="Lumina NLP design system guidelines: colors, typography, layout tokens, and reusable HTML components.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'design-system',
+      depth: 1,
+      breadcrumbs: [{ label: 'Design System' }],
+    };
+  </script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <div class="page-hero">
+            <div class="page-badge">🎨 System</div>
+            <h1 class="page-title">Design System Showcase</h1>
+            <p class="page-subtitle">Lumina NLP Design System: a dark-first, modern, professional visual language with typography scale, tokens, and reusable components.</p>
+          </div>
+
+          <!-- Color Tokens -->
+          <section aria-labelledby="colors-heading" style="margin-bottom:2.5rem;">
+            <h2 id="colors-heading" class="section-title">Color Palette</h2>
+            <p style="font-size:.9rem;color:var(--text-sec);margin-bottom:1rem;">We use dark-first HSL variables that automatically map to light mode values when the theme toggles.</p>
+            
+            <div style="display:flex;flex-wrap:wrap;gap:1rem;">
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#0A0F1E;border:1px solid var(--border-hover);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:600;">#0A0F1E</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Background</span>
+              </div>
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#0F172A;border:1px solid var(--border-hover);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:600;">#0F172A</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Surface</span>
+              </div>
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#1E293B;border:1px solid var(--border-hover);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:600;">#1E293B</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Card</span>
+              </div>
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#6366F1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:600;">#6366F1</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Primary</span>
+              </div>
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#22D3EE;display:flex;align-items:center;justify-content:center;color:#0F172A;font-size:.75rem;font-weight:600;">#22D3EE</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Secondary</span>
+              </div>
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#A78BFA;display:flex;align-items:center;justify-content:center;color:#0F172A;font-size:.75rem;font-weight:600;">#A78BFA</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Tertiary</span>
+              </div>
+              <div style="text-align:center;">
+                <div style="width:72px;height:72px;border-radius:.5rem;background:#10B981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:600;">#10B981</div>
+                <span style="font-size:.75rem;color:var(--text-sec);display:block;margin-top:.375rem;font-weight:500;">Success</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Typography -->
+          <section aria-labelledby="type-heading" style="margin-bottom:2.5rem;">
+            <h2 id="type-heading" class="section-title">Typography Scale</h2>
+            <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
+              <div>
+                <span style="font-size:.625rem;font-family:JetBrains Mono,monospace;color:var(--text-muted);display:block;margin-bottom:.25rem;">DISPLAY (Inter 800)</span>
+                <p style="font-size:2.25rem;font-weight:800;letter-spacing:-.03em;color:var(--text);margin:0;">Lumina NLP Hub</p>
+              </div>
+              <div>
+                <span style="font-size:.625rem;font-family:JetBrains Mono,monospace;color:var(--text-muted);display:block;margin-bottom:.25rem;">HEADING 1 (Inter 700)</span>
+                <p style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;color:var(--text);margin:0;">Transformer Architecture</p>
+              </div>
+              <div>
+                <span style="font-size:.625rem;font-family:JetBrains Mono,monospace;color:var(--text-muted);display:block;margin-bottom:.25rem;">BODY (Inter 400 · line-height 1.7)</span>
+                <p style="font-size:.9375rem;color:var(--text-sec);margin:0;line-height:1.7;">Natural Language Processing is a subfield of artificial intelligence concerned with the interaction between computers and human language.</p>
+              </div>
+              <div>
+                <span style="font-size:.625rem;font-family:JetBrains Mono,monospace;color:var(--text-muted);display:block;margin-bottom:.25rem;">MONOSPACE (JetBrains Mono 400)</span>
+                <code style="font-family:'JetBrains Mono',monospace;font-size:.875rem;color:var(--tertiary);">from transformers import AutoTokenizer, AutoModel</code>
+              </div>
+            </div>
+          </section>
+
+          <!-- UI Components -->
+          <section aria-labelledby="components-heading" style="margin-bottom:2.5rem;">
+            <h2 id="components-heading" class="section-title">UI Components</h2>
+            
+            <h3 style="font-size:1rem;font-weight:600;color:var(--text);margin:1.5rem 0 .5rem;">Buttons</h3>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.5rem;">
+              <button class="btn btn-primary">Primary Button</button>
+              <button class="btn btn-secondary">Secondary Button</button>
+              <button class="btn btn-ghost">Ghost Button</button>
+              <button class="btn btn-primary btn-sm">Small Button</button>
+              <button class="btn btn-primary btn-lg">Large Button</button>
+            </div>
+
+            <h3 style="font-size:1rem;font-weight:600;color:var(--text);margin:1.5rem 0 .5rem;">Badges &amp; Tags</h3>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.5rem;">
+              <span class="badge badge-beginner">Beginner</span>
+              <span class="badge badge-intermediate">Intermediate</span>
+              <span class="badge badge-advanced">Advanced</span>
+              <span class="badge badge-primary">Primary</span>
+              <span class="badge badge-cyan">Word Vectors</span>
+              <span class="badge badge-violet">Transformers</span>
+              <span class="tag">nltk</span>
+              <span class="tag">spacy</span>
+            </div>
+
+            <h3 style="font-size:1rem;font-weight:600;color:var(--text);margin:1.5rem 0 .5rem;">Callouts</h3>
+            <div class="callout callout-note" style="margin-bottom:1rem;">
+              <span class="callout-icon">ℹ️</span>
+              <div>
+                <h4>Note Callout</h4>
+                <p>Use notes to highlight background information, prerequisites, or helpful architectural context.</p>
+              </div>
+            </div>
+            <div class="callout callout-tip" style="margin-bottom:1rem;">
+              <span class="callout-icon">💡</span>
+              <div>
+                <h4>Tip Callout</h4>
+                <p>Use tips to point out practical recommendations, developer shortcuts, or helpful tooling suggestions.</p>
+              </div>
+            </div>
+            <div class="callout callout-warning" style="margin-bottom:1rem;">
+              <span class="callout-icon">⚠️</span>
+              <div>
+                <h4>Warning Callout</h4>
+                <p>Use warnings to flag high-complexity algorithms, memory bottlenecks, or deprecated libraries.</p>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

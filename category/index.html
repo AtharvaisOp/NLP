@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Overview — NLP Hub</title>
+  <meta name="description" content="Browse NLP concepts organized by category including Fundamentals, Preprocessing, Word Representations, Language Models, and NLP Tasks.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'category',
+      depth: 1,
+      breadcrumbs: [
+        { label: 'Repository', href: '../repository/index.html' },
+        { label: 'Category Overview' },
+      ],
+    };
+  </script>
+  <style>
+    .category-hero-banner {
+      background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(167,139,250,.08));
+      border: 1px solid rgba(99,102,241,.2);
+      border-radius: 1rem;
+      padding: 2rem 2rem 1.75rem;
+      margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+    }
+    .category-icon-circle {
+      width: 4rem; height: 4rem; border-radius: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; flex-shrink: 0;
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.25);
+    }
+    .filter-tabs {
+      display: flex; gap: .375rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .filter-tab {
+      padding: .375rem .875rem;
+      border-radius: .5rem; border: 1px solid var(--border-solid);
+      font-size: .8125rem; cursor: pointer;
+      color: var(--text-sec); background: transparent;
+      transition: all .15s;
+    }
+    .filter-tab:hover, .filter-tab.active {
+      border-color: var(--primary); color: var(--primary);
+      background: rgba(99,102,241,.08);
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <!-- Category Hero Banner -->
+          <div class="category-hero-banner">
+            <div class="category-icon-circle" aria-hidden="true">🗂️</div>
+            <div>
+              <div class="page-badge" style="margin-bottom:.5rem;">All Categories</div>
+              <h1 class="page-title" style="margin:0 0 .5rem;">Category Overview</h1>
+              <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+                <span class="badge badge-primary">12 Categories</span>
+                <span class="badge badge-beginner">18 Beginner</span>
+                <span class="badge badge-intermediate">20 Intermediate</span>
+                <span class="badge badge-advanced">10 Advanced</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="filter-tabs" role="tablist" aria-label="Filter by type">
+            <button class="filter-tab active" role="tab" aria-selected="true">All</button>
+            <button class="filter-tab" role="tab" aria-selected="false">Preprocessing</button>
+            <button class="filter-tab" role="tab" aria-selected="false">Feature Engineering</button>
+            <button class="filter-tab" role="tab" aria-selected="false">Language Representation</button>
+            <button class="filter-tab" role="tab" aria-selected="false">Language Models</button>
+          </div>
+
+          <!-- Categories grid -->
+          <section aria-labelledby="all-categories-heading">
+            <h2 id="all-categories-heading" class="sr-only">All Categories</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <a href="../concept/index.html?id=sentence-segmentation" class="placeholder-card">
+                <span class="placeholder-card-tag" style="background:rgba(16,185,129,.1);color:var(--success);">Preprocessing</span>
+                <h4>Text Preprocessing</h4>
+                <p>Sentence segmentation, tokenization, case normalization, stop-word removal, stemming, lemmatization, noise removal, and cleaning.</p>
+                <span class="stat-chip" style="font-size:.75rem;color:var(--text-muted);">8 concepts · Beginner</span>
+              </a>
+              <a href="../concept/index.html?id=bag-of-words" class="placeholder-card">
+                <span class="placeholder-card-tag" style="background:rgba(99,102,241,.1);color:var(--primary);">Feature Engineering</span>
+                <h4>Feature Engineering</h4>
+                <p>Converting tokens to mathematical representations: Bag of Words, N-Grams, Term Frequency, Inverse Document Frequency, and TF-IDF.</p>
+                <span class="stat-chip" style="font-size:.75rem;color:var(--text-muted);">5 concepts · Intermediate</span>
+              </a>
+              <a href="../concept/index.html?id=one-hot-encoding" class="placeholder-card">
+                <span class="placeholder-card-tag" style="background:rgba(34,211,238,.1);color:var(--secondary);">Language Representation</span>
+                <h4>Language Representation</h4>
+                <p>One-hot encoding, dense word embeddings, Word2Vec, FastText, and contextual representations.</p>
+                <span class="stat-chip" style="font-size:.75rem;color:var(--text-muted);">5 concepts · Mixed</span>
+              </a>
+              <a href="../concept/index.html?id=statistical-language-models" class="placeholder-card">
+                <span class="placeholder-card-tag" style="background:rgba(167,139,250,.1);color:var(--tertiary);">Language Models</span>
+                <h4>Language Models</h4>
+                <p>Statistical transition models, smoothing, neural sequence language models, and contextual transformer structures.</p>
+                <span class="stat-chip" style="font-size:.75rem;color:var(--text-muted);">3 concepts · Advanced</span>
+              </a>
+              <a href="../compare/index.html" class="placeholder-card">
+                <span class="placeholder-card-tag" style="background:rgba(239,68,68,.1);color:var(--danger);">Comparisons</span>
+                <h4>Model Comparisons</h4>
+                <p>Side-by-side analysis of models, embeddings, and algorithms.</p>
+                <span class="stat-chip" style="font-size:.75rem;color:var(--text-muted);">5 comparisons</span>
+              </a>
+            </div>
+          </section>
+
+          <div class="callout callout-tip" style="margin-top:2rem;">
+            <span class="callout-icon">💡</span>
+            <div>
+              <h4>Learning Path Suggestion</h4>
+              <p>If you're new to NLP, start with <strong>Fundamentals → Preprocessing → Word Representations → Language Models → NLP Tasks</strong>.</p>
+            </div>
+          </div>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+  <script>
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected','false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected','true');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sustainability &amp; Green NLP — NLP Hub</title>
+  <meta name="description" content="Environmental impact of NLP models. Training GPT-3 emitted 552 tonnes of CO₂. Explore green AI practices and carbon-efficient NLP.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'sustainability',
+      depth: 1,
+      breadcrumbs: [{ label: 'Sustainability' }],
+    };
+  </script>
+  <style>
+    .impact-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:.875rem; overflow:hidden; border:1px solid var(--border-solid); margin:1.5rem 0; }
+    .impact-table th { background:var(--bg-elevated); padding:.875rem 1rem; font-size:.8125rem; font-weight:600; text-align:left; border-bottom:1px solid var(--border-solid); }
+    .impact-table td { padding:.75rem 1rem; font-size:.875rem; border-bottom:1px solid var(--border-solid); }
+    .impact-table tr:last-child td { border-bottom:none; }
+    .impact-table tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+    .eff-low    { color:var(--success); font-weight:600; }
+    .eff-medium { color:var(--warning); font-weight:600; }
+    .eff-high   { color:var(--danger);  font-weight:600; }
+    .green-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1rem; margin-top:1rem; }
+    .green-card { background:var(--bg-card); border:1px solid rgba(16,185,129,.2); border-radius:.875rem; padding:1.25rem; }
+    .green-card h3 { font-size:.9375rem; font-weight:600; color:var(--text); margin:0 0 .375rem; }
+    .green-card p { font-size:.875rem; color:var(--text-sec); margin:0; line-height:1.55; }
+    .green-icon { font-size:1.5rem; margin-bottom:.75rem; }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <div class="page-hero">
+            <div class="page-badge">🌱 Sustainability</div>
+            <h1 class="page-title">Sustainability &amp; Green NLP</h1>
+            <p class="page-subtitle">Understanding the environmental cost of large NLP models and how to build more responsible, carbon-efficient AI systems.</p>
+          </div>
+
+          <!-- Hero impact card -->
+          <div style="background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(34,211,238,.06));border:1px solid rgba(16,185,129,.2);border-radius:1rem;padding:2rem;margin-bottom:2rem;text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:.75rem;">🌍</div>
+            <h2 style="font-size:1.5rem;font-weight:700;color:var(--text);margin:0 0 .5rem;">The Carbon Cost of NLP</h2>
+            <p style="font-size:1rem;color:var(--text-sec);margin:0;">Training GPT-3 emitted approximately <strong style="color:var(--danger);">552 tonnes of CO₂</strong> — equivalent to 5 average American cars driven for an entire year each.</p>
+          </div>
+
+          <!-- Impact metrics -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;">
+            <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--danger);">552t</div>
+              <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.25rem;">CO₂ for GPT-3 training</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--warning);">1.3 GWh</div>
+              <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.25rem;">Energy for GPT-3 training</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--success);">97%</div>
+              <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.25rem;">Reduction with DistilBERT</div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:700;color:var(--primary);">40%</div>
+              <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.25rem;">Savings via quantization</div>
+            </div>
+          </div>
+
+          <!-- Carbon footprint table -->
+          <section aria-labelledby="footprint-heading">
+            <h2 id="footprint-heading" class="section-title">Model Carbon Footprint Comparison</h2>
+            <div style="overflow-x:auto;">
+              <table class="impact-table" aria-label="Carbon footprint by model">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Parameters</th>
+                    <th>CO₂ (kg)</th>
+                    <th>Training Hrs</th>
+                    <th>Efficiency</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>DistilBERT</td><td>66M</td><td>~1.5</td><td>~90</td><td class="eff-low">● Low</td></tr>
+                  <tr><td>BERT-Base</td><td>110M</td><td>~1,438</td><td>~4 days</td><td class="eff-medium">● Medium</td></tr>
+                  <tr><td>BERT-Large</td><td>340M</td><td>~2,876</td><td>~16 days</td><td class="eff-medium">● Medium</td></tr>
+                  <tr><td>GPT-2</td><td>1.5B</td><td>~1,800</td><td>~8 days</td><td class="eff-medium">● Medium</td></tr>
+                  <tr><td>GPT-3</td><td>175B</td><td>~552,000</td><td>~34 days</td><td class="eff-high">● Very High</td></tr>
+                  <tr><td>LLaMA-2 70B</td><td>70B</td><td>~150,000</td><td>~21 days</td><td class="eff-high">● High</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Green practices -->
+          <section aria-labelledby="green-heading" style="margin-top:2rem;">
+            <h2 id="green-heading" class="section-title">Green NLP Practices</h2>
+            <div class="green-grid">
+              <div class="green-card">
+                <div class="green-icon">🗜️</div>
+                <h3>Model Compression</h3>
+                <p>Pruning, quantization, and knowledge distillation reduce model size by 10× with minimal accuracy loss.</p>
+              </div>
+              <div class="green-card">
+                <div class="green-icon">⚡</div>
+                <h3>Efficient Architectures</h3>
+                <p>DistilBERT, TinyBERT, MobileBERT — purpose-built for efficiency without sacrificing performance.</p>
+              </div>
+              <div class="green-card">
+                <div class="green-icon">🔄</div>
+                <h3>Transfer Learning</h3>
+                <p>Fine-tuning pre-trained models instead of training from scratch saves up to 99% of compute.</p>
+              </div>
+              <div class="green-card">
+                <div class="green-icon">🌿</div>
+                <h3>Carbon-Aware Scheduling</h3>
+                <p>Train during low-carbon grid hours using tools like Carbon Aware SDK and WattTime API.</p>
+              </div>
+              <div class="green-card">
+                <div class="green-icon">🏭</div>
+                <h3>Green Data Centers</h3>
+                <p>Choose cloud providers with renewable energy commitments (Google Cloud: 100% renewable).</p>
+              </div>
+              <div class="green-card">
+                <div class="green-icon">📦</div>
+                <h3>Batch Inference</h3>
+                <p>Batching requests and using efficient serving frameworks reduces per-query energy cost by 5×.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="callout callout-tip" style="margin-top:2rem;">
+            <span class="callout-icon">💡</span>
+            <div>
+              <h4>Measure Your Impact</h4>
+              <p>Use <a href="https://mlco2.github.io/codecarbon/" target="_blank" rel="noopener" style="color:var(--secondary);">CodeCarbon</a> to automatically track the carbon footprint of your NLP experiments: <code>pip install codecarbon</code></p>
+            </div>
+          </div>
+
+          <!-- Societal Impact Section -->
+          <section aria-labelledby="societal-heading" style="margin-top:3rem; padding-top:2rem; border-top:1px solid var(--border-solid);">
+            <h2 id="societal-heading" class="section-title">Societal Impact &amp; Inclusion</h2>
+            <p style="font-size:.9375rem; line-height:1.75; color:var(--text-sec); margin-bottom:1.5rem;">
+              Beyond environmental metrics, Natural Language Processing serves as a vital bridge for social equity, accessibility, and community integration across the globe.
+            </p>
+
+            <div style="display:grid; grid-template-columns:1fr; gap:1.5rem;">
+              <div style="background:var(--bg-card); border:1px solid var(--border-solid); border-radius:.875rem; padding:1.5rem;">
+                <h3 style="font-size:1.0625rem; font-weight:600; color:var(--text); margin:0 0 .5rem;">🌐 Language Accessibility &amp; Regional Technologies</h3>
+                <p style="font-size:.875rem; line-height:1.6; color:var(--text-sec); margin:0;">
+                  While English dominates the digital landscape, over 7,000 languages are spoken globally. Regional Language Technologies—including low-resource translation models and localized speech-to-text systems—democratize the web. These pipelines translate interface controls and database records into local dialects, ensuring speakers of regional languages are not left behind in the digital economy.
+                </p>
+              </div>
+
+              <div style="background:var(--bg-card); border:1px solid var(--border-solid); border-radius:.875rem; padding:1.5rem;">
+                <h3 style="font-size:1.0625rem; font-weight:600; color:var(--text); margin:0 0 .5rem;">📚 Educational Inclusion</h3>
+                <p style="font-size:.875rem; line-height:1.6; color:var(--text-sec); margin:0;">
+                  NLP-driven systems make world-class education accessible to everyone. Automated lecture transcription, multi-language video subtitling, and AI-driven adaptive tutors explain engineering or programming concepts in students' native tongues. This bridges geographical and economic barriers, offering personalized learning support to under-resourced schools.
+                </p>
+              </div>
+
+              <div style="background:var(--bg-card); border:1px solid var(--border-solid); border-radius:.875rem; padding:1.5rem;">
+                <h3 style="font-size:1.0625rem; font-weight:600; color:var(--text); margin:0 0 .5rem;">♿ Assistive Technologies</h3>
+                <p style="font-size:.875rem; line-height:1.6; color:var(--text-sec); margin:0;">
+                  For individuals with speech, auditory, or visual impairments, NLP acts as an essential communication interface. Text-to-Speech (TTS) engines read documents aloud for visually impaired users, while real-time transcriptions assist the hard of hearing. Predictive keyboards and semantic input decoders facilitate daily digital interactions for users with motor coordination limitations.
+                </p>
+              </div>
+
+              <div style="background:var(--bg-card); border:1px solid var(--border-solid); border-radius:.875rem; padding:1.5rem;">
+                <h3 style="font-size:1.0625rem; font-weight:600; color:var(--text); margin:0 0 .5rem;">🏛️ Citizen &amp; Public Services</h3>
+                <p style="font-size:.875rem; line-height:1.6; color:var(--text-sec); margin:0;">
+                  Local and national governments leverage NLP to streamline public service administration. Conversational chatbots answer public queries regarding health services, licensing, and civic updates in multiple regional dialects. Named Entity Recognition (NER) models categorize and route civic complaints automatically, reducing administrative lag times. By translating official paperwork into simplified local dialects, NLP ensures that citizen services are transparent, equitable, and accessible to all layers of society.
+                </p>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

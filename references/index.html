@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>References &amp; Bibliography — NLP Hub</title>
+  <meta name="description" content="Complete bibliography of NLP papers, books, documentation, and resources referenced in this knowledge repository.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'references',
+      depth: 1,
+      breadcrumbs: [{ label: 'References' }],
+    };
+  </script>
+  <style>
+    .ref-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-solid);
+      border-radius: .875rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: border-color .15s;
+    }
+    .ref-card:hover {
+      border-color: var(--primary);
+    }
+    .ref-title {
+      font-size: .9375rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 .25rem;
+    }
+    .ref-authors {
+      font-size: .8125rem;
+      color: var(--text-sec);
+      font-style: italic;
+      margin: 0 0 .5rem;
+    }
+    .ref-desc {
+      font-size: .8125rem;
+      color: var(--text-sec);
+      margin: 0 0 .75rem;
+      line-height: 1.5;
+    }
+    .ref-tags {
+      display: flex;
+      gap: .375rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <div class="page-hero">
+            <div class="page-badge">📖 References</div>
+            <h1 class="page-title">References &amp; Bibliography</h1>
+            <p class="page-subtitle">All academic papers, textbook chapters, official API documentations, and websites referenced throughout this NLP knowledge repository.</p>
+          </div>
+
+          <!-- Filter tabs -->
+          <div style="display:flex;align-items:center;gap:.375rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm">All Resources</button>
+            <button class="btn btn-ghost btn-sm">Research Papers</button>
+            <button class="btn btn-ghost btn-sm">Textbooks</button>
+            <button class="btn btn-ghost btn-sm">APIs &amp; Docs</button>
+          </div>
+
+          <!-- References list -->
+          <section aria-labelledby="academic-papers-heading">
+            <h2 id="academic-papers-heading" class="section-title">Academic Papers</h2>
+            
+            <div class="ref-card">
+              <h3 class="ref-title">Attention Is All You Need</h3>
+              <p class="ref-authors">Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., &amp; Polosukhin, I. (2017). <em>Advances in Neural Information Processing Systems</em>, 30, 5998–6008.</p>
+              <p class="ref-desc">Introduced the Transformer model, completely replacing recurrent layers with multi-head self-attention mechanisms.</p>
+              <div class="ref-tags">
+                <span class="badge badge-primary">62,000+ Citations</span>
+                <span class="tag">Self-Attention</span>
+                <span class="tag">Transformer</span>
+                <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="margin-left:auto;">PDF ↗</a>
+              </div>
+            </div>
+
+            <div class="ref-card">
+              <h3 class="ref-title">BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</h3>
+              <p class="ref-authors">Devlin, J., Chang, M. W., Lee, K., &amp; Toutanova, K. (2018). <em>arXiv preprint arXiv:1810.04805</em>.</p>
+              <p class="ref-desc">Introduced BERT, a bidirectional representation model pre-trained on MLM and NSP tasks, setting state-of-the-art across 11 tasks.</p>
+              <div class="ref-tags">
+                <span class="badge badge-primary">45,000+ Citations</span>
+                <span class="tag">BERT</span>
+                <span class="tag">Pre-training</span>
+                <a href="https://arxiv.org/abs/1810.04805" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="margin-left:auto;">PDF ↗</a>
+              </div>
+            </div>
+
+            <div class="ref-card">
+              <h3 class="ref-title">Efficient Estimation of Word Representations in Vector Space</h3>
+              <p class="ref-authors">Mikolov, T., Chen, K., Corrado, G., &amp; Dean, J. (2013). <em>arXiv preprint arXiv:1301.3781</em>.</p>
+              <p class="ref-desc">Introduced the Skip-gram and Continuous Bag-of-Words (CBOW) architectures for training high-quality vector representations (Word2Vec).</p>
+              <div class="ref-tags">
+                <span class="badge badge-primary">28,000+ Citations</span>
+                <span class="tag">Word2Vec</span>
+                <span class="tag">Embeddings</span>
+                <a href="https://arxiv.org/abs/1301.3781" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="margin-left:auto;">PDF ↗</a>
+              </div>
+            </div>
+          </section>
+
+          <section aria-labelledby="textbooks-heading" style="margin-top:2rem;">
+            <h2 id="textbooks-heading" class="section-title">Textbooks &amp; Academic Guides</h2>
+            
+            <div class="ref-card">
+              <h3 class="ref-title">Speech and Language Processing (3rd Edition Draft)</h3>
+              <p class="ref-authors">Jurafsky, D., &amp; Martin, J. H. (2024). Stanford University.</p>
+              <p class="ref-desc">The gold standard textbook for speech and natural language processing, offering complete mathematical breakdowns from basic tokenization to modern LLMs.</p>
+              <div class="ref-tags">
+                <span class="tag">Textbook</span>
+                <span class="tag">Reference</span>
+                <a href="https://web.stanford.edu/~jurafsky/slp3/" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="margin-left:auto;">Website ↗</a>
+              </div>
+            </div>
+          </section>
+
+          <section aria-labelledby="api-heading" style="margin-top:2rem;">
+            <h2 id="api-heading" class="section-title">APIs, Tools &amp; Official Documentation</h2>
+            
+            <div class="ref-card">
+              <h3 class="ref-title">Hugging Face Transformers Documentation</h3>
+              <p class="ref-authors">Hugging Face Inc. (2024). <em>Transformers API Reference</em>.</p>
+              <p class="ref-desc">Official documentation for implementing, loading, and fine-tuning state-of-the-art pre-trained Transformer models.</p>
+              <div class="ref-tags">
+                <span class="tag">Documentation</span>
+                <span class="tag">API</span>
+                <a href="https://huggingface.co/docs/transformers/index" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="margin-left:auto;">Docs ↗</a>
+              </div>
+            </div>
+          </section>
+
+          <div class="callout callout-note" style="margin-top:2rem;">
+            <span class="callout-icon">ℹ️</span>
+            <div>
+              <h4>Academic Year Bibliography</h4>
+              <p>All citation details are formatted in APA Style. Over 64 references across research projects, books, and web assets will be populated in the final content implementation phase.</p>
+            </div>
+          </div>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

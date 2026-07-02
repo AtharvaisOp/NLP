@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept Detail — NLP Hub</title>
+  <meta name="description" content="Explore NLP preprocessing steps, feature engineering methods, representations, and language models.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  
+  <style>
+    /* Article typography */
+    .article h2 {
+      font-size: 1.375rem; font-weight: 700; margin: 2.5rem 0 .75rem;
+      letter-spacing: -.02em; color: var(--text);
+      padding-top: 1rem; border-top: 1px solid var(--border-solid);
+    }
+    .article h3 {
+      font-size: 1.125rem; font-weight: 600; margin: 1.75rem 0 .5rem; color: var(--text);
+    }
+    .article p { font-size: .9375rem; line-height: 1.75; color: var(--text-sec); margin: 0 0 1rem; }
+    .article ul { margin: .5rem 0 1rem 1.25rem; }
+    .article li { font-size: .9375rem; line-height: 1.7; color: var(--text-sec); margin-bottom: .375rem; }
+    .article strong { color: var(--text); font-weight: 600; }
+
+    /* Concept meta sidebar */
+    .concept-meta {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .875rem; padding: 1.25rem; margin-bottom: 1.5rem;
+    }
+    .meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .5rem 0; border-bottom: 1px solid var(--border-solid);
+      font-size: .8125rem;
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { color: var(--text-muted); }
+    .meta-value { color: var(--text-sec); font-weight: 500; }
+
+    /* Prev/next nav */
+    .concept-nav {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 1px solid var(--border-solid);
+    }
+    .concept-nav-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .75rem; padding: 1rem 1.25rem;
+      text-decoration: none; color: inherit;
+      transition: border-color .15s;
+    }
+    .concept-nav-card:hover { border-color: var(--primary); }
+    .concept-nav-card.next { text-align: right; }
+    .concept-nav-dir { font-size: .6875rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .concept-nav-title { font-size: .9375rem; font-weight: 600; color: var(--text); margin-top: .25rem; }
+
+    .io-row { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1.25rem 0; }
+    @media (min-width: 768px) {
+      .io-row { grid-template-columns: 1fr 1fr; }
+    }
+    .io-box { background: var(--bg-card); border: 1px solid var(--border-solid); border-radius: .75rem; padding: 1.25rem; }
+    .io-label { font-family: 'JetBrains Mono', monospace; font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .5rem; }
+    .io-content { font-family: 'JetBrains Mono', monospace; font-size: .875rem; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+  </style>
+
+  <!-- Loader Script to configure window.NLP_CONFIG before components.js runs -->
+  <script src="../assets/js/concepts-data.js"></script>
+  <script>
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      let conceptId = urlParams.get('id') || 'sentence-segmentation';
+      
+      // Basic normalization
+      conceptId = conceptId.toLowerCase().trim();
+      
+      const db = window.NLP.Database || {};
+      const concept = db[conceptId] || db['sentence-segmentation'];
+      
+      // Configure breadcrumbs dynamically based on concept category
+      window.NLP_CONFIG = {
+        page: 'concept-' + conceptId,
+        depth: 1,
+        breadcrumbs: [
+          { label: 'Repository', href: '../repository/index.html' },
+          { label: concept.category, href: '../category/index.html' },
+          { label: concept.title }
+        ]
+      };
+      
+      // Expose active concept ID
+      window.ACTIVE_CONCEPT_ID = conceptId;
+    })();
+  </script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+
+        <main id="main-content" tabindex="-1">
+          <div class="doc-layout">
+
+            <!-- ── Main Article ─────────────────────────── -->
+            <article class="article" aria-labelledby="concept-title">
+
+              <!-- Article header -->
+              <header style="margin-bottom:2rem;">
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.875rem;">
+                  <span id="concept-category-badge" class="badge">Category</span>
+                  <span id="concept-difficulty-badge" class="badge">Difficulty</span>
+                  <span id="concept-read-time-badge" style="font-size:.8125rem;color:var(--text-muted);margin-left:.25rem;">⏱ Read Time</span>
+                </div>
+                <h1 id="concept-title" class="page-title" style="font-size:1.875rem;margin:0 0 .75rem;">
+                  Concept Title
+                </h1>
+                <p id="concept-definition-lead" style="font-size:1rem;color:var(--text-sec);line-height:1.7;margin:0;">
+                  Concept definition lead text.
+                </p>
+              </header>
+
+              <!-- Section: Purpose -->
+              <section id="sec-purpose" aria-labelledby="heading-purpose">
+                <div class="callout callout-note" style="margin-bottom: 2rem;">
+                  <span class="callout-icon">📋</span>
+                  <div>
+                    <h4 id="heading-purpose">Purpose</h4>
+                    <p id="concept-purpose" style="margin: 0;"></p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Section: Working Principle -->
+              <section id="sec-principle" aria-labelledby="heading-principle">
+                <h2 id="heading-principle">Working Principle</h2>
+                <p id="concept-principle"></p>
+              </section>
+
+              <!-- Section: Step-by-Step -->
+              <section id="sec-steps" aria-labelledby="heading-steps">
+                <h2 id="heading-steps">Step-by-Step Explanation</h2>
+                <ol id="concept-steps-list" class="list-decimal pl-6 space-y-2 text-nlp-text-sec">
+                  <!-- Injected steps -->
+                </ol>
+              </section>
+
+              <!-- Section: Example & Code -->
+              <section id="sec-example" aria-labelledby="heading-example">
+                <h2 id="heading-example">Practical Example</h2>
+                
+                <div class="io-row">
+                  <div class="io-box">
+                    <div class="io-label">Input Representation</div>
+                    <div class="io-content" id="concept-example-input"></div>
+                  </div>
+                  <div class="io-box">
+                    <div class="io-label">Output Representation</div>
+                    <div class="io-content" id="concept-example-output"></div>
+                  </div>
+                </div>
+
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin: 1.5rem 0 .5rem; color: var(--text);">Python Implementation</h3>
+                <div class="code-block">
+                  <div class="code-header">
+                    <span class="code-lang">Python</span>
+                    <button class="code-copy" aria-label="Copy code to clipboard">Copy</button>
+                  </div>
+                  <pre><code id="concept-code-block" style="color:var(--text-sec);"></code></pre>
+                </div>
+              </section>
+
+              <!-- Section: Advantages & Limitations -->
+              <section id="sec-pros-cons" aria-labelledby="heading-pros-cons">
+                <h2 id="heading-pros-cons">Advantages &amp; Limitations</h2>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 1rem;">
+                  <div style="background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: .75rem; padding: 1.25rem;">
+                    <h3 style="color: var(--success); font-weight: 600; display: flex; align-items: center; gap: .5rem; margin: 0 0 .75rem;">✓ Advantages</h3>
+                    <ul id="concept-advantages-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec" style="margin: 0;">
+                      <!-- Injected advantages -->
+                    </ul>
+                  </div>
+                  <div style="background: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: .75rem; padding: 1.25rem;">
+                    <h3 style="color: var(--danger); font-weight: 600; display: flex; align-items: center; gap: .5rem; margin: 0 0 .75rem;">✗ Limitations</h3>
+                    <ul id="concept-limitations-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec" style="margin: 0;">
+                      <!-- Injected limitations -->
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Section: Applications -->
+              <section id="sec-applications" aria-labelledby="heading-applications">
+                <h2 id="heading-applications">Applications</h2>
+                <ul id="concept-applications-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec">
+                  <!-- Injected applications -->
+                </ul>
+              </section>
+
+              <!-- Section: Key Takeaways -->
+              <section id="sec-takeaways" aria-labelledby="heading-takeaways">
+                <h2 id="heading-takeaways">Key Takeaways</h2>
+                <div class="callout callout-tip">
+                  <span class="callout-icon">💡</span>
+                  <div>
+                    <ul id="concept-takeaways-list" class="list-disc pl-6 space-y-2" style="margin: 0; color: var(--text-sec);">
+                      <!-- Injected takeaways -->
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Section: Related Concepts -->
+              <section id="sec-related" aria-labelledby="heading-related">
+                <h2 id="heading-related">Related Concepts</h2>
+                <div id="concept-related-links" style="display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem;">
+                  <!-- Injected related links -->
+                </div>
+              </section>
+
+              <!-- Section: References -->
+              <section id="sec-references" aria-labelledby="heading-references">
+                <h2 id="heading-references">References</h2>
+                <ul id="concept-references-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec text-sm">
+                  <!-- Injected references -->
+                </ul>
+              </section>
+
+              <!-- Prev/Next navigation -->
+              <nav class="concept-nav" aria-label="Previous and next concept">
+                <a id="concept-nav-prev" href="#" class="concept-nav-card">
+                  <div class="concept-nav-dir">← Previous</div>
+                  <div id="concept-nav-prev-title" class="concept-nav-title">Previous Concept</div>
+                </a>
+                <a id="concept-nav-next" href="#" class="concept-nav-card next">
+                  <div class="concept-nav-dir">Next →</div>
+                  <div id="concept-nav-next-title" class="concept-nav-title">Next Concept</div>
+                </a>
+              </nav>
+            </article>
+
+            <!-- ── Right TOC Sidebar ──────────────────── -->
+            <aside aria-label="Table of contents" class="toc-sidebar">
+              <p class="toc-title">On this page</p>
+              <a href="#sec-purpose"        class="toc-link active">Purpose</a>
+              <a href="#sec-principle"      class="toc-link">Working Principle</a>
+              <a href="#sec-steps"          class="toc-link">Step-by-Step</a>
+              <a href="#sec-example"        class="toc-link">Example &amp; Code</a>
+              <a href="#sec-pros-cons"      class="toc-link">Pros &amp; Cons</a>
+              <a href="#sec-applications"   class="toc-link">Applications</a>
+              <a href="#sec-takeaways"      class="toc-link">Key Takeaways</a>
+              <a href="#sec-related"        class="toc-link">Related Concepts</a>
+              <a href="#sec-references"     class="toc-link">References</a>
+
+              <!-- Concept meta -->
+              <div class="concept-meta" style="margin-top: 1.5rem;">
+                <div class="meta-row">
+                  <span class="meta-label">Category</span>
+                  <span id="meta-val-category" class="meta-value">Category Name</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Difficulty</span>
+                  <span id="meta-val-difficulty" class="meta-value">Difficulty Level</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Read time</span>
+                  <span id="meta-val-readtime" class="meta-value">Time</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Year Introduced</span>
+                  <span id="meta-val-year" class="meta-value">Year</span>
+                </div>
+              </div>
+            </aside>
+
+          </div>
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <!-- Standard footer & nav scripts -->
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+
+  <!-- Dynamic Content Injection Script -->
+  <script>
+    (function () {
+      'use strict';
+
+      const db = window.NLP.Database || {};
+      const conceptId = window.ACTIVE_CONCEPT_ID || 'sentence-segmentation';
+      const concept = db[conceptId] || db['sentence-segmentation'];
+
+      // Helper to set text content
+      const setTxt = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = txt;
+      };
+
+      // Helper to set HTML content safely
+      const setHTML = (id, html) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+      };
+
+      // 1. Populate Header info
+      setTxt('concept-title', concept.title);
+      setTxt('concept-definition-lead', concept.definition);
+      setTxt('concept-purpose', concept.purpose);
+      setTxt('concept-principle', concept.workingPrinciple);
+
+      // SEO: Document Title & Meta Description
+      document.title = concept.title + " — NLP Hub";
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', concept.definition);
+
+      // 2. Set Badges
+      const catBadge = document.getElementById('concept-category-badge');
+      if (catBadge) {
+        catBadge.textContent = concept.category;
+        // Map category color style classes
+        if (concept.category === 'Text Preprocessing') catBadge.className = 'badge badge-success';
+        else if (concept.category === 'Feature Engineering') catBadge.className = 'badge badge-cyan';
+        else if (concept.category === 'Language Representation') catBadge.className = 'badge badge-primary';
+        else catBadge.className = 'badge badge-violet';
+      }
+
+      const diffBadge = document.getElementById('concept-difficulty-badge');
+      if (diffBadge) {
+        diffBadge.textContent = concept.difficulty;
+        if (concept.difficulty === 'Beginner') diffBadge.className = 'badge badge-beginner';
+        else if (concept.difficulty === 'Intermediate') diffBadge.className = 'badge badge-intermediate';
+        else diffBadge.className = 'badge badge-advanced';
+      }
+
+      setTxt('concept-read-time-badge', '⏱ ' + concept.readTime + ' read');
+
+      // 3. Step-by-step
+      const stepsList = document.getElementById('concept-steps-list');
+      if (stepsList && concept.steps) {
+        stepsList.innerHTML = concept.steps.map(step => `<li>${step}</li>`).join('');
+      }
+
+      // 4. Example Section
+      setTxt('concept-example-input', concept.example.input);
+      setTxt('concept-example-output', concept.example.output);
+      setTxt('concept-code-block', concept.example.code);
+
+      // 5. Advantages & Limitations
+      const advList = document.getElementById('concept-advantages-list');
+      if (advList && concept.advantages) {
+        advList.innerHTML = concept.advantages.map(adv => `<li>${adv}</li>`).join('');
+      }
+
+      const limList = document.getElementById('concept-limitations-list');
+      if (limList && concept.limitations) {
+        limList.innerHTML = concept.limitations.map(lim => `<li>${lim}</li>`).join('');
+      }
+
+      // 6. Applications
+      const appList = document.getElementById('concept-applications-list');
+      if (appList && concept.applications) {
+        appList.innerHTML = concept.applications.map(app => `<li>${app}</li>`).join('');
+      }
+
+      // 7. Key Takeaways
+      const takList = document.getElementById('concept-takeaways-list');
+      if (takList && concept.keyTakeaways) {
+        takList.innerHTML = concept.keyTakeaways.map(tak => `<li>${tak}</li>`).join('');
+      }
+
+      // 8. Related Concepts
+      const relatedContainer = document.getElementById('concept-related-links');
+      if (relatedContainer && concept.relatedConcepts) {
+        relatedContainer.innerHTML = concept.relatedConcepts.map(c => 
+          `<a href="?id=${c.id}" class="tag">${c.label}</a>`
+        ).join('');
+      }
+
+      // 9. References
+      const refList = document.getElementById('concept-references-list');
+      if (refList && concept.references) {
+        refList.innerHTML = concept.references.map(ref => `<li>${ref}</li>`).join('');
+      }
+
+      // 10. Meta Panel
+      setTxt('meta-val-category', concept.category);
+      const metaDiff = document.getElementById('meta-val-difficulty');
+      if (metaDiff) {
+        metaDiff.textContent = concept.difficulty;
+        if (concept.difficulty === 'Beginner') metaDiff.className = 'meta-value text-nlp-success';
+        else if (concept.difficulty === 'Intermediate') metaDiff.className = 'meta-value text-nlp-warning';
+        else metaDiff.className = 'meta-value text-nlp-danger';
+      }
+      setTxt('meta-val-readtime', concept.readTime);
+      setTxt('meta-val-year', concept.year);
+
+      // 11. Pagination Prev/Next links
+      const keys = Object.keys(db);
+      const idx = keys.indexOf(conceptId);
+
+      const prevCard = document.getElementById('concept-nav-prev');
+      const prevTitle = document.getElementById('concept-nav-prev-title');
+      if (idx > 0) {
+        const prevId = keys[idx - 1];
+        prevCard.href = '?id=' + prevId;
+        prevTitle.textContent = db[prevId].title;
+        prevCard.style.visibility = 'visible';
+      } else {
+        prevCard.style.visibility = 'hidden';
+      }
+
+      const nextCard = document.getElementById('concept-nav-next');
+      const nextTitle = document.getElementById('concept-nav-next-title');
+      if (idx < keys.length - 1 && idx !== -1) {
+        const nextId = keys[idx + 1];
+        nextCard.href = '?id=' + nextId;
+        nextTitle.textContent = db[nextId].title;
+        nextCard.style.visibility = 'visible';
+      } else {
+        nextCard.href = '../compare/index.html';
+        nextTitle.textContent = 'Model Comparisons';
+        nextCard.style.visibility = 'visible';
+      }
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contribution Matrix — NLP Hub</title>
+  <meta name="description" content="A detailed breakdown of team member contributions, responsibilities, and tasks in building the NLP Hub repository.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'team',
+      depth: 1,
+      breadcrumbs: [{ label: 'Contribution Matrix' }],
+    };
+  </script>
+  <style>
+    .matrix-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: .875rem;
+      overflow: hidden;
+      border: 1px solid var(--border-solid);
+      margin: 1.5rem 0;
+    }
+    .matrix-table th {
+      background: var(--bg-elevated);
+      padding: .875rem 1rem;
+      font-size: .8125rem;
+      font-weight: 600;
+      text-align: left;
+      border-bottom: 1px solid var(--border-solid);
+    }
+    .matrix-table td {
+      padding: .75rem 1rem;
+      font-size: .875rem;
+      border-bottom: 1px solid var(--border-solid);
+    }
+    .matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+    .matrix-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, .02);
+    }
+    .matrix-role {
+      font-size: .75rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-sec);
+    }
+    .matrix-check {
+      color: var(--success);
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <div class="page-hero">
+            <div class="page-badge">👥 Team</div>
+            <h1 class="page-title">Contribution Matrix</h1>
+            <p class="page-subtitle">A transparent map of responsibilities, content ownership, code implementation, and research roles among our team members.</p>
+          </div>
+
+          <!-- Team profile grids -->
+          <section aria-labelledby="team-profiles">
+            <h2 id="team-profiles" class="sr-only">Team Profiles</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:2rem;">
+              <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;text-align:center;">
+                <div style="width:3.5rem;height:3.5rem;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:700;color:#fff;margin:0 auto .75rem;">At</div>
+                <h3 style="font-size:.9375rem;font-weight:700;color:var(--text);margin:0 0 .25rem;">Atharva</h3>
+                <span class="badge badge-primary" style="font-size:.6875rem;">Lead Architect</span>
+                <p style="font-size:.8125rem;color:var(--text-sec);margin:.625rem 0 0;line-height:1.5;">UI/UX design system, global component layout architecture, routing, and Transformer sections.</p>
+              </div>
+              <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.875rem;padding:1.25rem;text-align:center;">
+                <div style="width:3.5rem;height:3.5rem;border-radius:50%;background:linear-gradient(135deg,var(--secondary),var(--success));display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:700;color:#fff;margin:0 auto .75rem;">Aa</div>
+                <h3 style="font-size:.9375rem;font-weight:700;color:var(--text);margin:0 0 .25rem;">Aarya</h3>
+                <span class="badge badge-cyan" style="font-size:.6875rem;">Content Specialist</span>
+                <p style="font-size:.8125rem;color:var(--text-sec);margin:.625rem 0 0;line-height:1.5;">Preprocessing concepts, word embeddings datasets, spelling algorithms, and code blocks.</p>
+              </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Heatmap Contribution Matrix Table -->
+          <section aria-labelledby="heatmap-heading">
+            <h2 id="heatmap-heading" class="section-title">Task Contribution Matrix</h2>
+            <div style="overflow-x:auto;">
+              <table class="matrix-table" aria-label="Team contribution matrix">
+                <thead>
+                  <tr>
+                    <th>Module / Component</th>
+                    <th>Atharva</th>
+                    <th>Aarya</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="matrix-role">Layout &amp; Architecture</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td>-</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">Interactive UI &amp; Search</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td>-</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">Preprocessing Sections</td>
+                    <td>-</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">Word Representations</td>
+                    <td>-</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">Language Model Concepts</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td>-</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">Workflow Visualizations</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td>-</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">Sustainability Analysis</td>
+                    <td>-</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td class="matrix-role">References &amp; Timelines</td>
+                    <td>-</td>
+                    <td class="matrix-check">✓ Lead</td>
+                    <td><span class="badge badge-success">Completed</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="callout callout-note" style="margin-top:2rem;">
+            <span class="callout-icon">ℹ️</span>
+            <div>
+              <h4>Academic Attribution</h4>
+              <p>This contribution matrix serves as verification of equal ownership and responsibility split for grading by academic evaluators.</p>
+            </div>
+          </div>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Comparisons — NLP Hub</title>
+  <meta name="description" content="Side-by-side comparisons of NLP models, preprocessing tools, embeddings, and architectures.">
+  <meta name="theme-color" content="#0A0F1E">
+
+  <!-- Favicons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <style>
+    /* Styling for tables and detail blocks */
+    .compare-table {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      border-radius: .875rem; overflow: hidden;
+      border: 1px solid var(--border-solid); margin: 1.5rem 0;
+    }
+    .compare-table th {
+      background: var(--bg-elevated); padding: .875rem 1rem;
+      font-size: .8125rem; font-weight: 600; text-align: left;
+      border-bottom: 1px solid var(--border-solid);
+    }
+    .compare-table td { padding: .875rem 1rem; font-size: .875rem; border-bottom: 1px solid var(--border-solid); }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:nth-child(even) td { background: rgba(255, 255, 255, .02); }
+    .compare-table tr:hover td { background: rgba(99, 102, 241, .04); }
+    .compare-table .trait-col { font-weight: 600; color: var(--text); font-size: .8125rem; width: 160px; }
+
+    .compare-stub {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .875rem; padding: 1.5rem; margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; text-decoration: none; color: inherit;
+      transition: border-color .15s, transform .15s;
+    }
+    .compare-stub:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .compare-stub-title { font-size: 1.0625rem; font-weight: 600; color: var(--text); }
+    .compare-stub-subjects { display: flex; gap: .375rem; margin-top: .5rem; flex-wrap: wrap; }
+
+    /* Detail layouts */
+    .article h2 {
+      font-size: 1.375rem; font-weight: 700; margin: 2.5rem 0 .75rem;
+      letter-spacing: -.02em; color: var(--text);
+      padding-top: 1rem; border-top: 1px solid var(--border-solid);
+    }
+    .article h3 { font-size: 1.125rem; font-weight: 600; margin: 1.75rem 0 .5rem; color: var(--text); }
+    .article p { font-size: .9375rem; line-height: 1.75; color: var(--text-sec); margin: 0 0 1rem; }
+    .article ul { margin: .5rem 0 1rem 1.25rem; }
+    .article li { font-size: .9375rem; line-height: 1.7; color: var(--text-sec); margin-bottom: .375rem; }
+
+    .pros-cons-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    @media (min-width: 768px) {
+      .pros-cons-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .pro-box { background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: .75rem; padding: 1.25rem; }
+    .con-box { background: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: .75rem; padding: 1.25rem; }
+
+    .concept-nav {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+      margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-solid);
+    }
+    .concept-nav-card {
+      background: var(--bg-card); border: 1px solid var(--border-solid);
+      border-radius: .75rem; padding: 1rem 1.25rem;
+      text-decoration: none; color: inherit; transition: border-color .15s;
+    }
+    .concept-nav-card:hover { border-color: var(--primary); }
+    .concept-nav-card.next { text-align: right; }
+    .concept-nav-dir { font-size: .6875rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .concept-nav-title { font-size: .9375rem; font-weight: 600; color: var(--text); margin-top: .25rem; }
+  </style>
+
+  <!-- Loader Script to configure window.NLP_CONFIG before components.js runs -->
+  <script src="../assets/js/compare-data.js"></script>
+  <script>
+    (function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      let compareId = urlParams.get('id');
+      
+      const db = window.NLP.CompareDatabase || {};
+      
+      let config = { page: 'compare', depth: 1, breadcrumbs: [{ label: 'Compare' }] };
+      
+      if (compareId && db[compareId]) {
+        const item = db[compareId];
+        config = {
+          page: 'compare-' + compareId,
+          depth: 1,
+          breadcrumbs: [
+            { label: 'Compare', href: '../compare/index.html' },
+            { label: item.title }
+          ]
+        };
+        window.ACTIVE_COMPARE_ID = compareId;
+      }
+      
+      window.NLP_CONFIG = config;
+    })();
+  </script>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner">
+        <div id="breadcrumb-container"></div>
+        <main id="main-content" tabindex="-1">
+
+          <!-- ══════════════════════════════════════════════════
+               DASHBOARD VIEW (when no id parameter is specified)
+          ══════════════════════════════════════════════════ -->
+          <div id="compare-dashboard">
+            <div class="page-hero">
+              <div class="page-badge">⚖️ Comparisons</div>
+              <h1 class="page-title">Model Comparison Center</h1>
+              <p class="page-subtitle">Detailed side-by-side evaluations to help you choose the right NLP methods, models, and embeddings for your task.</p>
+            </div>
+
+            <section aria-labelledby="all-comparisons-heading" style="margin-top:2rem;">
+              <h2 id="all-comparisons-heading" class="sr-only">Available Comparisons</h2>
+              <div id="compare-stubs-list">
+                <!-- Populated dynamically -->
+              </div>
+            </section>
+          </div>
+
+          <!-- ══════════════════════════════════════════════════
+               DETAIL VIEW (when id parameter matches a comparison)
+          ══════════════════════════════════════════════════ -->
+          <div id="compare-details" style="display:none;">
+            <div class="doc-layout">
+              <article class="article" aria-labelledby="compare-title">
+                
+                <header style="margin-bottom:2rem;">
+                  <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.875rem;">
+                    <span id="compare-category-badge" class="badge">Category</span>
+                    <span id="compare-difficulty-badge" class="badge">Difficulty</span>
+                    <span id="compare-read-time-badge" style="font-size:.8125rem;color:var(--text-muted);margin-left:.25rem;">⏱ Read Time</span>
+                  </div>
+                  <h1 id="compare-title" class="page-title" style="font-size:1.875rem;margin:0 0 .75rem;">
+                    Comparison Title
+                  </h1>
+                  <p id="compare-overview" style="font-size:1rem;color:var(--text-sec);line-height:1.7;margin:0;">
+                    Overview description paragraph.
+                  </p>
+                </header>
+
+                <!-- Section: Mechanism -->
+                <section id="sec-mechanism" aria-labelledby="heading-mechanism">
+                  <h2 id="heading-mechanism">Working Mechanism</h2>
+                  <p id="compare-mechanism-text"></p>
+                </section>
+
+                <!-- Section: Complexity -->
+                <section id="sec-complexity" aria-labelledby="heading-complexity">
+                  <h2 id="heading-complexity">Computational Complexity</h2>
+                  <p id="compare-complexity-text"></p>
+                </section>
+
+                <!-- Section: Advantages side-by-side -->
+                <section id="sec-advantages" aria-labelledby="heading-advantages">
+                  <h2 id="heading-advantages">Advantages</h2>
+                  <div class="pros-cons-grid">
+                    <div class="pro-box">
+                      <h3 style="color:var(--success);font-weight:600;margin:0 0 .75rem;" id="sub1-title-adv">Subject 1</h3>
+                      <ul id="sub1-advantages-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec"></ul>
+                    </div>
+                    <div class="pro-box">
+                      <h3 style="color:var(--success);font-weight:600;margin:0 0 .75rem;" id="sub2-title-adv">Subject 2</h3>
+                      <ul id="sub2-advantages-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec"></ul>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Section: Disadvantages side-by-side -->
+                <section id="sec-disadvantages" aria-labelledby="heading-disadvantages">
+                  <h2 id="heading-disadvantages">Disadvantages</h2>
+                  <div class="pros-cons-grid">
+                    <div class="con-box">
+                      <h3 style="color:var(--danger);font-weight:600;margin:0 0 .75rem;" id="sub1-title-dis">Subject 1</h3>
+                      <ul id="sub1-disadvantages-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec"></ul>
+                    </div>
+                    <div class="con-box">
+                      <h3 style="color:var(--danger);font-weight:600;margin:0 0 .75rem;" id="sub2-title-dis">Subject 2</h3>
+                      <ul id="sub2-disadvantages-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec"></ul>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Section: Applications -->
+                <section id="sec-applications" aria-labelledby="heading-applications">
+                  <h2 id="heading-applications">Suitable Applications</h2>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.75rem;padding:1.25rem;">
+                      <h3 style="font-weight:600;margin:0 0 .75rem;color:var(--text);" id="sub1-title-app">Subject 1</h3>
+                      <ul id="sub1-applications-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec"></ul>
+                    </div>
+                    <div style="background:var(--bg-card);border:1px solid var(--border-solid);border-radius:.75rem;padding:1.25rem;">
+                      <h3 style="font-weight:600;margin:0 0 .75rem;color:var(--text);" id="sub2-title-app">Subject 2</h3>
+                      <ul id="sub2-applications-list" class="list-disc pl-6 space-y-2 text-nlp-text-sec"></ul>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Section: Visual Table -->
+                <section id="sec-table" aria-labelledby="heading-table">
+                  <h2 id="heading-table">Visual Comparison Matrix</h2>
+                  <div style="overflow-x:auto;">
+                    <table class="compare-table" aria-label="Trait comparisons table">
+                      <thead>
+                        <tr>
+                          <th>Feature / Trait</th>
+                          <th id="th-sub1">Subject 1</th>
+                          <th id="th-sub2">Subject 2</th>
+                        </tr>
+                      </thead>
+                      <tbody id="compare-table-body">
+                        <!-- Injected rows -->
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <!-- Section: Summary -->
+                <section id="sec-summary" aria-labelledby="heading-summary">
+                  <h2 id="heading-summary">Summary</h2>
+                  <div class="callout callout-note">
+                    <span class="callout-icon">ℹ️</span>
+                    <div>
+                      <p id="compare-summary-text" style="margin:0;"></p>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Section: Recommendation -->
+                <section id="sec-recommendation" aria-labelledby="heading-recommendation">
+                  <h2 id="heading-recommendation">Recommendation</h2>
+                  <div class="callout callout-tip">
+                    <span class="callout-icon">💡</span>
+                    <div>
+                      <h4 style="margin-top:0;">Best Choice Guidelines</h4>
+                      <p id="compare-recommendation-text" style="margin:0;"></p>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Navigation between comparisons -->
+                <nav class="concept-nav" aria-label="Previous and next comparisons">
+                  <a id="compare-nav-prev" href="#" class="concept-nav-card">
+                    <div class="concept-nav-dir">← Previous</div>
+                    <div id="compare-nav-prev-title" class="concept-nav-title">Previous Comparison</div>
+                  </a>
+                  <a id="compare-nav-next" href="#" class="concept-nav-card next">
+                    <div class="concept-nav-dir">Next →</div>
+                    <div id="compare-nav-next-title" class="concept-nav-title">Next Comparison</div>
+                  </a>
+                </nav>
+
+              </article>
+
+              <!-- Table of Contents sidebar -->
+              <aside aria-label="Table of contents" class="toc-sidebar">
+                <p class="toc-title">On this page</p>
+                <a href="#sec-mechanism"     class="toc-link active">Mechanism</a>
+                <a href="#sec-complexity"    class="toc-link">Complexity</a>
+                <a href="#sec-advantages"    class="toc-link">Advantages</a>
+                <a href="#sec-disadvantages" class="toc-link">Disadvantages</a>
+                <a href="#sec-applications"  class="toc-link">Applications</a>
+                <a href="#sec-table"         class="toc-link">Matrix Table</a>
+                <a href="#sec-summary"       class="toc-link">Summary</a>
+                <a href="#sec-recommendation" class="toc-link">Recommendation</a>
+              </aside>
+            </div>
+          </div>
+
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/search.js"></script>
+
+  <!-- Comparison Injection Logic -->
+  <script>
+    (function () {
+      'use strict';
+
+      const db = window.NLP.CompareDatabase || {};
+      const compareId = window.ACTIVE_COMPARE_ID;
+
+      const dashboard = document.getElementById('compare-dashboard');
+      const details   = document.getElementById('compare-details');
+
+      if (!compareId || !db[compareId]) {
+        // Render Dashboard list
+        dashboard.style.display = 'block';
+        details.style.display   = 'none';
+
+        const listContainer = document.getElementById('compare-stubs-list');
+        listContainer.innerHTML = Object.entries(db).map(([id, item]) => {
+          let badgeClass = 'badge-success';
+          if (item.category === 'Feature Engineering') badgeClass = 'badge-cyan';
+          else if (item.category === 'Language Representation') badgeClass = 'badge-primary';
+          else if (item.category === 'Language Models') badgeClass = 'badge-violet';
+
+          let diffBadgeClass = 'badge-beginner';
+          if (item.difficulty === 'Intermediate') diffBadgeClass = 'badge-intermediate';
+          else if (item.difficulty === 'Advanced') diffBadgeClass = 'badge-advanced';
+
+          return `
+          <a href="?id=${id}" class="compare-stub">
+            <div>
+              <div class="compare-stub-title">${item.title}</div>
+              <div class="compare-stub-subjects">
+                <span class="badge ${badgeClass}" style="font-size:.6875rem;">${item.category}</span>
+                <span class="badge ${diffBadgeClass}">${item.difficulty}</span>
+                <span class="tag">${item.subjects[0]}</span>
+                <span class="tag">${item.subjects[1]}</span>
+              </div>
+            </div>
+            <span class="btn btn-ghost btn-sm">Compare →</span>
+          </a>`;
+        }).join('');
+
+      } else {
+        // Render Details Page
+        dashboard.style.display = 'none';
+        details.style.display   = 'block';
+
+        const item = db[compareId];
+
+        // Set text values
+        document.getElementById('compare-title').textContent = item.title;
+        document.getElementById('compare-overview').textContent = item.overview;
+        document.getElementById('compare-mechanism-text').textContent = item.mechanism;
+        document.getElementById('compare-complexity-text').textContent = item.complexity;
+
+        // Set badges
+        const catBadge = document.getElementById('compare-category-badge');
+        if (catBadge) {
+          catBadge.textContent = item.category;
+          if (item.category === 'Text Preprocessing') catBadge.className = 'badge badge-success';
+          else if (item.category === 'Feature Engineering') catBadge.className = 'badge badge-cyan';
+          else if (item.category === 'Language Representation') catBadge.className = 'badge badge-primary';
+          else catBadge.className = 'badge badge-violet';
+        }
+
+        const diffBadge = document.getElementById('compare-difficulty-badge');
+        if (diffBadge) {
+          diffBadge.textContent = item.difficulty;
+          if (item.difficulty === 'Beginner') diffBadge.className = 'badge badge-beginner';
+          else if (item.difficulty === 'Intermediate') diffBadge.className = 'badge badge-intermediate';
+          else diffBadge.className = 'badge badge-advanced';
+        }
+        
+        document.getElementById('compare-read-time-badge').textContent = '⏱ ' + item.readTime + ' read';
+
+        // Subject headers
+        const sub1 = item.subjects[0];
+        const sub2 = item.subjects[1];
+
+        document.getElementById('sub1-title-adv').textContent = sub1;
+        document.getElementById('sub2-title-adv').textContent = sub2;
+        document.getElementById('sub1-title-dis').textContent = sub1;
+        document.getElementById('sub2-title-dis').textContent = sub2;
+        document.getElementById('sub1-title-app').textContent = sub1;
+        document.getElementById('sub2-title-app').textContent = sub2;
+        document.getElementById('th-sub1').textContent = sub1;
+        document.getElementById('th-sub2').textContent = sub2;
+
+        // Render arrays
+        const fillList = (id, arr) => {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = arr.map(x => `<li>${x}</li>`).join('');
+        };
+
+        fillList('sub1-advantages-list', item.advantages.sub1);
+        fillList('sub2-advantages-list', item.advantages.sub2);
+        fillList('sub1-disadvantages-list', item.disadvantages.sub1);
+        fillList('sub2-disadvantages-list', item.disadvantages.sub2);
+        fillList('sub1-applications-list', item.applications.sub1);
+        fillList('sub2-applications-list', item.applications.sub2);
+
+        // Visual Table body
+        const tableBody = document.getElementById('compare-table-body');
+        tableBody.innerHTML = item.table.map(row => `
+        <tr>
+          <td class="trait-col">${row.trait}</td>
+          <td>${row.sub1}</td>
+          <td>${row.sub2}</td>
+        </tr>`).join('');
+
+        // Summary & Recommendation
+        document.getElementById('compare-summary-text').textContent = item.summary;
+        document.getElementById('compare-recommendation-text').innerHTML = item.recommendation;
+
+        // Dynamic Nav pagination
+        const keys = Object.keys(db);
+        const idx = keys.indexOf(compareId);
+
+        const prevCard = document.getElementById('compare-nav-prev');
+        const prevTitle = document.getElementById('compare-nav-prev-title');
+        if (idx > 0) {
+          const prevId = keys[idx - 1];
+          prevCard.href = '?id=' + prevId;
+          prevTitle.textContent = db[prevId].title;
+          prevCard.style.visibility = 'visible';
+        } else {
+          // Go to compare home (dashboard)
+          prevCard.href = '../compare/index.html';
+          prevTitle.textContent = 'Comparison Center';
+          prevCard.style.visibility = 'visible';
+        }
+
+        const nextCard = document.getElementById('compare-nav-next');
+        const nextTitle = document.getElementById('compare-nav-next-title');
+        if (idx < keys.length - 1 && idx !== -1) {
+          const nextId = keys[idx + 1];
+          nextCard.href = '?id=' + nextId;
+          nextTitle.textContent = db[nextId].title;
+          nextCard.style.visibility = 'visible';
+        } else {
+          // Go to workflow page
+          nextCard.href = '../workflows/index.html';
+          nextTitle.textContent = 'NLP Workflows';
+          nextCard.style.visibility = 'visible';
+        }
+      }
+
+    })();
+  </script>
+</body>
+</html>
