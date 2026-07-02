@@ -174,7 +174,7 @@
         </button>
 
         <!-- GitHub -->
-        <a href="https://github.com/AtharvaisOp" target="_blank" rel="noopener noreferrer" class="nav-github-btn" aria-label="View on GitHub (opens in new tab)">
+        <a href="https://github.com/AtharvaisOp/NLP" target="_blank" rel="noopener noreferrer" class="nav-github-btn" aria-label="View on GitHub (opens in new tab)">
           ${ICONS.github}
           <span>GitHub</span>
         </a>
@@ -235,7 +235,7 @@
           <p style="font-size:.875rem;color:var(--text-sec);line-height:1.6;margin:0 0 1rem;max-width:200px;">
             An interactive NLP knowledge repository for students and beginners.
           </p>
-          <a href="https://github.com/AtharvaisOp" target="_blank" rel="noopener noreferrer"
+          <a href="https://github.com/AtharvaisOp/NLP" target="_blank" rel="noopener noreferrer"
              style="display:inline-flex;align-items:center;gap:.375rem;font-size:.75rem;padding:.25rem .75rem;border:1px solid var(--border-hover);border-radius:9999px;color:var(--text-sec);text-decoration:none;transition:all .15s;"
              aria-label="GitHub (opens in new tab)">
             ${ICONS.github} GitHub
