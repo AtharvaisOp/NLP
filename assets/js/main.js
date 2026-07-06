@@ -317,14 +317,17 @@
   /* ── Apply theme immediately (before DOMContentLoaded) ── */
   Theme.init();
 
-  /* ── Wait for DOMContentLoaded (components injected first) */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  /* ── Wait for components.js to finish injecting HTML ───────
+     components.js sets window.NLP_COMPONENTS_READY after inject().
+     If scripts load at bottom of <body>, components.js runs first
+     synchronously, so we can call init() immediately.
+     If scripts are in <head> with defer, we wait for nlp:ready.  */
+  if (global.NLP_COMPONENTS_READY) {
+    init();
   } else {
-    // DOM already ready — run after components.js DOMContentLoaded
-    // handlers complete (same event loop tick is guaranteed ordered)
-    setTimeout(init, 0);
+    document.addEventListener('nlp:ready', init);
   }
+
 
   /* ── Expose globals for page-level scripts ─────────────── */
   global.NLP = global.NLP || {};

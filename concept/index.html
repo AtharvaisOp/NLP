@@ -315,6 +315,14 @@
         if (el) el.textContent = txt;
       };
 
+      // Helper to safely escape HTML special characters before inserting into innerHTML
+      const escapeHTML = (str) => String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
       // Helper to set HTML content safely
       const setHTML = (id, html) => {
         const el = document.getElementById(id);
@@ -353,10 +361,10 @@
 
       setTxt('concept-read-time-badge', '⏱ ' + concept.readTime + ' read');
 
-      // 3. Step-by-step
+      // 3. Step-by-step — escape content before injecting into innerHTML
       const stepsList = document.getElementById('concept-steps-list');
       if (stepsList && concept.steps) {
-        stepsList.innerHTML = concept.steps.map(step => `<li>${step}</li>`).join('');
+        stepsList.innerHTML = concept.steps.map(step => `<li>${escapeHTML(step)}</li>`).join('');
       }
 
       // 4. Example Section
@@ -364,41 +372,41 @@
       setTxt('concept-example-output', concept.example.output);
       setTxt('concept-code-block', concept.example.code);
 
-      // 5. Advantages & Limitations
+      // 5. Advantages & Limitations — escape HTML in list items
       const advList = document.getElementById('concept-advantages-list');
       if (advList && concept.advantages) {
-        advList.innerHTML = concept.advantages.map(adv => `<li>${adv}</li>`).join('');
+        advList.innerHTML = concept.advantages.map(adv => `<li>${escapeHTML(adv)}</li>`).join('');
       }
 
       const limList = document.getElementById('concept-limitations-list');
       if (limList && concept.limitations) {
-        limList.innerHTML = concept.limitations.map(lim => `<li>${lim}</li>`).join('');
+        limList.innerHTML = concept.limitations.map(lim => `<li>${escapeHTML(lim)}</li>`).join('');
       }
 
       // 6. Applications
       const appList = document.getElementById('concept-applications-list');
       if (appList && concept.applications) {
-        appList.innerHTML = concept.applications.map(app => `<li>${app}</li>`).join('');
+        appList.innerHTML = concept.applications.map(app => `<li>${escapeHTML(app)}</li>`).join('');
       }
 
       // 7. Key Takeaways
       const takList = document.getElementById('concept-takeaways-list');
       if (takList && concept.keyTakeaways) {
-        takList.innerHTML = concept.keyTakeaways.map(tak => `<li>${tak}</li>`).join('');
+        takList.innerHTML = concept.keyTakeaways.map(tak => `<li>${escapeHTML(tak)}</li>`).join('');
       }
 
       // 8. Related Concepts
       const relatedContainer = document.getElementById('concept-related-links');
       if (relatedContainer && concept.relatedConcepts) {
-        relatedContainer.innerHTML = concept.relatedConcepts.map(c => 
-          `<a href="?id=${c.id}" class="tag">${c.label}</a>`
+        relatedContainer.innerHTML = concept.relatedConcepts.map(c =>
+          `<a href="?id=${escapeHTML(c.id)}" class="tag">${escapeHTML(c.label)}</a>`
         ).join('');
       }
 
       // 9. References
       const refList = document.getElementById('concept-references-list');
       if (refList && concept.references) {
-        refList.innerHTML = concept.references.map(ref => `<li>${ref}</li>`).join('');
+        refList.innerHTML = concept.references.map(ref => `<li>${escapeHTML(ref)}</li>`).join('');
       }
 
       // 10. Meta Panel

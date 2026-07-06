@@ -380,10 +380,18 @@
   }
 
   /* ── Auto-init ──────────────────────────────────────────── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', inject);
-  } else {
+  function runInject() {
     inject();
+    // Mark components as ready so main.js can check synchronously
+    global.NLP_COMPONENTS_READY = true;
+    // Also fire event for any listeners that registered before us
+    document.dispatchEvent(new CustomEvent('nlp:ready'));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runInject);
+  } else {
+    runInject();
   }
 
   /* ── Expose ─────────────────────────────────────────────── */
