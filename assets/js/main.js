@@ -1,5 +1,5 @@
 /**
- * NLP Hub — Core Application Logic
+ * महापल्स — Core Application Logic
  * ─────────────────────────────────────────────────────────────
  * Handles: Theme, Mobile Menu, Scroll Progress, Scroll-to-Top,
  *          Keyboard Shortcuts, TOC Active Tracking, Copy Code,
@@ -32,14 +32,14 @@
 
     /** Update the toggle button icons after components are injected. */
     syncIcons(mode) {
-      const dark  = document.getElementById('theme-icon-dark');
+      const dark = document.getElementById('theme-icon-dark');
       const light = document.getElementById('theme-icon-light');
       if (!dark || !light) return;
       if (mode === 'light') {
-        dark.style.display  = 'none';
+        dark.style.display = 'none';
         light.style.display = '';
       } else {
-        dark.style.display  = '';
+        dark.style.display = '';
         light.style.display = 'none';
       }
     },
@@ -48,7 +48,7 @@
     set(mode) {
       this.apply(mode);
       this.syncIcons(mode);
-      try { localStorage.setItem(this.STORAGE_KEY, mode); } catch {}
+      try { localStorage.setItem(this.STORAGE_KEY, mode); } catch { }
     },
 
     toggle() {
@@ -75,6 +75,7 @@
       this.open = true;
       document.getElementById('sidebar')?.classList.add('open');
       document.getElementById('sidebar-overlay')?.classList.add('active');
+      document.querySelector('.nav-center')?.classList.add('mobile-open');
       document.getElementById('menu-toggle')?.setAttribute('aria-expanded', 'true');
       document.body.style.overflow = 'hidden';
     },
@@ -83,6 +84,7 @@
       this.open = false;
       document.getElementById('sidebar')?.classList.remove('open');
       document.getElementById('sidebar-overlay')?.classList.remove('active');
+      document.querySelector('.nav-center')?.classList.remove('mobile-open');
       document.getElementById('menu-toggle')?.setAttribute('aria-expanded', 'false');
       document.body.style.overflow = '';
     },
@@ -104,9 +106,9 @@
 
     update() {
       if (!this.bar) return;
-      const doc      = document.documentElement;
+      const doc = document.documentElement;
       const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight) || 0;
-      const pct      = Math.min(100, Math.round(scrolled * 1000) / 10);
+      const pct = Math.min(100, Math.round(scrolled * 1000) / 10);
       this.bar.style.width = pct + '%';
       this.bar.setAttribute('aria-valuenow', Math.round(pct));
     },
@@ -173,7 +175,7 @@
         if (!btn) return;
 
         const block = btn.closest('.code-block');
-        const code  = block?.querySelector('code');
+        const code = block?.querySelector('code');
         if (!code) return;
 
         navigator.clipboard?.writeText(code.textContent).then(() => {
@@ -184,7 +186,7 @@
             btn.textContent = orig;
             btn.style.color = '';
           }, 1800);
-        }).catch(() => {});
+        }).catch(() => { });
       });
     },
   };
@@ -312,6 +314,11 @@
 
     /* Footer hover */
     initFooterHover();
+
+    /* Load PixelBlast Backgrounds on Hero Sections */
+    if (window.initPixelBlastBackgrounds) {
+      window.initPixelBlastBackgrounds();
+    }
   }
 
   /* ── Apply theme immediately (before DOMContentLoaded) ── */

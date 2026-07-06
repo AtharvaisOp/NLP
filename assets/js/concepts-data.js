@@ -1,5 +1,5 @@
 /**
- * NLP Hub — Concepts Database (महापल्स Edition)
+ * महापल्स — Concepts Database (महापल्स Edition)
  * ─────────────────────────────────────────────────────────────
  * Contains the 8 NLP concepts that form the महापल्स pipeline:
  * AI-Powered Marathi Sentiment & Opinion Analysis System.
@@ -43,14 +43,14 @@
         'Collapse multiple whitespace characters into a single space.'
       ],
       example: {
-        input: 'हे उत्पादन खूप चांगले आहे! 😊 Check: http://example.com',
+        input: 'हे उत्पादन खूप चांगले आहे! 😊 Check: https://en.wikipedia.org/wiki/Marathi_language#Grammar',
         output: 'हे उत्पादन खूप चांगले आहे',
         code: `import re
 from mahaNLP.preprocess import MarathiPreprocessor
 
 preprocessor = MarathiPreprocessor()
 
-raw_text = "हे उत्पादन खूप चांगले आहे! 😊 Check: http://example.com"
+raw_text = "हे उत्पादन खूप चांगले आहे! 😊 Check: https://en.wikipedia.org/wiki/Marathi_language#Grammar"
 
 # Step 1: Remove HTML tags
 text = re.sub(r'<[^>]+>', '', raw_text)

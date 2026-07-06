@@ -1,5 +1,5 @@
 /**
- * NLP Hub — Tailwind CSS Configuration
+ * महापल्स — Tailwind CSS Configuration
  * Load this BEFORE cdn.tailwindcss.com
  * Sets custom design tokens as Tailwind utilities
  */

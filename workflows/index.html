@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>महापल्स NLP Workflows — Interactive Pipeline Diagrams</title>
-  <meta name="description" content="Interactive महापल्स NLP pipeline visualizations: Marathi text preprocessing (6 steps) and the MahaBERT/IndicBERT representation pipeline.">
+  <meta name="description"
+    content="Interactive महापल्स NLP pipeline visualizations: Marathi text preprocessing (6 steps) and the MahaBERT/IndicBERT representation pipeline.">
   <meta name="theme-color" content="#0A0F1E">
 
   <!-- Favicons -->
@@ -15,7 +17,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <script src="../assets/js/tailwind.config.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
@@ -29,97 +33,243 @@
   <style>
     /* Tabs styling */
     .tab-bar {
-      display: flex; gap: .5rem; border-bottom: 1px solid var(--border-solid);
-      padding-bottom: 1px; margin-bottom: 2rem; flex-wrap: wrap;
+      display: flex;
+      gap: .5rem;
+      border-bottom: 1px solid var(--border-solid);
+      padding-bottom: 1px;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
     }
+
     .tab-btn {
-      padding: .625rem 1.25rem; font-size: .875rem; font-weight: 500;
-      color: var(--text-sec); border-bottom: 2px solid transparent;
-      background: transparent; cursor: pointer; transition: all .15s;
+      padding: .625rem 1.25rem;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text-sec);
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: all .15s;
     }
-    .tab-btn:hover { color: var(--text); }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
     .tab-btn.active {
-      color: var(--primary); border-bottom-color: var(--primary);
+      color: var(--primary);
+      border-bottom-color: var(--primary);
       background: rgba(99, 102, 241, 0.04);
     }
 
     /* Diagram Viewport & Scale Panel */
     .viewport-card {
-      background: var(--bg-card); border: 1px solid var(--border-solid);
-      border-radius: 1rem; overflow: hidden; position: relative; margin-bottom: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-solid);
+      border-radius: 1rem;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 2rem;
     }
+
     .viewport-header {
-      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-solid);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-solid);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .75rem;
     }
-    .viewport-title { font-size: .9375rem; font-weight: 600; color: var(--text); margin: 0; }
-    .zoom-controls { display: flex; gap: .25rem; align-items: center; }
+
+    .viewport-title {
+      font-size: .9375rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .zoom-controls {
+      display: flex;
+      gap: .25rem;
+      align-items: center;
+    }
+
     .zoom-btn {
-      width: 28px; height: 28px; border-radius: .375rem;
-      border: 1px solid var(--border-solid); background: var(--bg-elevated);
-      color: var(--text-sec); display: flex; align-items: center; justify-content: center;
-      font-size: .875rem; cursor: pointer; transition: all .15s;
+      width: 28px;
+      height: 28px;
+      border-radius: .375rem;
+      border: 1px solid var(--border-solid);
+      background: var(--bg-elevated);
+      color: var(--text-sec);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .875rem;
+      cursor: pointer;
+      transition: all .15s;
     }
-    .zoom-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .zoom-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
 
     .viewport-canvas {
-      padding: 2.5rem 1.5rem; overflow: auto; display: flex; justify-content: center;
-      min-height: 280px; position: relative; background: radial-gradient(circle, rgba(255,255,255,0.01) 1px, transparent 1px);
+      padding: 2.5rem 1.5rem;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      min-height: 280px;
+      position: relative;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
       background-size: 16px 16px;
     }
+
     .viewport-canvas svg {
-      transition: transform 0.2s ease; transform-origin: center center;
-      max-width: 100%; height: auto;
+      transition: transform 0.2s ease;
+      transform-origin: center center;
+      max-width: 100%;
+      height: auto;
     }
 
     /* Legend Box */
-    .legend-row { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .75rem; color: var(--text-muted); }
-    .legend-item { display: flex; align-items: center; gap: .375rem; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: .75rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: .375rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
 
     /* Interactive Node States */
-    .svg-node { cursor: pointer; }
-    .svg-node rect, .svg-node circle {
-      fill: var(--bg-elevated); stroke: var(--border-solid); stroke-width: 1.5px;
+    .svg-node {
+      cursor: pointer;
+    }
+
+    .svg-node rect,
+    .svg-node circle {
+      fill: var(--bg-elevated);
+      stroke: var(--border-solid);
+      stroke-width: 1.5px;
       transition: all 0.2s;
     }
+
     .svg-node text {
-      fill: var(--text-sec); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
+      fill: var(--text-sec);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
       transition: fill 0.2s;
     }
-    .svg-node:hover rect, .svg-node:hover circle {
-      stroke: var(--primary); fill: rgba(99, 102, 241, 0.08);
+
+    .svg-node:hover rect,
+    .svg-node:hover circle {
+      stroke: var(--primary);
+      fill: rgba(99, 102, 241, 0.08);
       filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.3));
     }
-    .svg-node:hover text { fill: var(--text); }
-    
-    .svg-node.active rect, .svg-node.active circle {
-      stroke: var(--primary); fill: rgba(99, 102, 241, 0.2);
+
+    .svg-node:hover text {
+      fill: var(--text);
+    }
+
+    .svg-node.active rect,
+    .svg-node.active circle {
+      stroke: var(--primary);
+      fill: rgba(99, 102, 241, 0.2);
       stroke-width: 2px;
       filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
     }
-    .svg-node.active text { fill: var(--text); font-weight: 600; }
 
-    .svg-edge { stroke: var(--border-hover); stroke-width: 1.5px; fill: none; }
-    .svg-arrow { fill: var(--border-hover); }
+    .svg-node.active text {
+      fill: var(--text);
+      font-weight: 600;
+    }
+
+    .svg-edge {
+      stroke: var(--border-hover);
+      stroke-width: 1.5px;
+      fill: none;
+    }
+
+    .svg-arrow {
+      fill: var(--border-hover);
+    }
 
     /* Step detail panel */
     .step-detail-card {
-      background: var(--bg-card); border: 1px solid var(--border-solid);
-      border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-solid);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
     }
-    .step-detail-title { font-size: 1.125rem; font-weight: 700; color: var(--text); margin: 0 0 .5rem; }
-    .step-detail-desc { font-size: .9rem; color: var(--text-sec); line-height: 1.6; margin: 0 0 1.25rem; }
 
-    .io-row { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.25rem; }
-    @media (min-width: 768px) {
-      .io-row { grid-template-columns: 1fr 1fr; }
+    .step-detail-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 .5rem;
     }
-    .io-box { background: var(--bg-surface); border: 1px solid var(--border-solid); border-radius: .75rem; padding: 1rem; }
-    .io-label { font-family: 'JetBrains Mono', monospace; font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .5rem; }
-    .io-content { font-family: 'JetBrains Mono', monospace; font-size: .8125rem; color: var(--text-sec); word-break: break-all; }
+
+    .step-detail-desc {
+      font-size: .9rem;
+      color: var(--text-sec);
+      line-height: 1.6;
+      margin: 0 0 1.25rem;
+    }
+
+    .io-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+      .io-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .io-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-solid);
+      border-radius: .75rem;
+      padding: 1rem;
+    }
+
+    .io-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .6875rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      margin-bottom: .5rem;
+    }
+
+    .io-content {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8125rem;
+      color: var(--text-sec);
+      word-break: break-all;
+    }
   </style>
 </head>
+
 <body>
   <div id="navbar-container"></div>
   <div id="search-container"></div>
@@ -134,20 +284,23 @@
           <div class="page-hero">
             <div class="page-badge">🔄 Interactive</div>
             <h1 class="page-title">महापल्स Pipeline Workflows</h1>
-            <p class="page-subtitle">Interactive pipeline diagrams for the महापल्स Marathi Sentiment Analysis system. Click any node to inspect data states, Marathi examples, and Python code.</p>
+            <p class="page-subtitle">Interactive pipeline diagrams for the महापल्स Marathi Sentiment Analysis system.
+              Click any node to inspect data states, Marathi examples, and Python code.</p>
           </div>
 
           <!-- Tabs -->
           <div class="tab-bar" role="tablist" aria-label="Select महापल्स pipeline">
-            <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchPipeline(1)" id="tab-p1">1. Marathi Text Preprocessing</button>
-            <button class="tab-btn" role="tab" aria-selected="false" onclick="switchPipeline(2)" id="tab-p2">2. महापल्स Representation Pipeline</button>
+            <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchPipeline(1)" id="tab-p1">1.
+              Marathi Text Preprocessing</button>
+            <button class="tab-btn" role="tab" aria-selected="false" onclick="switchPipeline(2)" id="tab-p2">2. महापल्स
+              Representation Pipeline</button>
           </div>
 
           <!-- Viewport Card -->
           <div class="viewport-card">
             <div class="viewport-header">
               <h2 id="pipeline-title" class="viewport-title">Text Preprocessing Pipeline</h2>
-              
+
               <!-- Zoom Controls -->
               <div class="zoom-controls">
                 <button class="zoom-btn" onclick="zoom(-0.1)" aria-label="Zoom out">-</button>
@@ -164,22 +317,30 @@
             </div>
 
             <!-- Footer legend bar -->
-            <div style="padding: .75rem 1.25rem; border-top:1px solid var(--border-solid); background: rgba(0,0,0,0.1);">
+            <div
+              style="padding: .75rem 1.25rem; border-top:1px solid var(--border-solid); background: rgba(0,0,0,0.1);">
               <div class="legend-row" aria-label="Diagram legend">
-                <div class="legend-item"><div class="legend-dot" style="background:#38BDF8;"></div><span>Input Node</span></div>
-                <div class="legend-item"><div class="legend-dot" style="background:#818CF8;"></div><span>Transformation Stage</span></div>
-                <div class="legend-item"><div class="legend-dot" style="background:#34D399;"></div><span>Output Vector / Token</span></div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#38BDF8;"></div><span>Input Node</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#818CF8;"></div><span>Transformation Stage</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background:#34D399;"></div><span>Output Vector / Token</span>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Step Detail Panel -->
           <div class="step-detail-card" role="tabpanel">
-            <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:.5rem;">
+            <header
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:.5rem;">
               <h3 id="step-title" class="step-detail-title">Pipeline Step</h3>
               <span id="step-badge" class="badge">Category</span>
             </header>
-            
+
             <p id="step-desc" class="step-detail-desc">Click any node in the SVG diagram above to load details.</p>
 
             <div class="io-row">
@@ -194,7 +355,8 @@
             </div>
 
             <!-- Code block -->
-            <h4 style="font-size: .875rem; font-weight: 600; color: var(--text); margin-bottom: .5rem;">Python Implementation</h4>
+            <h4 style="font-size: .875rem; font-weight: 600; color: var(--text); margin-bottom: .5rem;">Python
+              Implementation</h4>
             <div class="code-block">
               <div class="code-header">
                 <span class="code-lang">Python</span>
@@ -205,7 +367,9 @@
 
             <!-- Related concepts -->
             <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-solid);">
-              <h4 style="font-size: .8125rem; font-family:'JetBrains Mono', monospace; text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem;">Related Concept</h4>
+              <h4
+                style="font-size: .8125rem; font-family:'JetBrains Mono', monospace; text-transform:uppercase; color:var(--text-muted); margin-bottom:.5rem;">
+                Related Concept</h4>
               <div id="step-related-links">
                 <!-- Injected link tags -->
               </div>
@@ -233,8 +397,8 @@
         1: {
           title: "Marathi Text Preprocessing Pipeline (Steps 1–6)",
           nodes: [
-            { id: "p1-n1", x: 45, y: 75, r: 24, label: "Raw Text", type: "input", title: "Raw Marathi Input", cat: "Preprocessing", desc: "Raw Marathi social media text: may contain HTML, URLs, emojis, @mentions, hashtags, and mixed scripts.", input: 'हे उत्पादन खूप चांगले आहे! 😊 http://example.com', output: 'Raw unprocessed Marathi string with noise', code: '# Raw Marathi text from scraping or API\ntext = "हे उत्पादन खूप चांगले आहे! 😊 http://example.com"', link: 'text-cleaning' },
-            { id: "p1-n2", x: 155, y: 75, r: 24, label: "Text Clean", type: "transform", title: "Text Cleaning (Step 1)", cat: "Preprocessing", desc: "Removes HTML tags, URLs, and non-Devanagari characters. The mahaNLP library provides Marathi-specific cleaning utilities.", input: 'हे उत्पादन खूप चांगले आहे! 😊 http://example.com', output: 'हे उत्पादन खूप चांगले आहे', code: 'import re\n# Remove HTML\ntext = re.sub(r\'<[^>]+>\', \'\', text)\n# Remove URLs\ntext = re.sub(r\'http\\S+\', \'\', text)\n# Keep only Devanagari + spaces\ntext = re.sub(r\'[^\\u0900-\\u097F\\s]\', \'\', text).strip()', link: 'text-cleaning' },
+            { id: "p1-n1", x: 45, y: 75, r: 24, label: "Raw Text", type: "input", title: "Raw Marathi Input", cat: "Preprocessing", desc: "Raw Marathi social media text: may contain HTML, URLs, emojis, @mentions, hashtags, and mixed scripts.", input: 'हे उत्पादन खूप चांगले आहे! 😊 https://en.wikipedia.org/wiki/Marathi_language#Grammar', output: 'Raw unprocessed Marathi string with noise', code: '# Raw Marathi text from scraping or API\ntext = "हे उत्पादन खूप चांगले आहे! 😊 https://en.wikipedia.org/wiki/Marathi_language#Grammar"', link: 'text-cleaning' },
+            { id: "p1-n2", x: 155, y: 75, r: 24, label: "Text Clean", type: "transform", title: "Text Cleaning (Step 1)", cat: "Preprocessing", desc: "Removes HTML tags, URLs, and non-Devanagari characters. The mahaNLP library provides Marathi-specific cleaning utilities.", input: 'हे उत्पादन खूप चांगले आहे! 😊 https://en.wikipedia.org/wiki/Marathi_language#Grammar', output: 'हे उत्पादन खूप चांगले आहे', code: 'import re\n# Remove HTML\ntext = re.sub(r\'<[^>]+>\', \'\', text)\n# Remove URLs\ntext = re.sub(r\'http\\S+\', \'\', text)\n# Keep only Devanagari + spaces\ntext = re.sub(r\'[^\\u0900-\\u097F\\s]\', \'\', text).strip()', link: 'text-cleaning' },
             { id: "p1-n3", x: 265, y: 75, r: 24, label: "Noise Out", type: "transform", title: "Noise Removal (Step 2)", cat: "Preprocessing", desc: "Strips emojis, @mentions, hashtag markers, and repeated punctuation from Marathi social media text.", input: 'हे @virat खूप #मस्त आहे!!! 🔥', output: 'हे खूप मस्त आहे!', code: 'import re\n# Remove emojis\ntext = re.sub(r\'[\\U00010000-\\U0010FFFF]\', \'\', text, flags=re.UNICODE)\n# Remove @mentions\ntext = re.sub(r\'@\\S+\', \'\', text)\n# Strip # but keep Marathi word\ntext = re.sub(r\'#(\\S+)\', r\'\\1\', text)\n# Collapse repeated punctuation\ntext = re.sub(r\'([!?.]){2,}\', r\'\\1\', text).strip()', link: 'noise-removal' },
             { id: "p1-n4", x: 375, y: 75, r: 24, label: "Sentences", type: "transform", title: "Sentence Segmentation (Step 3)", cat: "Preprocessing", desc: "Splits Marathi text at sentence boundaries using danda (।) and standard punctuation, with Marathi abbreviation awareness.", input: 'डॉ. राज मुंबईला गेले. हे चांगले आहे का?', output: '["डॉ. राज मुंबईला गेले.", "हे चांगले आहे का?"]', code: 'from mahaNLP.tokenize import MarathiSentenceTokenizer\ntokenizer = MarathiSentenceTokenizer()\nsentences = tokenizer.tokenize(text)', link: 'sentence-segmentation' },
             { id: "p1-n5", x: 485, y: 75, r: 24, label: "Tokens", type: "transform", title: "Tokenization (Step 4)", cat: "Preprocessing", desc: "Applies MahaBERT WordPiece subword tokenization, handling morphologically complex Marathi words and OOV cases.", input: 'हे उत्पादन खूप चांगले आहे', output: '["[CLS]", "हे", "उत्पादन", "खूप", "चांगले", "आहे", "[SEP]"]', code: 'from transformers import AutoTokenizer\ntokenizer = AutoTokenizer.from_pretrained("l3cube-pune/marathi-bert-v2")\ntokens = tokenizer(sentence, return_tensors="pt")', link: 'tokenization' },
@@ -292,7 +456,7 @@
 
         // Populate detail panels
         document.getElementById('step-title').textContent = node.title;
-        document.getElementById('step-desc').textContent  = node.desc;
+        document.getElementById('step-desc').textContent = node.desc;
         document.getElementById('step-input').textContent = node.input;
         document.getElementById('step-output').textContent = node.output;
         document.getElementById('step-code-block').textContent = node.code;
@@ -415,4 +579,5 @@
     })();
   </script>
 </body>
+
 </html>

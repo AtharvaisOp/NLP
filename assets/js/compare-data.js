@@ -1,5 +1,5 @@
 /**
- * NLP Hub — Comparison Database
+ * महापल्स — Comparison Database
  * ─────────────────────────────────────────────────────────────
  * Contains complete detailed side-by-side comparisons for the
  * 5 requested comparisons.

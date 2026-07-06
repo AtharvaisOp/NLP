@@ -184,6 +184,20 @@ svg {
   margin: 0 auto;
 }
 
+.nav-center.mobile-open {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--nav-bg, rgba(10, 15, 30, 0.95));
+  backdrop-filter: blur(40px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+  z-index: 99;
+}
+
 @media (min-width: 1024px) {
   .nav-center {
     display: flex;
@@ -1346,6 +1360,7 @@ body.light .btn-ghost:hover {
   line-height: 1.7;
   position: relative;
   z-index: 1;
+  margin-bottom: 2rem;
 }
 
 /* Hero search bar */
@@ -1363,6 +1378,7 @@ body.light .btn-ghost:hover {
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
   position: relative;
   z-index: 1;
+  margin-bottom: 2rem;
 }
 
 .hero-search:hover {

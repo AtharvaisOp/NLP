@@ -1,5 +1,5 @@
 /**
- * NLP Hub — Search Module
+ * महापल्स — Search Module
  * ─────────────────────────────────────────────────────────────
  * Provides local-first, keyboard-navigable search over a
  * predefined index of NLP concepts and pages.

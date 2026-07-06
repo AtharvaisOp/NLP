@@ -1,5 +1,5 @@
 /**
- * NLP Hub — Component Injection
+ * महापल्स — Component Injection
  * ─────────────────────────────────────────────────────────────
  * Generates and injects the Navbar, Sidebar, Footer, Search
  * Modal, and Breadcrumb into placeholder <div> containers.
@@ -143,9 +143,11 @@
       </button>
 
       <!-- Logo -->
-      <a href="${ROOT}index.html" class="nav-logo" aria-label="NLP Hub home">
-        ${logoMark(28, 13)}
-        <span class="nav-logo-text" aria-hidden="false">NLP Hub</span>
+      <a href="${ROOT}index.html" class="nav-logo" aria-label="महापल्स home">
+        <div class="logo-box">
+          ${logoMark(28, 13)}
+          <span class="nav-logo-text" aria-hidden="false">महापल्स</span>
+        </div>
       </a>
 
       <!-- Center links (desktop) -->
@@ -204,9 +206,11 @@
 
     return `
     <aside id="sidebar" role="complementary" aria-label="Documentation navigation">
-      <a href="${ROOT}index.html" class="sidebar-brand" aria-label="NLP Hub home">
-        ${logoMark(22, 11)}
-        <span class="sidebar-brand-text">NLP Hub</span>
+      <a href="${ROOT}index.html" class="sidebar-brand" aria-label="महापल्स home">
+        <div class="sidebar-logo-box">
+          ${logoMark(22, 11)}
+          <span class="sidebar-brand-text">महापल्स</span>
+        </div>
       </a>
 
       ${sections}
@@ -228,9 +232,11 @@
       <div class="footer-grid">
         <!-- Brand -->
         <div>
-          <a href="${ROOT}index.html" class="nav-logo" style="margin-bottom:0.875rem;text-decoration:none;" aria-label="NLP Hub home">
-            ${logoMark(28, 13)}
-            <span class="nav-logo-text">NLP Hub</span>
+          <a href="${ROOT}index.html" class="nav-logo" style="margin-bottom:0.875rem;text-decoration:none;" aria-label="महापल्स home">
+            <div class="logo-box">
+              ${logoMark(28, 13)}
+              <span class="nav-logo-text">महापल्स</span>
+            </div>
           </a>
           <p style="font-size:.875rem;color:var(--text-sec);line-height:1.6;margin:0 0 1rem;max-width:200px;">
             An interactive NLP knowledge repository for students and beginners.
@@ -277,7 +283,7 @@
       </div>
 
       <div class="footer-bottom">
-        <span>© 2026 NLP Hub · Academic Project</span>
+        <span>© 2026 महापल्स · Academic Project</span>
         <div style="display:flex;gap:1rem;align-items:center;">
           <span>Open Source</span>
           <span aria-hidden="true">·</span>
@@ -297,7 +303,7 @@
   ═══════════════════════════════════════════════════════════ */
   function searchModalHTML() {
     return `
-    <div id="search-overlay" role="dialog" aria-modal="true" aria-label="Search NLP Hub">
+    <div id="search-overlay" role="dialog" aria-modal="true" aria-label="Search महापल्स">
       <div id="search-modal">
         <div class="search-input-row">
           <span style="color:var(--text-muted);flex-shrink:0;" aria-hidden="true">${ICONS.search}</span>
