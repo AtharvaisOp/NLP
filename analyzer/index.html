@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>महापल्स Analyzer — Marathi NLP</title>
+  <meta name="description" content="Analyze Marathi and Marathi-English text with the MahaPulse NLP pipeline.">
+  <meta name="theme-color" content="#0A0F1E">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+  <link rel="manifest" href="../site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="../assets/js/tailwind.config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.NLP_CONFIG = {
+      page: 'analyzer',
+      depth: 1,
+      breadcrumbs: [{ label: 'Analyzer' }],
+    };
+  </script>
+</head>
+
+<body>
+  <div id="navbar-container"></div>
+  <div id="search-container"></div>
+
+  <div class="page-wrapper has-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="content-area">
+      <div class="content-inner analyzer-main">
+        <div id="breadcrumb-container"></div>
+
+        <main id="main-content" tabindex="-1">
+          <header class="analyzer-hero" aria-labelledby="analyzer-title">
+            <p class="analyzer-eyebrow">महापल्स · live pipeline</p>
+            <h1 id="analyzer-title" class="analyzer-title">Understand what your Marathi text is saying.</h1>
+            <p class="analyzer-subtitle">Run a transparent sentiment pass over Marathi or Marathi-English text. See the conservative model path alongside the deeper analysis path that powers future enrichment.</p>
+          </header>
+
+          <div class="analyzer-layout">
+            <section class="analyzer-card" aria-labelledby="input-title">
+              <div class="analyzer-card-header">
+                <div>
+                  <h2 id="input-title" class="analyzer-card-title">Input text</h2>
+                  <p class="analyzer-card-copy">Keep the original context intact. Press Ctrl/⌘ + Enter to analyze.</p>
+                </div>
+                <span class="page-badge">NLP</span>
+              </div>
+              <div class="analyzer-card-body">
+                <form id="analyzer-form" novalidate>
+                  <label class="analyzer-label" for="analysis-text">Marathi or Marathi-English text</label>
+                  <textarea id="analysis-text" class="analyzer-textarea" maxlength="100000" spellcheck="false" aria-describedby="input-help character-count" placeholder="उदा. हा अनुभव खूप चांगला आहे, पण delivery थोडी उशिरा झाली..."></textarea>
+                  <div class="analyzer-input-meta">
+                    <span id="input-help">Sentiment-bearing words, negation and code mixing are preserved.</span>
+                    <span id="character-count" aria-live="polite">0 / 100,000</span>
+                  </div>
+                  <div class="analyzer-examples" aria-label="Example inputs">
+                    <button class="analyzer-example" type="button" data-example="हे उत्पादन खूप चांगले आहे!">Positive Marathi</button>
+                    <button class="analyzer-example" type="button" data-example="सेवा अजिबात चांगली नाही.">Negative Marathi</button>
+                    <button class="analyzer-example" type="button" data-example="अनुभव ठीकठाक आहे.">Neutral Marathi</button>
+                    <button class="analyzer-example" type="button" data-example="हा app मस्त आहे पण delivery उशिरा झाली.">Code-mixed</button>
+                  </div>
+                  <div class="analyzer-actions">
+                    <button id="analyze-button" class="btn btn-primary" type="submit">Analyze text <span aria-hidden="true">→</span></button>
+                    <button id="clear-button" class="btn btn-ghost" type="button">Clear</button>
+                  </div>
+                </form>
+
+                <div class="analyzer-status-stack" aria-label="Service status">
+                  <div class="analyzer-status-row"><span class="analyzer-status-label">API backend</span><span id="backend-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+                  <div class="analyzer-status-row"><span class="analyzer-status-label">Sentiment model</span><span id="model-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+                  <div class="analyzer-status-row"><span class="analyzer-status-label">Enrichment</span><span id="enrichment-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+                </div>
+                <p id="mock-mode-note" class="analyzer-dev-note" hidden>Development mock mode is active. Results are deterministic samples, not model performance.</p>
+                <p id="service-model-info" class="analyzer-meta" aria-label="Loaded service metadata"></p>
+              </div>
+            </section>
+
+            <section class="analyzer-card" aria-labelledby="results-title" aria-live="polite">
+              <div class="analyzer-card-header">
+                <div>
+                  <h2 id="results-title" class="analyzer-card-title">Analysis output</h2>
+                  <p class="analyzer-card-copy">The response follows the stable MahaPulse API contract.</p>
+                </div>
+                <span class="page-badge">v1</span>
+              </div>
+              <div class="analyzer-card-body">
+                <div id="analysis-state" class="analyzer-state" data-state="idle" role="status"></div>
+
+                <div id="results-panel" hidden>
+                  <div class="analyzer-results-grid">
+                    <article class="analyzer-result-card analyzer-result-card-wide" aria-labelledby="sentiment-heading">
+                      <h3 id="sentiment-heading" class="analyzer-result-heading">Sentiment</h3>
+                      <div class="sentiment-hero"><div id="sentiment-label" class="sentiment-label">—</div><div class="sentiment-confidence"><strong id="sentiment-confidence">—</strong>confidence</div></div>
+                      <div class="probability-list" aria-label="Sentiment probabilities">
+                        <div class="probability-row"><span class="probability-name">Positive</span><div class="probability-track"><div id="prob-positive-bar" class="probability-fill positive" role="progressbar" aria-label="Positive probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><span id="prob-positive-value" class="probability-value">—</span></div>
+                        <div class="probability-row"><span class="probability-name">Neutral</span><div class="probability-track"><div id="prob-neutral-bar" class="probability-fill neutral" role="progressbar" aria-label="Neutral probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><span id="prob-neutral-value" class="probability-value">—</span></div>
+                        <div class="probability-row"><span class="probability-name">Negative</span><div class="probability-track"><div id="prob-negative-bar" class="probability-fill negative" role="progressbar" aria-label="Negative probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><span id="prob-negative-value" class="probability-value">—</span></div>
+                      </div>
+                      <p id="confidence-warning" class="confidence-warning" hidden>Low confidence: treat this prediction as uncertain.</p>
+                    </article>
+
+                    <article class="analyzer-result-card" aria-labelledby="language-heading">
+                      <h3 id="language-heading" class="analyzer-result-heading">Language signal</h3>
+                      <div class="analyzer-kpi-list">
+                        <div class="analyzer-kpi"><span class="analyzer-kpi-label">Primary</span><strong id="language-primary" class="analyzer-kpi-value">—</strong></div>
+                        <div class="analyzer-kpi"><span class="analyzer-kpi-label">Code-mixed</span><strong id="language-mixed" class="analyzer-kpi-value">—</strong></div>
+                        <div class="analyzer-kpi"><span class="analyzer-kpi-label">Devanagari</span><strong id="language-devanagari" class="analyzer-kpi-value">—</strong></div>
+                        <div class="analyzer-kpi"><span class="analyzer-kpi-label">Latin</span><strong id="language-latin" class="analyzer-kpi-value">—</strong></div>
+                      </div>
+                    </article>
+
+                    <article class="analyzer-result-card" aria-labelledby="keywords-heading">
+                      <h3 id="keywords-heading" class="analyzer-result-heading">Keywords</h3>
+                      <div id="keyword-list" class="keyword-list"><p class="analyzer-empty">No keywords were returned.</p></div>
+                    </article>
+
+                    <article class="analyzer-result-card" aria-labelledby="topic-heading">
+                      <h3 id="topic-heading" class="analyzer-result-heading">Topic</h3>
+                      <p id="topic-empty" class="analyzer-empty">Topic unavailable / not assigned.</p>
+                      <div id="topic-data" class="analyzer-kpi-list" hidden><div class="analyzer-kpi"><span class="analyzer-kpi-label">ID</span><strong id="topic-id" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Label</span><strong id="topic-label" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Probability</span><strong id="topic-probability" class="analyzer-kpi-value">—</strong></div></div>
+                    </article>
+
+                    <article class="analyzer-result-card" aria-labelledby="summary-heading">
+                      <h3 id="summary-heading" class="analyzer-result-heading">Summary</h3>
+                      <p id="summary-empty" class="analyzer-empty">Summary unavailable for this response.</p>
+                      <div id="summary-data" hidden><p id="summary-text" class="analyzer-summary">—</p><p class="analyzer-meta">Provider: <span id="summary-provider">—</span></p></div>
+                    </article>
+                  </div>
+
+                  <details class="pipeline-text">
+                    <summary>Inspect pipeline text</summary>
+                    <div class="pipeline-text-grid">
+                      <div class="pipeline-text-block"><span>Original text</span><pre id="pipeline-original">—</pre></div>
+                      <div class="pipeline-text-block"><span>Model text · conservative</span><pre id="pipeline-model">—</pre></div>
+                      <div class="pipeline-text-block"><span>Analysis text · enriched path</span><pre id="pipeline-analysis">—</pre></div>
+                    </div>
+                  </details>
+                  <div class="analyzer-meta" aria-label="Analysis metadata"><span>Request: <span id="request-id">—</span></span><span>Model: <span id="model-version">—</span></span><span>Processing: <span id="processing-ms">—</span></span></div>
+                  <ul id="warning-list" class="analyzer-warning-list" hidden role="status" aria-live="polite" aria-label="Analysis warnings"></ul>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/components.js?v=3"></script>
+  <script src="../assets/js/pixelblast.js?v=2"></script>
+  <script src="../assets/js/main.js?v=2"></script>
+  <script src="../assets/js/search.js?v=2"></script>
+  <script src="../assets/js/api-config.js?v=1"></script>
+  <script src="../assets/js/analyzer.js?v=1"></script>
+</body>
+
+</html>
