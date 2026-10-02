@@ -80,25 +80,62 @@
     const letters = [...text].filter(char => /[A-Za-z\u0900-\u097f]/.test(char));
     const devanagari = letters.filter(char => /[\u0900-\u097f]/.test(char)).length;
     const latin = letters.filter(char => /[A-Za-z]/.test(char)).length;
+    const keywordError = /keyword[- ]?error|enrichment[- ]?warning|multi[- ]?enrichment[- ]?error/.test(lower);
+    const topicError = /topic[- ]?error|enrichment[- ]?warning|multi[- ]?enrichment[- ]?error/.test(lower);
+    const summaryError = /summary[- ]?error|enrichment[- ]?warning|multi[- ]?enrichment[- ]?error/.test(lower);
+    const disabled = /services[- ]?disabled/.test(lower);
+    const warnings = ['Mock API mode is enabled; no production model was called.'];
+    if (keywordError) warnings.push('Keyword enrichment unavailable.');
+    if (topicError) warnings.push('Topic enrichment unavailable.');
+    if (summaryError) warnings.push('Summary enrichment unavailable.');
     return {
       request_id: 'mock-request-0001', original_text: text, model_text: text.replace(/\s+/g, ' ').trim(),
       analysis_text: text.replace(/[^A-Za-z\u0900-\u097f0-9]+/g, ' ').trim().toLocaleLowerCase(),
       language: { primary: 'mr', devanagari_ratio: letters.length ? devanagari / letters.length : 0, latin_ratio: letters.length ? latin / letters.length : 0, is_code_mixed: codeMixed },
       sentiment: Object.assign({}, sentiment, { low_confidence: sentiment.confidence < .6 }),
-      keywords: [], topic: { id: null, label: null, probability: null }, summary: { text: null, provider: null },
-      meta: { model_version: 'mock-v0', processing_ms: 1, warnings: ['Mock API mode is enabled; no production model was called.'] },
+      keywords: disabled || keywordError ? [] : [{ text: 'अनुभव', score: 0.91 }, { text: codeMixed ? 'app' : 'उत्पादन', score: 0.73 }],
+      topic: disabled || topicError || /topic[- ]?null|no[- ]?topic|topic[- ]?outlier/.test(lower)
+        ? { id: null, label: null, probability: null }
+        : /topic[- ]?assigned/.test(lower) ? { id: 7, label: 'उत्पादन अनुभव', probability: 0.82 } : { id: null, label: null, probability: null },
+      summary: disabled || summaryError || !/summary[- ]?available/.test(lower)
+        ? { text: null, provider: null }
+        : { text: 'Mock extractive summary for frontend verification.', provider: 'extractive' },
+      meta: { model_version: 'mock-v0', processing_ms: 1, warnings },
+    };
+  }
+
+  function mockService(name, overrides) {
+    return Object.assign({ name, version: 'mock-v0', device: 'not-loaded', state: 'mocked', backend: 'mock', provider: name, production_ready: null }, overrides || {});
+  }
+
+  function mockReadiness() {
+    return {
+      api: { state: 'ready', detail: 'API process is running' },
+      preprocessing: { state: 'ready', detail: 'Deterministic preprocessing is available' },
+      sentiment: { state: 'mocked', detail: 'Service is mocked and no model is loaded', production_ready: null },
+      keywords: { state: 'mocked', detail: 'Development fixture' },
+      topics: { state: 'mocked', detail: 'Development fixture' },
+      summary: { state: 'mocked', detail: 'Development fixture' },
+    };
+  }
+
+  function mockModelInfo() {
+    const readiness = mockReadiness();
+    return {
+      sentiment_model: mockService('MuRIL', { provider: 'MuRIL' }),
+      labels: ['positive', 'negative', 'neutral'],
+      keyword_service: mockService('KeyBERT'),
+      topic_service: mockService('BERTopic'),
+      summary_service: mockService('summarization', { provider: null }),
+      readiness,
     };
   }
 
   const api = {
     config,
-    health() { return config.USE_MOCK_API ? Promise.resolve({ status: 'ok', service: 'mock-api' }) : request('/health'); },
-    ready() { return config.USE_MOCK_API ? Promise.resolve({ status: 'ready', services: {} }) : request('/ready'); },
-    modelInfo() {
-      return config.USE_MOCK_API
-        ? Promise.resolve({ sentiment_model: { name: 'MuRIL', version: 'mock-v0', device: 'not-loaded', state: 'mocked' }, labels: ['positive', 'negative', 'neutral'], keyword_service: { name: 'KeyBERT', version: 'mock-v0', device: 'not-loaded', state: 'mocked' }, topic_service: { name: 'BERTopic', version: 'mock-v0', device: 'not-loaded', state: 'mocked' }, summary_service: { name: 'summarization', version: 'mock-v0', device: 'not-loaded', state: 'mocked' }, readiness: {} })
-        : request('/v1/model-info');
-    },
+    health() { return config.USE_MOCK_API ? Promise.resolve({ status: 'ok', service: 'mahapulse-api', pipeline: 'phase-2' }) : request('/health'); },
+    ready() { return config.USE_MOCK_API ? Promise.resolve({ status: 'degraded', services: mockReadiness() }) : request('/ready'); },
+    modelInfo() { return config.USE_MOCK_API ? Promise.resolve(mockModelInfo()) : request('/v1/model-info'); },
     analyze(text) { return config.USE_MOCK_API ? Promise.resolve(mockAnalysis(text)) : request('/v1/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }); },
   };
 

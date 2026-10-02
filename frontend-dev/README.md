@@ -19,7 +19,7 @@ python -m http.server 8765
 
 Open <http://127.0.0.1:8765/analyzer/>. The frontend default points to
 `http://localhost:8000`, so no production URL or secret is needed. The fixture
-supports the Phase 2 routes and deterministic analyzer cases. Include these
+supports the Phase 5 routes and deterministic analyzer cases. Include these
 phrases in the textarea to exercise cases:
 
 `assets/js/api-config.js` resolves configuration in this order: runtime
@@ -44,12 +44,21 @@ This is a run-time environment setting; the frontend does not weaken CORS.
 | `topic-assigned` | optional topic payload |
 | `summary-available` | optional summary payload |
 | `partial` | partial enrichment warning |
+| `keyword-error` | sentiment succeeds with empty keywords and a keyword warning |
+| `topic-error` | sentiment succeeds with a null topic and a topic warning |
+| `summary-error` | sentiment succeeds with a null summary and a summary warning |
+| `multi-enrichment-error` | all optional services fail while sentiment remains available |
+| `topic-outlier` | BERTopic-style unassigned/null topic |
+| `services-disabled` | analysis fixture with disabled optional results |
 | `trigger-422` | HTTP 422 safe error |
 | `trigger-500` | HTTP 500 safe error |
 | `timeout` | delayed response; default frontend timeout is 12 seconds |
 
 The mock server is intentionally deterministic and must never be presented as
-model performance.
+model performance. Readiness/model-info state fixtures are also available with
+`/ready?case=services-disabled`, `/ready?case=services-unavailable`, and the
+corresponding `/v1/model-info` query parameters. They are development-only
+fixtures and do not represent deployment health.
 
 ## Browser checklist
 

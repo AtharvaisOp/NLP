@@ -70,6 +70,46 @@
     return `${service.name || 'Service'}${service.version ? ` ${service.version}` : ''}${state}${lifecycle}`;
   }
 
+  function compactServiceInfo(label, service) {
+    if (!service) return `${label}: unavailable`;
+    const parts = [service.name || label];
+    if (service.version) parts.push(service.version);
+    if (service.backend) parts.push(service.backend);
+    if (service.device && service.device !== 'not-loaded') parts.push(service.device);
+    if (service.embedding_model) parts.push(`embedding ${service.embedding_model}`);
+    if (service.provider && service.provider !== service.name) parts.push(service.provider);
+    if (service.smoke_test === true || service.production_ready === false) parts.push('smoke · not production-ready');
+    return `${label}: ${parts.join(' · ')}`;
+  }
+
+  function enrichmentSummary(readiness, modelInfo) {
+    const infoKeys = { keywords: 'keyword_service', topics: 'topic_service', summary: 'summary_service' };
+    const services = ['keywords', 'topics', 'summary'].map(name => ({
+      name,
+      ...(readiness?.[name] || modelInfo?.readiness?.[name] || modelInfo?.[infoKeys[name]] || {}),
+    }));
+    const states = services.map(service => service.state || 'unavailable');
+    if (states.every(state => state === 'disabled')) return { kind: 'mocked', label: 'Enrichment disabled' };
+    if (states.every(state => state === 'ready')) return { kind: 'ready', label: 'Enrichment ready' };
+    if (states.some(state => ['unavailable', 'not_ready', 'not_loaded'].includes(state))) {
+      return { kind: 'mocked', label: 'Enrichment partial' };
+    }
+    if (states.some(state => state === 'mocked')) return { kind: 'mocked', label: 'Development mocks active' };
+    if (states.some(state => state === 'disabled')) return { kind: 'mocked', label: 'Enrichment partial · some disabled' };
+    return { kind: 'mocked', label: 'Enrichment status unavailable' };
+  }
+
+  function renderModelInfo(modelInfo) {
+    const node = $('service-model-info');
+    if (!node) return;
+    node.textContent = [
+      compactServiceInfo('Sentiment', modelInfo?.sentiment_model),
+      compactServiceInfo('Keywords', modelInfo?.keyword_service),
+      compactServiceInfo('Topics', modelInfo?.topic_service),
+      compactServiceInfo('Summary', modelInfo?.summary_service),
+    ].join('  |  ');
+  }
+
   async function loadServiceStatus() {
     setIndicator('backend-status', 'checking', 'Checking…');
     setIndicator('model-status', 'checking', 'Checking…');
@@ -77,20 +117,37 @@
     const health = results[0];
     const ready = results[1];
     const model = results[2];
+    const readiness = ready.status === 'fulfilled' ? ready.value : null;
+    const modelInfo = model.status === 'fulfilled' ? model.value : null;
+    const sentimentState = readiness?.services?.sentiment?.state || modelInfo?.sentiment_model?.state;
+    const smoke = modelInfo?.sentiment_model?.smoke_test === true || modelInfo?.sentiment_model?.production_ready === false;
+    const enrichment = enrichmentSummary(readiness?.services, modelInfo);
     if (health.status === 'fulfilled') {
-      const readyState = ready.status === 'fulfilled' && ready.value.status === 'ready' ? 'ready' : 'mocked';
-      setIndicator('backend-status', readyState, readyState === 'ready' ? 'Online' : 'Online · degraded');
+      const coreReady = sentimentState === 'ready';
+      const coreLabel = coreReady
+        ? (smoke ? 'Core sentiment smoke' : 'Core sentiment ready')
+        : sentimentState === 'mocked' ? 'Core sentiment mocked' : 'Core sentiment unavailable';
+      const suffix = enrichment.label;
+      setIndicator('backend-status', coreReady && !smoke && enrichment.kind === 'ready' ? 'ready' : 'mocked', `Online · ${coreLabel} · ${suffix}`);
     } else {
       setIndicator('backend-status', 'offline', 'Unavailable');
     }
+    setIndicator('enrichment-status', enrichment.kind, enrichment.label);
     if (model.status === 'fulfilled') {
       const info = model.value.sentiment_model;
-      const smoke = info?.smoke_test === true || info?.production_ready === false;
       setIndicator('model-status', info?.state === 'ready' && !smoke ? 'ready' : 'mocked', serviceLabel(info));
       const note = $('mock-mode-note');
-      if (note) note.hidden = !config.USE_MOCK_API;
+      if (note) {
+        const mockActive = config.USE_MOCK_API || sentimentState === 'mocked' || enrichment.label === 'Development mocks active';
+        note.hidden = !mockActive && !smoke;
+        note.textContent = smoke
+          ? 'Smoke sentiment model is active for integration only; it is not production-ready.'
+          : 'Development/mock services are active. Optional enrichment may be disabled or unavailable.';
+      }
+      renderModelInfo(model.value);
     } else {
       setIndicator('model-status', 'offline', 'Not available');
+      renderModelInfo(null);
     }
   }
 
@@ -287,7 +344,18 @@
     loadServiceStatus();
   }
 
-  global.MahaPulseAnalyzer = { analyze, renderProbabilities, renderTopic, renderSummary, validateAnalysisResponse: validAnalysisResponse, serviceLabel };
+  global.MahaPulseAnalyzer = {
+    analyze,
+    renderProbabilities,
+    renderKeywords,
+    renderTopic,
+    renderSummary,
+    renderWarnings,
+    renderResponse,
+    validateAnalysisResponse: validAnalysisResponse,
+    serviceLabel,
+    enrichmentSummary,
+  };
   if (global.NLP_COMPONENTS_READY) init();
   else document.addEventListener('nlp:ready', init, { once: true });
 })(window);

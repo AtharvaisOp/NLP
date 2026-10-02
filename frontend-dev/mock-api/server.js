@@ -18,8 +18,55 @@ function json(res, status, payload) {
   res.end(body);
 }
 
-function service(name) {
-  return { name, version: 'mock-v0', device: 'not-loaded', state: 'mocked' };
+function service(name, overrides = {}) {
+  return {
+    name,
+    version: 'mock-v0',
+    device: 'not-loaded',
+    state: 'mocked',
+    smoke_test: null,
+    backend: 'mock',
+    provider: name,
+    production_ready: null,
+    base_model: null,
+    preprocessing_version: null,
+    embedding_model: null,
+    ...overrides,
+  };
+}
+
+function stateServices(mode = '') {
+  const optional = mode === 'services-disabled'
+    ? { state: 'disabled', version: 'disabled', backend: 'disabled', production_ready: null }
+    : mode === 'services-unavailable'
+      ? { state: 'unavailable', version: 'unavailable', production_ready: false }
+      : {};
+  return {
+    api: { state: 'ready', detail: 'API process is running' },
+    preprocessing: { state: 'ready', detail: 'Deterministic preprocessing is available' },
+    sentiment: { state: 'mocked', detail: 'Service is mocked and no model is loaded', smoke_test: null, production_ready: null },
+    keywords: { state: optional.state || 'mocked', detail: optional.state ? 'Fixture state' : 'Service is mocked and no model is loaded', smoke_test: null, production_ready: null, ...optional },
+    topics: { state: optional.state || 'mocked', detail: optional.state ? 'Fixture state' : 'Service is mocked and no model is loaded', smoke_test: null, production_ready: null, ...optional },
+    summary: { state: optional.state || 'mocked', detail: optional.state ? 'Fixture state' : 'Service is mocked and no model is loaded', smoke_test: null, production_ready: null, ...optional },
+  };
+}
+
+function modelInfo(mode = '') {
+  const disabled = mode === 'services-disabled';
+  const unavailable = mode === 'services-unavailable';
+  const optional = (name, overrides = {}) => service(name, Object.assign(disabled
+    ? { state: 'disabled', version: 'disabled', backend: 'disabled', provider: null, production_ready: null }
+    : unavailable
+      ? { state: 'unavailable', version: 'unavailable', production_ready: false }
+      : {}, overrides));
+  return {
+    sentiment_model: service('MuRIL', { provider: 'MuRIL' }),
+    labels: LABELS,
+    keyword_service: optional('KeyBERT'),
+    topic_service: optional('BERTopic'),
+    summary_service: optional('summarization', { provider: null }),
+    readiness: stateServices(mode),
+  };
 }
 
 function readJson(req) {
@@ -52,12 +99,20 @@ function makeAnalysis(text) {
   const letters = [...text].filter(char => /[A-Za-z\u0900-\u097f]/.test(char));
   const devanagari = letters.filter(char => /[\u0900-\u097f]/.test(char)).length;
   const latin = letters.filter(char => /[A-Za-z]/.test(char)).length;
-  const nullTopic = !/topic[- ]?assigned/.test(lower) || /topic[- ]?null|no[- ]?topic/.test(lower);
-  const nullSummary = !/summary[- ]?available/.test(lower) || /summary[- ]?null|no[- ]?summary/.test(lower);
+  const keywordError = /keyword[- ]?error|enrichment[- ]?warning|multi[- ]?enrichment[- ]?error/.test(lower);
+  const topicError = /topic[- ]?error|enrichment[- ]?warning|multi[- ]?enrichment[- ]?error/.test(lower);
+  const summaryError = /summary[- ]?error|enrichment[- ]?warning|multi[- ]?enrichment[- ]?error/.test(lower);
+  const servicesDisabled = /services[- ]?disabled/.test(lower);
+  const topicOutlier = /topic[- ]?outlier|topic[- ]?null|no[- ]?topic/.test(lower);
+  const nullTopic = topicOutlier || !/topic[- ]?assigned/.test(lower) || topicError || servicesDisabled;
+  const nullSummary = !/summary[- ]?available/.test(lower) || /summary[- ]?null|no[- ]?summary/.test(lower) || summaryError || servicesDisabled;
   const emptyKeywords = /empty[- ]?keywords|no[- ]?keywords/.test(lower);
   const partial = /partial|enrichment[- ]?warning/.test(lower);
   const warnings = ['ML service outputs are deterministic mocks; no models are loaded.'];
-  if (partial) warnings.push('Keyword/topic enrichment is partial in the development fixture.');
+  if (keywordError) warnings.push('Keyword enrichment unavailable.');
+  if (topicError) warnings.push('Topic enrichment unavailable.');
+  if (summaryError) warnings.push('Summary enrichment unavailable.');
+  if (partial && !keywordError && !topicError && !summaryError) warnings.push('Optional enrichment is partial in the development fixture.');
   return {
     request_id: `mock-${Buffer.from(text).toString('base64url').slice(0, 16) || 'empty'}`,
     original_text: text,
@@ -65,9 +120,9 @@ function makeAnalysis(text) {
     analysis_text: text.replace(/[^A-Za-z\u0900-\u097f0-9]+/g, ' ').trim().toLocaleLowerCase(),
     language: { primary: 'mr', devanagari_ratio: letters.length ? devanagari / letters.length : 0, latin_ratio: letters.length ? latin / letters.length : 0, is_code_mixed: codeMixed },
     sentiment: { ...sentiment, low_confidence: lowConfidence },
-    keywords: emptyKeywords ? [] : [{ text: 'अनुभव', score: 0.91 }, { text: codeMixed ? 'app' : 'उत्पादन', score: 0.73 }],
+    keywords: emptyKeywords || keywordError || servicesDisabled ? [] : [{ text: 'अनुभव', score: 0.91 }, { text: codeMixed ? 'app' : 'उत्पादन', score: 0.73 }],
     topic: nullTopic ? { id: null, label: null, probability: null } : { id: 7, label: 'उत्पादन अनुभव', probability: 0.82 },
-    summary: nullSummary ? { text: null, provider: null } : { text: 'Mock summary for frontend verification.', provider: 'mock-summary' },
+    summary: nullSummary ? { text: null, provider: null } : { text: 'Mock extractive summary for frontend verification.', provider: 'extractive' },
     meta: { model_version: 'mock-v0', processing_ms: 4, warnings },
   };
 }
@@ -89,12 +144,14 @@ async function handleAnalyze(req, res, delayMs) {
 function createMockServer({ port = Number(process.env.MAHAPULSE_MOCK_PORT || 8000), delayMs = Number(process.env.MAHAPULSE_MOCK_DELAY_MS || 13000) } = {}) {
   const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Accept', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }); res.end(); return; }
-    if (req.method === 'GET' && req.url === '/health') { json(res, 200, { status: 'ok', service: 'mahapulse-api', pipeline: 'phase-2-mock' }); return; }
-    if (req.method === 'GET' && req.url === '/ready') {
-      json(res, 200, { status: 'degraded', services: { preprocessing: { state: 'ready', detail: 'available' }, sentiment: { state: 'mocked', detail: 'fixture only' }, keywords: { state: 'mocked', detail: 'fixture only' }, topics: { state: 'mocked', detail: 'fixture only' }, summary: { state: 'mocked', detail: 'fixture only' } } }); return;
+    const requestUrl = new URL(req.url, 'http://127.0.0.1');
+    const mode = requestUrl.searchParams.get('case') || '';
+    if (req.method === 'GET' && requestUrl.pathname === '/health') { json(res, 200, { status: 'ok', service: 'mahapulse-api', pipeline: 'phase-2' }); return; }
+    if (req.method === 'GET' && requestUrl.pathname === '/ready') {
+      json(res, 200, { status: 'degraded', services: stateServices(mode) }); return;
     }
-    if (req.method === 'GET' && req.url === '/v1/model-info') {
-      json(res, 200, { sentiment_model: service('MuRIL'), labels: LABELS, keyword_service: service('KeyBERT'), topic_service: service('BERTopic'), summary_service: service('summarization'), readiness: {} }); return;
+    if (req.method === 'GET' && requestUrl.pathname === '/v1/model-info') {
+      json(res, 200, modelInfo(mode)); return;
     }
     if (req.method === 'POST' && req.url === '/v1/analyze') { await handleAnalyze(req, res, delayMs); return; }
     json(res, 404, { error: { code: 'not_found', message: 'Mock route not found.' }, request_id: 'mock-404' });
