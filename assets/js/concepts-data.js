@@ -1,10 +1,10 @@
 /**
  * महापल्स — Concepts Database (महापल्स Edition)
  * ─────────────────────────────────────────────────────────────
- * Contains the 8 NLP concepts that form the महापल्स pipeline:
- * AI-Powered Marathi Sentiment & Opinion Analysis System.
+ * Contains 8 educational NLP reference concepts and model comparisons.
+ * Implemented MahaPulse sentiment uses MuRIL and conservative preprocessing.
  *
- * Pipeline order:
+ * Educational example order (not the runtime classifier pipeline):
  *   1. Text Cleaning
  *   2. Noise Removal
  *   3. Sentence Segmentation
@@ -33,7 +33,7 @@
       readTime: '6 min',
       year: '1990s',
       definition: 'Text cleaning standardizes raw Marathi text by removing URLs, HTML tags, non-Devanagari characters, and stray Roman or Arabic script that is mixed into social media data.',
-      purpose: 'Converts raw, messy Marathi content into a standardized Devanagari-only format suitable for downstream NLP processing. This is the first step in the महापल्स preprocessing pipeline.',
+      purpose: 'This educational example demonstrates Devanagari-only filtering. Implemented MahaPulse instead uses NFC and safe noise normalization while preserving Roman code mixing, negation, emojis and punctuation in model_text.',
       workingPrinciple: 'Uses regex patterns to strip non-Devanagari characters, HTML markup, and URLs. The mahaNLP library provides built-in Marathi-specific cleaning utilities that understand Devanagari Unicode ranges (U+0900–U+097F).',
       steps: [
         'Load the raw Marathi text string (e.g., a customer review or social media post).',
@@ -79,12 +79,12 @@ print(text)
         'Code-mixed Marathi-English text (common on social media) requires careful handling to avoid over-cleaning.'
       ],
       applications: [
-        'First stage of the महापल्स preprocessing pipeline.',
+        'Educational corpus-cleaning experiments; aggressive filtering is not the MahaPulse classifier path.',
         'Cleaning Marathi customer reviews for sentiment classification.',
         'Social media corpus preparation for Marathi NLP models.'
       ],
       keyTakeaways: [
-        'Text cleaning is the entry point of the महापल्स pipeline — it must run before all other steps.',
+        'MahaPulse normalizes model_text conservatively and prepares a separate analysis_text path.',
         'Marathi text cleaning requires Devanagari-aware Unicode filtering.',
         'The mahaNLP library (Magdum et al., 2023) provides dedicated Marathi preprocessing utilities.',
         'Case normalization is NOT needed — Devanagari script has no uppercase/lowercase distinction.'
@@ -106,7 +106,7 @@ print(text)
       readTime: '5 min',
       year: '1990s',
       definition: 'Noise removal filters out elements present in user-generated Marathi content that are not part of the language itself — such as emojis, hashtags, punctuation sequences, and special symbols.',
-      purpose: 'Social media Marathi text is extremely noisy: it contains emojis, hashtags (#मराठी), @mentions, repeated punctuation (!!!), and mixed-script tokens. Noise removal ensures only linguistically meaningful Marathi content is passed forward in the महापल्स pipeline.',
+      purpose: 'Social media Marathi text is extremely noisy: it contains emojis, hashtags (#मराठी), @mentions, repeated punctuation (!!!), and mixed-script tokens. This reference compares noise removal strategies. MahaPulse preserves emotional cues and Roman words in classifier input.',
       workingPrinciple: 'Applies targeted regex filters to strip specific noise categories. Unlike text cleaning (which targets markup and URLs), noise removal focuses on social-media-specific noise patterns common in Marathi user-generated content.',
       steps: [
         'Identify noise categories in the input: emojis, hashtags, @mentions, repeated punctuation.',
@@ -149,12 +149,12 @@ print(remove_noise_marathi(raw))
         'Aggressive repeated-punctuation stripping can alter the tone of exclamatory statements.'
       ],
       applications: [
-        'Cleaning Marathi Twitter/X and Instagram data for महापल्स.',
+        'Comparing cleaning strategies for Marathi social-media corpora.',
         'Preprocessing Marathi YouTube comment datasets.',
         'Filtering Marathi WhatsApp message corpora.'
       ],
       keyTakeaways: [
-        'Noise removal is the second step in the महापल्स pipeline, running after Text Cleaning.',
+        'MahaPulse replaces URLs, emails and mentions with placeholders while preserving emojis, hashtags and punctuation.',
         'Marathi social media data is uniquely noisy due to script-mixing and emoji-heavy expression.',
         'The mahaNLP library supports built-in social media noise removal for Marathi.',
         'Consider retaining emoji polarity as a separate feature rather than discarding it entirely.'
@@ -176,7 +176,7 @@ print(remove_noise_marathi(raw))
       readTime: '6 min',
       year: '1990s',
       definition: 'Sentence segmentation identifies the boundaries between sentences in a block of Marathi text, using both the Devanagari danda (।) and standard punctuation as sentence-ending markers.',
-      purpose: 'Downstream महापल्स processing (tokenization, lemmatization, and the MahaBERT model) operates sentence by sentence. Accurate segmentation prevents structural mixing of sentences and ensures each unit of text carries a coherent, self-contained sentiment.',
+      purpose: 'Sentence segmentation supports extractive summarization and sentence-level NLP experiments. MahaPulse sentiment receives conservative model_text through the saved MuRIL tokenizer; it does not require lemmatized sentences.',
       workingPrinciple: 'Marathi uses the danda (।) as its primary sentence terminator, in addition to periods (.) and question marks (?). Language-specific segmenters in the mahaNLP library are aware of these Devanagari conventions and handle abbreviation edge cases in Marathi.',
       steps: [
         'Scan the cleaned Marathi text for potential sentence termination markers: danda (।), period (.), question mark (?), and exclamation mark (!).',
@@ -204,7 +204,7 @@ for i, s in enumerate(sentences, 1):
       },
       advantages: [
         'Devanagari danda (।) provides an unambiguous sentence boundary marker absent in English.',
-        'Enables sentence-level sentiment classification in महापल्स.',
+        'Supports sentence-level classification experiments; extractive summaries use source sentence boundaries.',
         'Marathi-specific segmenters in mahaNLP handle local abbreviation exceptions (e.g., "श्री.", "डॉ.").'
       ],
       limitations: [
@@ -213,14 +213,14 @@ for i, s in enumerate(sentences, 1):
         'Very long Marathi compound sentences may represent multiple opinions and require sub-segmentation.'
       ],
       applications: [
-        'Splitting Marathi product reviews into individual opinion sentences for महापल्स.',
+        'Splitting Marathi product reviews for sentence-level experiments.',
         'Preprocessing Marathi news articles for summarization.',
         'Structuring Marathi survey responses for clause-level analysis.'
       ],
       keyTakeaways: [
         'Marathi uses the danda (।) as its primary sentence-ending character — treat it like a period.',
         'The mahaNLP library provides a Marathi-aware sentence tokenizer.',
-        'Sentence segmentation is Step 3 in the महापल्स pipeline, after cleaning and noise removal.',
+        'Sentence segmentation is an educational concept and a summary concern, not mandatory MuRIL preprocessing.',
         'Accurate segmentation directly improves MahaBERT fine-tuning quality.'
       ],
       relatedConcepts: [
@@ -276,14 +276,14 @@ print("Input IDs:", tokens["input_ids"])
         'Tokenizer must match the pre-trained model (MahaBERT tokenizer ≠ IndicBERT tokenizer).'
       ],
       applications: [
-        'Preparing Marathi text for MahaBERT and IndicBERT input in महापल्स.',
+        'Preparing text for educational MahaBERT and IndicBERT comparisons; MahaPulse uses its saved MuRIL tokenizer.',
         'Building Marathi vocabulary for information retrieval systems.',
         'Morphological analysis of Marathi text corpora.'
       ],
       keyTakeaways: [
         'Use the MahaBERT-specific tokenizer — it is trained on Marathi and understands Devanagari subword structure.',
         'Subword tokenization is the standard for all transformer-based Marathi NLP pipelines.',
-        'Tokenization is Step 4 in the महापल्स pipeline.',
+        'MahaPulse loads the tokenizer matching its MuRIL artifact and recorded maximum sequence length.',
         'The L3Cube MahaCorpus of 24.8M sentences gives MahaBERT\'s tokenizer broad Marathi coverage.'
       ],
       relatedConcepts: [
@@ -327,7 +327,7 @@ print(filtered)
 # Output: ['उत्पादन', 'खूप', 'चांगले', 'आवडले']`
       },
       advantages: [
-        'Reduces the number of input tokens passed to MahaBERT, lowering computation.',
+        'Can reduce classical feature counts, but removing classifier input tokens may lose sentiment context.',
         'L3Cube\'s 400-word Marathi stop list is derived from 24.8M sentences — highly representative.',
         'Focuses sentiment classification on content words like adjectives and nouns.',
         'Available directly in the mahaNLP library.'
@@ -338,13 +338,13 @@ print(filtered)
         'MahaBERT itself retains all tokens internally — stop-word removal is applied only to reduce preprocessing feature space, not model input.'
       ],
       applications: [
-        'Reducing Marathi sentiment analysis feature dimensions in the महापल्स pipeline.',
+        'Reducing feature dimensions in classical Marathi NLP experiments.',
         'Building clean Marathi topic models.',
         'Marathi keyword extraction for news summarization.'
       ],
       keyTakeaways: [
         'Use the L3Cube Marathi stop word list — it is empirically derived from the largest Marathi corpus available.',
-        'Stop-word removal is Step 5 in the महापल्स pipeline, applied after tokenization.',
+        'MahaPulse does not remove stop words from MuRIL model_text or the shared analysis_text preprocessor.',
         'Never remove Marathi negation words (नाही, नको) — they are critical for accurate sentiment.',
         'The mahaNLP library provides ready-to-use Marathi stop word utilities.'
       ],
@@ -392,7 +392,7 @@ print(lemmas)
       advantages: [
         'Always yields a valid Marathi dictionary word — unlike stemming.',
         'Resolves highly inflected Marathi verb forms to a single canonical root.',
-        'Improves vocabulary consolidation for downstream MahaBERT fine-tuning.',
+        'Can consolidate vocabulary in classical NLP experiments; transformer fine-tuning should preserve useful context.',
         'Handles grammatically irregular Marathi forms correctly.'
       ],
       limitations: [
@@ -402,12 +402,12 @@ print(lemmas)
         'Errors in POS tagging propagate to lemmatization errors.'
       ],
       applications: [
-        'Vocabulary normalization in the महापल्स Marathi sentiment pipeline.',
+        'Vocabulary normalization in educational Marathi NLP experiments.',
         'Preprocessing Marathi text for search and information retrieval.',
         'Morphological analysis for Marathi chatbot query understanding.'
       ],
       keyTakeaways: [
-        'Lemmatization is preferred over stemming in महापल्स — it preserves valid Marathi words.',
+        'Lemmatization and stemming are reference techniques; MahaPulse does neither on its classifier path.',
         'Marathi\'s morphological richness makes lemmatization especially important for vocabulary consolidation.',
         'Lemmatization is Step 6 — the final text preprocessing step before the representation stage.',
         'Use the mahaNLP Marathi lemmatizer for linguistically accurate results.'
@@ -477,12 +477,12 @@ for sentence in [s1, s2]:
         'Requires the MahaBERT/IndicBERT model to be loaded in memory (~440MB).'
       ],
       applications: [
-        'Sentence-level Marathi sentiment classification in महापल्स.',
+        'Sentence-level Marathi sentiment model comparison experiments.',
         'Marathi Named Entity Recognition (NER).',
         'Marathi question answering and natural language inference.'
       ],
       keyTakeaways: [
-        'Contextual embeddings are Step 7 in the महापल्स pipeline — the bridge between preprocessing and classification.',
+        'Contextual embeddings explain transformer behavior; the runtime classifier is MuRIL and keywords use multilingual MiniLM embeddings.',
         'MahaBERT produces 768-dimensional contextual embeddings per Marathi token.',
         'The [CLS] token embedding is used as the sentence representation for sentiment classification.',
         'Contextual embeddings from MahaBERT outperform static Word2Vec/FastText for Marathi sentiment tasks.'
@@ -507,7 +507,7 @@ for sentence in [s1, s2]:
       difficulty: 'Advanced',
       readTime: '11 min',
       year: '2017',
-      definition: 'Transformer representations are deep contextual vectors generated by multi-head self-attention stacks. महापल्स uses MahaBERT (Marathi monolingual) or IndicBERT (Indic multilingual) — both fine-tuned on labelled Marathi sentiment data for the final classification step.',
+      definition: 'Transformer representations are deep contextual vectors generated by multi-head self-attention stacks. This educational reference compares MahaBERT (Marathi monolingual) and IndicBERT (Indic multilingual). The implemented MahaPulse sentiment adapter uses MuRIL with a versioned artifact.',
       purpose: 'Enables highly parallelizable, context-aware processing of Marathi sentences. The pre-trained transformer captures deep linguistic knowledge of Marathi from 24.8M sentences (MahaBERT) or 12 Indian languages (IndicBERT), which is then fine-tuned for sentiment classification with minimal labelled data.',
       workingPrinciple: 'Processes all tokens in parallel using positional encodings and multi-head self-attention blocks. Each attention head independently computes weighted relationships between every token pair, allowing the model to capture both local and long-range Marathi grammatical dependencies. A classification head (linear layer + softmax) is added on top of the [CLS] token for sentiment prediction.',
       steps: [
@@ -546,7 +546,7 @@ print(f"Sentiment: {prediction} (confidence: {confidence:.2f})")
 # Sentiment: Negative (confidence: 0.94)`
       },
       advantages: [
-        'MahaBERT is pre-trained on 24.8M Marathi sentences — the largest Marathi-specific model available.',
+        'MahaBERT is pre-trained on a Marathi-specific corpus and is useful for model comparisons.',
         'Processes all tokens in parallel (no sequential bottleneck like LSTMs).',
         'Captures long-range Marathi grammatical dependencies that rule-based systems miss.',
         'Fine-tuning requires relatively few labelled Marathi examples due to transfer learning.',
@@ -559,17 +559,17 @@ print(f"Sentiment: {prediction} (confidence: {confidence:.2f})")
         'MahaBERT has a 512-token maximum sequence length — very long Marathi documents must be chunked.'
       ],
       applications: [
-        'Marathi sentiment classification — the core task of महापल्स.',
+        'Educational alternatives for Marathi sentiment classification; MahaPulse implements MuRIL.',
         'Marathi Named Entity Recognition (NER) with MahaBERT.',
         'Marathi Natural Language Inference and textual entailment.',
         'Opinion mining from Marathi government and social media portals.'
       ],
       keyTakeaways: [
-        'MahaBERT (Joshi, 2022) is the primary model for महापल्स — trained on Marathi and consistently outperforms multilingual alternatives on Marathi tasks.',
-        'IndicBERT (Kakwani et al., 2020) is the fallback when cross-lingual Indic context is beneficial.',
+        'MahaBERT (Joshi, 2022) is an educational Marathi model comparison; it is not the implemented MahaPulse classifier.',
+        'IndicBERT (Kakwani et al., 2020) is a multilingual educational comparison; MahaPulse does not silently switch sentiment models.',
         'The Transformer architecture (Vaswani et al., 2017) — "Attention is All You Need" — powers both models.',
         'Fine-tune for 3–5 epochs on a Marathi sentiment dataset using the Hugging Face Transformers library.',
-        'This is Step 8 — the final and most critical step in the महापल्स pipeline.'
+        'Implemented flow: preprocessing → MuRIL → KeyBERT → saved BERTopic → extractive summary → persistence → dashboard/export.'
       ],
       relatedConcepts: [
         { label: 'Contextual Embeddings', id: 'contextual-embeddings' },

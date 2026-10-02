@@ -40,10 +40,26 @@
           <header class="analyzer-hero" aria-labelledby="analyzer-title">
             <p class="analyzer-eyebrow">महापल्स · live pipeline</p>
             <h1 id="analyzer-title" class="analyzer-title">Understand what your Marathi text is saying.</h1>
-            <p class="analyzer-subtitle">Run a transparent sentiment pass over Marathi or Marathi-English text. See the conservative model path alongside the deeper analysis path that powers future enrichment.</p>
+            <p class="analyzer-subtitle">Analyze one text or a CSV collection. Explore sentiment, keywords, topics and summaries, with a transparent view of the services behind every result.</p>
           </header>
 
-          <div class="analyzer-layout">
+          <div class="analyzer-status-stack analyzer-service-bar" aria-label="Service status">
+            <div class="analyzer-status-row"><span class="analyzer-status-label">API backend</span><span id="backend-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+            <div class="analyzer-status-row"><span class="analyzer-status-label">Sentiment model</span><span id="model-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+            <div class="analyzer-status-row"><span class="analyzer-status-label">Keywords</span><span id="keyword-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+            <div class="analyzer-status-row"><span class="analyzer-status-label">Topics</span><span id="topic-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+            <div class="analyzer-status-row"><span class="analyzer-status-label">Summary</span><span id="summary-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+            <div class="analyzer-status-row"><span class="analyzer-status-label">Database</span><span id="database-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+          </div>
+          <p id="mock-mode-note" class="analyzer-dev-note" hidden>Development mock mode is active. Results are deterministic samples, not model performance.</p>
+          <p id="service-model-info" class="analyzer-meta" aria-label="Loaded service metadata"></p>
+          <span id="enrichment-status" class="sr-only"></span>
+          <div class="analyzer-mode-switch" aria-label="Analysis mode">
+            <button id="single-mode-button" class="analyzer-mode-button" type="button" aria-pressed="true" aria-controls="single-analysis-panel">Single text</button>
+            <button id="batch-mode-button" class="analyzer-mode-button" type="button" aria-pressed="false" aria-controls="batch-analysis-panel">CSV batch</button>
+          </div>
+
+          <div id="single-analysis-panel" class="analyzer-layout">
             <section class="analyzer-card" aria-labelledby="input-title">
               <div class="analyzer-card-header">
                 <div>
@@ -72,13 +88,6 @@
                   </div>
                 </form>
 
-                <div class="analyzer-status-stack" aria-label="Service status">
-                  <div class="analyzer-status-row"><span class="analyzer-status-label">API backend</span><span id="backend-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
-                  <div class="analyzer-status-row"><span class="analyzer-status-label">Sentiment model</span><span id="model-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
-                  <div class="analyzer-status-row"><span class="analyzer-status-label">Enrichment</span><span id="enrichment-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
-                </div>
-                <p id="mock-mode-note" class="analyzer-dev-note" hidden>Development mock mode is active. Results are deterministic samples, not model performance.</p>
-                <p id="service-model-info" class="analyzer-meta" aria-label="Loaded service metadata"></p>
               </div>
             </section>
 
@@ -148,6 +157,68 @@
               </div>
             </section>
           </div>
+
+          <section id="batch-analysis-panel" hidden aria-labelledby="batch-title">
+            <div class="analyzer-card">
+              <div class="analyzer-card-header">
+                <div><h2 id="batch-title" class="analyzer-card-title">Analyze a collection</h2><p class="analyzer-card-copy">Upload a UTF-8 CSV. Every row is analyzed and persisted by the backend.</p></div>
+                <span class="page-badge">CSV</span>
+              </div>
+              <div class="analyzer-card-body">
+                <form id="batch-form" class="batch-upload-form" novalidate>
+                  <div id="csv-drop-zone" class="csv-drop-zone">
+                    <label class="analyzer-label" for="batch-file">CSV file</label>
+                    <input id="batch-file" class="batch-file-input" type="file" accept=".csv,text/csv" aria-describedby="batch-file-info batch-limits">
+                    <p class="analyzer-card-copy">Choose a file or drag and drop it here.</p>
+                    <p id="batch-file-info" class="analyzer-meta" aria-live="polite">No file selected.</p>
+                  </div>
+                  <div class="batch-upload-options">
+                    <label class="analyzer-label" for="text-column">Text column</label>
+                    <input id="text-column" class="analyzer-field" type="text" value="text" maxlength="200" autocomplete="off" aria-describedby="text-column-help">
+                    <p id="text-column-help" class="analyzer-card-copy">Enter the CSV header that contains your text. The server validates columns and rows.</p>
+                    <p id="batch-limits" class="analyzer-card-copy"></p>
+                    <div class="analyzer-actions"><button id="analyze-csv-button" class="btn btn-primary" type="submit">Analyze CSV <span aria-hidden="true">→</span></button><button id="clear-csv-button" class="btn btn-ghost" type="button">Clear CSV</button></div>
+                  </div>
+                </form>
+                <div id="batch-state" class="analyzer-state" data-state="idle" role="status" aria-live="polite">Choose a CSV to start, or reopen a saved session below.</div>
+                <div id="batch-progress-panel" hidden><label class="analyzer-label" for="batch-progress">Upload and analysis progress</label><progress id="batch-progress" class="batch-progress" max="100"></progress><p id="batch-progress-label" class="analyzer-card-copy">Preparing upload…</p></div>
+                <form id="session-form" class="batch-session-form">
+                  <label class="analyzer-label" for="session-input">Reopen a saved session</label>
+                  <div class="batch-session-controls"><input id="session-input" class="analyzer-field" type="text" autocomplete="off" maxlength="100" placeholder="Paste a session ID" required><button id="load-session-button" class="btn btn-ghost" type="submit">Load session</button></div>
+                </form>
+              </div>
+            </div>
+
+            <div id="batch-results" hidden>
+              <section class="analyzer-card batch-dashboard" aria-labelledby="batch-summary-title">
+                <div class="analyzer-card-header"><div><h2 id="batch-summary-title" class="analyzer-card-title">Collection overview</h2><p class="analyzer-card-copy">Session <span id="batch-session-id" class="batch-session-id">—</span></p></div><span id="batch-status" class="batch-status-badge">—</span></div>
+                <div class="analyzer-card-body">
+                  <div class="batch-metrics"><div class="analyzer-kpi"><span class="analyzer-kpi-label">Total documents</span><strong id="batch-total" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Successful</span><strong id="batch-successful" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Failed rows</span><strong id="batch-failed" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Processing time</span><strong id="batch-processing" class="analyzer-kpi-value">—</strong></div></div>
+                  <p class="analyzer-meta">Model: <span id="batch-model-version">—</span></p>
+                  <p id="analytics-state" class="analyzer-card-copy" role="status"></p>
+                  <div id="analytics-panel" class="batch-analytics-grid" hidden>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Sentiment distribution</h3><p class="analyzer-card-copy">Percentages reflect successful documents.</p><div id="batch-sentiment-list" class="batch-distribution-list"></div></article>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Confidence</h3><div class="analyzer-kpi-list"><div class="analyzer-kpi"><span class="analyzer-kpi-label">Average</span><strong id="confidence-average" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Low confidence</span><strong id="confidence-low" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Minimum</span><strong id="confidence-min" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Maximum</span><strong id="confidence-max" class="analyzer-kpi-value">—</strong></div></div></article>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Language</h3><p id="batch-language" class="analyzer-summary">—</p><p class="analyzer-card-copy">The API reports code mixing among successful documents; it does not return a separate Marathi-only count.</p></article>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Top keywords</h3><div id="batch-keywords" class="batch-aggregate-list"></div></article>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Topic distribution</h3><div id="batch-topics" class="batch-aggregate-list"></div><p id="batch-null-topics" class="analyzer-card-copy"></p></article>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Collection summary</h3><p id="batch-summary" class="analyzer-empty">An aggregate summary is not provided by this API. Individual document summaries appear below when available.</p></article>
+                  </div>
+                </div>
+              </section>
+
+              <section class="analyzer-card batch-documents" aria-labelledby="documents-title">
+                <div class="analyzer-card-header"><div><h2 id="documents-title" class="analyzer-card-title">Document results</h2><p class="analyzer-card-copy">Browse a limited page at a time. Failed rows remain visible.</p></div><div class="batch-export-actions"><button id="export-csv-button" class="btn btn-ghost" type="button">Export CSV</button><button id="export-json-button" class="btn btn-ghost" type="button">Export JSON</button></div></div>
+                <div class="analyzer-card-body">
+                  <p id="export-state" class="analyzer-card-copy" role="status" aria-live="polite"></p>
+                  <p id="document-state" class="analyzer-card-copy" role="status" aria-live="polite"></p>
+                  <p id="raw-text-note" class="analyzer-dev-note" hidden>Some original texts are not stored under the server's privacy policy. Analysis results remain available.</p>
+                  <div class="batch-table-scroll" tabindex="0" role="region" aria-label="Document results table"><table class="batch-results-table"><caption class="sr-only">Persisted CSV document results</caption><thead><tr><th scope="col">Row</th><th scope="col">Original text</th><th scope="col">Sentiment / confidence</th><th scope="col">Keywords</th><th scope="col">Topic</th><th scope="col">Summary</th><th scope="col">Language</th><th scope="col">Time</th><th scope="col">Status</th></tr></thead><tbody id="document-rows"></tbody></table></div>
+                  <div class="batch-pagination"><button id="previous-page-button" class="btn btn-ghost" type="button" disabled>Previous page</button><span id="document-page-info" class="analyzer-card-copy" aria-live="polite">—</span><button id="next-page-button" class="btn btn-ghost" type="button" disabled>Next page</button></div>
+                </div>
+              </section>
+            </div>
+          </section>
         </main>
       </div>
       <div id="footer-container"></div>
@@ -158,8 +229,10 @@
   <script src="../assets/js/pixelblast.js?v=2"></script>
   <script src="../assets/js/main.js?v=2"></script>
   <script src="../assets/js/search.js?v=2"></script>
-  <script src="../assets/js/api-config.js?v=1"></script>
-  <script src="../assets/js/analyzer.js?v=1"></script>
+  <script src="../assets/js/runtime-config.js?v=1"></script>
+  <script src="../assets/js/api-config.js?v=2"></script>
+  <script src="../assets/js/analyzer.js?v=2"></script>
+  <script src="../assets/js/batch-analyzer.js?v=1"></script>
 </body>
 
 </html>

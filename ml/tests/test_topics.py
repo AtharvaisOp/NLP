@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ml.topics import TopicTrainingConfig, TopicTrainingError, inspect_topic_artifact
+from ml.topics import TopicTrainingConfig, TopicTrainingError, _dataset_revision, inspect_topic_artifact
 
 
 def test_topic_training_config_has_multilingual_default_and_smoke_flag() -> None:
@@ -27,3 +27,11 @@ def test_topic_artifact_inspection_reads_manifest(tmp_path: Path) -> None:
 def test_topic_artifact_inspection_fails_loudly(tmp_path: Path) -> None:
     with pytest.raises(TopicTrainingError, match="manifest is missing"):
         inspect_topic_artifact(tmp_path / "missing")
+
+
+def test_topic_provenance_reads_actual_prepared_dataset_metadata(tmp_path: Path) -> None:
+    revision = "8ee29fa1329d6a841030eb46659d3c10614b5e59"
+    (tmp_path / "dataset_report.json").write_text(
+        json.dumps({"source_metadata": {"source_revision": revision}}), encoding="utf-8"
+    )
+    assert _dataset_revision(tmp_path) == revision

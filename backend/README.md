@@ -129,6 +129,9 @@ alembic -c backend/alembic.ini downgrade base
 ```
 
 `DATABASE_URL` enables database-backed history, batches, analytics, and export.
+Render-style `postgres://` and `postgresql://` URLs are normalized to the
+installed `postgresql+psycopg` driver. `/ready` verifies both connectivity and
+the required tables; an unmigrated database is reported unavailable.
 When it is unset, `/v1/analyze` remains stateless and `/ready` reports the
 database as disabled/not-required. `PERSIST_SINGLE_ANALYSIS=false` is the
 default; enabling it requires a configured database and persists one session
@@ -141,6 +144,12 @@ bounded by `MAX_UPLOAD_BYTES` and `MAX_BATCH_ROWS`, parsed as UTF-8 (including
 an optional BOM), and processed synchronously through the same
 `AnalysisOrchestrator` as single analysis. Rows fail independently; session
 status is `completed`, `partial`, or `failed`.
+Batch work runs in a thread pool so its synchronous inference/database work
+does not block the ASGI event loop. The HTTP layer limits bodies before JSON
+and multipart parsing: uploads allow the configured file bytes plus 64 KiB
+of multipart overhead, while text requests allow the configured character
+limit encoded as JSON plus bounded overhead. Oversized HTTP bodies return
+413; bounded uploads or inputs that exceed their content limits return 422.
 
 The normalized schema stores sessions, documents, sentiment, keywords, topics,
 and summaries. It does not store weights or embeddings. `STORE_RAW_TEXT=true`
@@ -149,6 +158,11 @@ null while the documented processed/result metadata may remain. User text is
 not written to normal application logs. CSV export protects cells beginning
 with `=`, `+`, `-`, or `@` against spreadsheet formula execution and preserves
 Marathi UTF-8.
+Export also protects formulas after leading whitespace/control characters.
+Exception logs record exception classes instead of provider/SQL exception
+contents, which can contain user input. CORS requires an explicit list of
+frontend origins and accepts either a comma-separated environment value or
+a JSON list; wildcard origins are rejected.
 
 On this local Windows CPU environment, the first KeyBERT load took about 13.4
 seconds and increased resident memory by about 702 MB. The two requested local
@@ -169,3 +183,6 @@ local smoke-development observations, not production latency guarantees.
 The API is designed to be deployed as a Render web service. Keep the existing
 static site independent so its current routes and GitHub Pages behavior remain
 unchanged while the API evolves.
+
+Final integration measurements, the actual OpenAPI contract, and remaining
+model/deployment gates are recorded in [docs/VALIDATION.md](../docs/VALIDATION.md).

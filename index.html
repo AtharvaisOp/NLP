@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>महापल्स — Marathi Sentiment Analyzer</title>
   <meta name="description"
-    content="An interactive NLP knowledge repository for महापल्स: an AI-powered Marathi Sentiment & Opinion Analysis System. Explore the 8-step pipeline from text cleaning to MahaBERT/IndicBERT transformer classification.">
+    content="MahaPulse Marathi sentiment analysis: MuRIL, optional enrichment, CSV batches and session analytics, with an educational NLP reference library.">
   <meta name="theme-color" content="#0A0F1E">
 
   <!-- Favicons -->
@@ -18,7 +18,7 @@
   <!-- Open Graph -->
   <meta property="og:title" content="महापल्स — Marathi Sentiment Analysis Pipeline">
   <meta property="og:description"
-    content="Explore the महापल्स 8-step Marathi NLP pipeline: from text cleaning to MahaBERT/IndicBERT transformer-based sentiment classification.">
+    content="Analyze Marathi and code-mixed text with MahaPulse, and explore its MuRIL pipeline and educational NLP comparisons.">
   <meta property="og:type" content="website">
 
   <!-- Fonts -->
@@ -109,9 +109,9 @@
 
         <!-- Subtitle -->
         <p class="hero-sub animate-fade-up delay-200">
-          An interactive reference for the <strong>महापल्स</strong> pipeline — an AI-powered Marathi
-          Sentiment &amp; Opinion Analysis System. Explore all 8 NLP steps, from Devanagari text
-          cleaning to MahaBERT/IndicBERT transformer classification.
+          <strong>महापल्स</strong> analyzes Marathi and code-mixed text with MuRIL sentiment,
+          optional keywords, topics and summaries. Try single text or CSV batches, then explore
+          the educational NLP reference library. Model readiness is shown in the Analyzer.
         </p>
 
         <!-- Search bar (opens modal) -->
@@ -152,9 +152,9 @@
           </a>
         </div>
 
-        <!-- महापल्स pipeline tags -->
+        <!-- Educational reference topics -->
         <div class="tag-row animate-fade-up delay-400" style="margin-top:2rem;max-width:680px;"
-          aria-label="महापल्स pipeline topics">
+          aria-label="Educational NLP reference topics">
           <a href="./concept/index.html?id=text-cleaning" class="hero-tag">Text Cleaning</a>
           <a href="./concept/index.html?id=noise-removal" class="hero-tag">Noise Removal</a>
           <a href="./concept/index.html?id=sentence-segmentation" class="hero-tag">Sentence Segmentation</a>
@@ -171,8 +171,8 @@
       ══════════════════════════════════════════════════════ -->
       <div class="stats-row" role="list" aria-label="Repository statistics">
         <div class="stat-item" role="listitem">
-          <span class="stat-num" aria-label="8 pipeline steps">8</span>
-          <span class="stat-label">Pipeline Steps</span>
+          <span class="stat-num" aria-label="8 reference concepts">8</span>
+          <span class="stat-label">Reference Concepts</span>
         </div>
         <div class="stat-item" role="listitem">
           <span class="stat-num" aria-label="2 categories">2</span>
@@ -197,9 +197,10 @@
       ══════════════════════════════════════════════════════ -->
       <section style="padding: 0 1.5rem 4rem; max-width:1180px; margin:0 auto;" aria-labelledby="features-heading">
         <div style="text-align:center;margin-bottom:2.5rem;">
-          <p class="section-eyebrow" aria-hidden="true">महापल्स Pipeline</p>
-          <h2 id="features-heading" class="section-title">Why These 8 NLP Topics?</h2>
-          <p class="section-desc">Each topic directly maps to a step in the महापल्स Marathi Sentiment Analysis pipeline.
+          <p class="section-eyebrow" aria-hidden="true">Learn the foundations</p>
+          <h2 id="features-heading" class="section-title">Explore 8 NLP Reference Topics</h2>
+          <p class="section-desc">Educational comparisons complement the implemented MuRIL pipeline.
+            Its classifier preserves code mixing, emojis, negation and punctuation.
           </p>
         </div>
 
@@ -207,34 +208,33 @@
           <div class="feature-card">
             <div class="feature-icon" style="background:rgba(99,102,241,.15);">🧹</div>
             <h3>Text Cleaning &amp; Noise Removal</h3>
-            <p>Strip URLs, HTML, emojis, and non-Devanagari characters from raw Marathi social media data.</p>
+            <p>Compare cleaning strategies. MahaPulse normalizes text while retaining sentiment cues and Latin words.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon" style="background:rgba(34,211,238,.15);">✂️</div>
             <h3>Sentence Segmentation &amp; Tokenization</h3>
-            <p>Detect Marathi sentence boundaries (using danda ।) and apply MahaBERT WordPiece subword tokenization.</p>
+            <p>Explore sentence boundaries and subword tokenization, with MahaBERT examples for comparison.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon" style="background:rgba(167,139,250,.15);">🔤</div>
             <h3>Stop-Word Removal &amp; Lemmatization</h3>
-            <p>Filter L3Cube's 400 Marathi stop words and reduce inflected forms to dictionary base lemmas.</p>
+            <p>Study vocabulary reduction techniques. MahaPulse does not apply them to MuRIL classifier input.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon" style="background:rgba(16,185,129,.15);">🔢</div>
             <h3>Contextual Embeddings</h3>
-            <p>Generate 768-dim context-sensitive word vectors using MahaBERT's encoder — resolving Marathi polysemy.
+            <p>Learn how transformer encoders represent context through educational MahaBERT examples.
             </p>
           </div>
           <div class="feature-card">
             <div class="feature-icon" style="background:rgba(245,158,11,.15);">🤖</div>
-            <h3>MahaBERT / IndicBERT</h3>
-            <p>Fine-tune a pre-trained Marathi transformer on labelled sentiment data for Positive / Negative / Neutral
-              classification.</p>
+            <h3>MahaBERT / IndicBERT Comparisons</h3>
+            <p>Compare Marathi and Indic model families. The implemented sentiment service uses MuRIL.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon" style="background:rgba(239,68,68,.15);">📑</div>
             <h3>IEEE-Cited References</h3>
-            <p>Every pipeline step backed by peer-reviewed citations including Joshi (2022), Devlin et al. (2019), and
+            <p>Reference concepts include citations to Joshi (2022), Devlin et al. (2019), and
               Vaswani et al. (2017).</p>
           </div>
         </div>
@@ -264,7 +264,7 @@
             aria-label="Text Preprocessing category">
             <div class="category-card-icon" aria-hidden="true">⚙️</div>
             <span class="category-card-name">Text Preprocessing</span>
-            <span class="category-card-count">6 pipeline steps</span>
+            <span class="category-card-count">6 reference concepts</span>
           </a>
           <a href="./concept/index.html?id=contextual-embeddings" class="category-card"
             aria-label="Language Representation category">
@@ -292,13 +292,13 @@
       <section style="padding: 0 1.5rem 5rem; max-width:1180px; margin:0 auto;">
         <div class="cta-banner">
           <h2>Explore the महापल्स Pipeline</h2>
-          <p>Dive into all 8 NLP steps — from Marathi text cleaning to MahaBERT sentiment classification — with
-            Devanagari examples, Python code, and IEEE citations.</p>
+          <p>Follow the implemented MuRIL, enrichment, persistence and analytics workflow, or study
+            eight educational concepts with Marathi examples, Python code and citations.</p>
           <div class="cta-actions">
             <a href="./repository/index.html" class="btn btn-primary btn-lg">
               Browse All Concepts
             </a>
-            <a href="./concept/index.html?id=text-cleaning" class="btn btn-ghost btn-lg">
+            <a href="./workflows/index.html" class="btn btn-ghost btn-lg">
               Start Pipeline →
             </a>
           </div>

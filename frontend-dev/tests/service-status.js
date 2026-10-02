@@ -1,0 +1,30 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const nodes = new Map();
+const document = { addEventListener() {}, getElementById(id) { if (!nodes.has(id)) nodes.set(id, { dataset: {}, hidden: false, textContent: '' }); return nodes.get(id); } };
+let databaseState = 'ready'; let sentimentState = 'ready'; let modelInfoFails = false;
+const readiness = () => ({ status: 'degraded', services: { sentiment: { state: sentimentState, smoke_test: true, production_ready: false }, keywords: { state: 'ready' }, topics: { state: 'unavailable' }, summary: { state: 'ready' }, database: { state: databaseState } } });
+const model = () => ({ sentiment_model: { name: 'MuRIL', state: sentimentState, smoke_test: true, production_ready: false, version: 'smoke-v4' }, keyword_service: { name: 'KeyBERT', state: 'ready' }, topic_service: { name: 'BERTopic', state: 'unavailable' }, summary_service: { name: 'extractive', state: 'ready' } });
+const window = { NLP_COMPONENTS_READY: false, MAHAPULSE_CONFIG: {}, MahaPulseAPI: { health: async () => ({ status: 'ok' }), ready: async () => readiness(), modelInfo: async () => { if (modelInfoFails) throw new Error('Metadata temporarily unavailable'); return model(); } } };
+vm.runInNewContext(fs.readFileSync('assets/js/analyzer.js', 'utf8'), { window, document });
+async function main() {
+  await window.MahaPulseAnalyzer.loadServiceStatus();
+  assert.match(nodes.get('mock-mode-note').textContent, /Development\/Smoke Model · Not Production Ready/);
+  assert.equal(nodes.get('mock-mode-note').hidden, false);
+  assert.match(nodes.get('keyword-status').textContent, /KeyBERT ready/);
+  assert.match(nodes.get('topic-status').textContent, /artifact unavailable/);
+  assert.match(nodes.get('summary-status').textContent, /extractive ready/);
+  assert.match(nodes.get('database-status').textContent, /persistence available/);
+  assert.match(nodes.get('backend-status').textContent, /Core sentiment smoke/, 'optional failure is not total API failure');
+  databaseState = 'disabled'; modelInfoFails = true;
+  await window.MahaPulseAnalyzer.loadServiceStatus();
+  assert.match(nodes.get('database-status').textContent, /stateless mode.*batch unavailable/);
+  assert.equal(nodes.get('mock-mode-note').hidden, false, 'readiness smoke flags survive model-info failure');
+  sentimentState = 'unavailable'; databaseState = 'unavailable'; modelInfoFails = false;
+  await window.MahaPulseAnalyzer.loadServiceStatus();
+  assert.equal(nodes.get('model-status').dataset.state, 'offline');
+  assert.match(nodes.get('database-status').textContent, /Unavailable/);
+  console.log('Service status: 11 assertions passed.');
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -75,6 +75,7 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
 
     manifest = _read_json(path / "model_manifest.json")
     mapping_file = _read_json(path / "label_mapping.json")
+    model_config = _read_json(path / "config.json")
     mapping = mapping_file.get("canonical_to_id")
     if manifest.get("project") != "MahaPulse":
         raise MurilArtifactError("sentiment artifact project is incompatible")
@@ -86,6 +87,9 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
         raise MurilArtifactError("sentiment artifact base model is incompatible")
     if mapping != CANONICAL_LABEL_MAPPING or manifest.get("label_mapping") != CANONICAL_LABEL_MAPPING:
         raise MurilArtifactError("sentiment artifact label mapping is incompatible")
+    expected_ids = {str(identifier): label for label, identifier in CANONICAL_LABEL_MAPPING.items()}
+    if model_config.get("label2id") != CANONICAL_LABEL_MAPPING or model_config.get("id2label") != expected_ids:
+        raise MurilArtifactError("sentiment model config label mapping is incompatible")
     if not isinstance(manifest.get("smoke_test"), bool):
         raise MurilArtifactError("sentiment artifact smoke_test flag is invalid")
     model_version = manifest.get("model_version")
@@ -103,14 +107,22 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
         if not isinstance(integrity, dict):
             raise MurilArtifactError("sentiment artifact integrity metadata is invalid")
         for filename, metadata in integrity.items():
-            file_path = path / filename
+            file_path = (path / filename).resolve()
+            if file_path.parent != path.resolve():
+                raise MurilArtifactError("sentiment artifact integrity filename is invalid")
             if not file_path.is_file() or not isinstance(metadata, dict):
                 raise MurilArtifactError("sentiment artifact integrity files are invalid")
             expected_size = metadata.get("bytes")
             expected_hash = metadata.get("sha256")
             if file_path.stat().st_size != expected_size:
                 raise MurilArtifactError("sentiment artifact file size does not match manifest")
-            actual_hash = hashlib.sha256(file_path.read_bytes()).hexdigest()
+            # A MuRIL weights file is almost 1 GB; hash it without allocating
+            # another weights-sized buffer during a memory-sensitive startup.
+            digest = hashlib.sha256()
+            with file_path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            actual_hash = digest.hexdigest()
             if actual_hash != expected_hash:
                 raise MurilArtifactError("sentiment artifact integrity check failed")
 
@@ -147,7 +159,7 @@ class MurilSentimentService:
         except Exception as exc:
             self._load_error = exc
             self._metadata = getattr(exc, "metadata", None)
-            LOGGER.error("MuRIL artifact validation failed", extra={"fields": {"reason": str(exc)}})
+            LOGGER.error("MuRIL artifact validation failed", extra={"fields": {"error_type": type(exc).__name__}})
 
     @staticmethod
     def _select_device(torch_module: Any, requested: str) -> str:
@@ -187,7 +199,7 @@ class MurilSentimentService:
                 self._tokenizer, self._model, self._torch, self._device = self._load_components()
             except Exception as exc:
                 self._load_error = exc
-                LOGGER.error("MuRIL model load failed", extra={"fields": {"reason": str(exc)}})
+                LOGGER.error("MuRIL model load failed", extra={"fields": {"error_type": type(exc).__name__}})
                 if raise_error:
                     raise MurilServiceError("MuRIL sentiment service is not ready") from exc
                 return False
@@ -215,7 +227,7 @@ class MurilSentimentService:
             device=self._device if loaded else "not-loaded",
             state="ready" if loaded else "not_ready",
             smoke_test=metadata.smoke_test,
-            production_ready=not metadata.smoke_test,
+            production_ready=loaded and not metadata.smoke_test,
             base_model=metadata.base_model,
             preprocessing_version=metadata.preprocessing_version,
             backend="muril",
@@ -268,5 +280,5 @@ class MurilSentimentService:
         except MurilServiceError:
             raise
         except Exception as exc:
-            LOGGER.exception("MuRIL inference failed", extra={"fields": {"reason": str(exc)}})
+            LOGGER.exception("MuRIL inference failed", extra={"fields": {"error_type": type(exc).__name__}})
             raise MurilServiceError("MuRIL inference failed") from exc

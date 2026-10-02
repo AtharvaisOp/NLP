@@ -4,6 +4,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import Response
+from starlette.concurrency import run_in_threadpool
 
 from ..dependencies import get_orchestrator, get_persistence
 from ..schemas import (
@@ -94,7 +95,8 @@ def create_router() -> APIRouter:
         settings = request.app.state.settings
         payload = await file.read(settings.max_upload_bytes + 1)
         try:
-            result = BatchProcessor(settings, persistence).process(
+            result = await run_in_threadpool(
+                BatchProcessor(settings, persistence).process,
                 payload,
                 filename=file.filename,
                 text_column=text_column,
