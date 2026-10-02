@@ -27,6 +27,10 @@ phrases in the textarea to exercise cases:
 `window.MAHAPULSE_STATIC_CONFIG`, then the safe localhost defaults. It strips
 trailing slashes and never embeds a Render URL or secret.
 
+For local FastAPI CORS, provide the list as JSON to `pydantic-settings`, for
+example: `ALLOWED_ORIGINS=["http://127.0.0.1:8765","http://localhost:8765"]`.
+This is a run-time environment setting; the frontend does not weaken CORS.
+
 | Input phrase | Fixture behavior |
 | --- | --- |
 | `हे उत्पादन छान आहे` | positive Marathi |
@@ -37,6 +41,8 @@ trailing slashes and never embeds a Render URL or secret.
 | `empty-keywords` | empty keyword state |
 | `topic-null` | null topic state |
 | `summary-null` | null summary state |
+| `topic-assigned` | optional topic payload |
+| `summary-available` | optional summary payload |
 | `partial` | partial enrichment warning |
 | `trigger-422` | HTTP 422 safe error |
 | `trigger-500` | HTTP 500 safe error |
