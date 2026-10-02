@@ -19,5 +19,5 @@ ml/artifacts/
 dist/
 *.log
 
-.vercel
 .env*
+!.env.example

@@ -15,7 +15,10 @@ a non-smoke artifact. [The validation record](docs/VALIDATION.md) contains actua
 runtime/deployment results and outstanding gates.
 
 The selected free cloud demo uses **mock sentiment and mock keywords**,
-disabled topics, real extractive summary, and PostgreSQL when configured.
+disabled topics, real extractive summary, and validated PostgreSQL persistence.
+Try the [live dashboard](https://mahapulse-staging.vercel.app/analyzer/).
+[Deployment evidence and operational limits](docs/DEPLOYMENT.md) include the
+validated PostgreSQL runtime and the free database's expiry date.
 Local smoke MuRIL/KeyBERT checks remain separate from the hosted demo.
 The real local pipeline measured about 1.45 GB resident memory; a paid instance
 was not selected. Neither hosted mock predictions nor local smoke results

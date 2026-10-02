@@ -1,9 +1,9 @@
 # MahaPulse ML pipeline
 
-Phase 3 prepares the official L3Cube MahaSent-MD Marathi sentiment dataset,
+The training pipeline prepares the official L3Cube MahaSent-MD Marathi sentiment dataset,
 fine-tunes `google/muril-base-cased` for three classes, evaluates a selected
 checkpoint, and records a versioned artifact. The FastAPI sentiment service
-consumes these artifacts in Phase 4. Phase 5 adds optional KeyBERT, BERTopic,
+consumes these artifacts. Optional KeyBERT, BERTopic,
 and extractive-summary services without changing the sentiment artifact or
 API contract.
 
@@ -50,7 +50,7 @@ text is not lemmatized. `analysis_text` remains a separate downstream path.
 The artifact contains model/tokenizer files plus `config.json`,
 `training_config.json`, `label_mapping.json`, `model_manifest.json`,
 `dataset_report.json`, `metrics.json`, and `predictions.jsonl`. Artifacts are
-ignored by Git. Phase 4 can load the tokenizer/model and manifest while keeping
+ignored by Git. FastAPI loads the tokenizer/model and manifest while keeping
 the existing `/v1/analyze` response contract unchanged.
 
 ## Phase 5 enrichment boundary

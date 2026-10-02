@@ -15,7 +15,7 @@ import random
 from typing import Any
 
 from .dataset import load_split_records
-from .preprocessing import PREPROCESSING_VERSION, preprocess_text
+from .preprocessing import PREPROCESSING_VERSION, build_analysis_tokens, preprocess_text
 
 
 class TopicTrainingError(RuntimeError):
@@ -51,6 +51,7 @@ def train_topic_model(
         import torch
         from bertopic import BERTopic
         from sentence_transformers import SentenceTransformer
+        from sklearn.feature_extraction.text import CountVectorizer
 
         random.seed(config.random_seed)
         try:
@@ -75,6 +76,9 @@ def train_topic_model(
             calculate_probabilities=True,
             low_memory=True,
             verbose=False,
+            vectorizer_model=CountVectorizer(
+                tokenizer=build_analysis_tokens, token_pattern=None, lowercase=False
+            ),
         )
         topics, _ = topic_model.fit_transform(documents)
     except TopicTrainingError:
@@ -171,4 +175,4 @@ def _dataset_revision(processed_dir: Path) -> str | None:
         report = json.loads(report_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
         return None
-    return report.get("source", {}).get("source_revision")
+    return report.get("source_metadata", {}).get("source_revision")
