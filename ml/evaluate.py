@@ -7,7 +7,14 @@ from pathlib import Path
 
 from .dataset import load_split_records
 from .metrics import classification_metrics, prediction_records
-from .train import TextClassificationDataset, TrainingError, _require_training_dependencies, _write_json
+from .train import (
+    TextClassificationDataset,
+    TrainingError,
+    _artifact_integrity,
+    _require_training_dependencies,
+    _trainer_processing_argument,
+    _write_json,
+)
 
 
 def evaluate_artifact(artifact_dir: Path, processed_dir: Path) -> dict[str, object]:
@@ -22,6 +29,7 @@ def evaluate_artifact(artifact_dir: Path, processed_dir: Path) -> dict[str, obje
     dataset = TextClassificationDataset(records, tokenizer, int(manifest["max_length"]), torch)
     from transformers import TrainingArguments
 
+    trainer_kwargs = _trainer_processing_argument(tokenizer)
     trainer = Trainer(
         model=model,
         args=TrainingArguments(
@@ -29,8 +37,8 @@ def evaluate_artifact(artifact_dir: Path, processed_dir: Path) -> dict[str, obje
             per_device_eval_batch_size=32,
             report_to=[],
         ),
-        tokenizer=tokenizer,
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
+        **trainer_kwargs,
     )
     prediction = trainer.predict(dataset)
     logits = prediction.predictions[0] if isinstance(prediction.predictions, tuple) else prediction.predictions
@@ -49,4 +57,6 @@ def evaluate_artifact(artifact_dir: Path, processed_dir: Path) -> dict[str, obje
     with (artifact_dir / "predictions.jsonl").open("w", encoding="utf-8", newline="\n") as handle:
         for row in prediction_records(records, probabilities.argmax(axis=1), probabilities):
             handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+    manifest["artifact_integrity"] = _artifact_integrity(artifact_dir)
+    _write_json(artifact_dir / "model_manifest.json", manifest)
     return metrics

@@ -29,11 +29,16 @@ def seed_everything(seed: int) -> None:
 
 def runtime_info() -> dict[str, object]:
     packages = {}
-    for package in ("torch", "transformers", "sklearn", "numpy"):
+    for display_name, distribution_name in (
+        ("torch", "torch"),
+        ("transformers", "transformers"),
+        ("sklearn", "scikit-learn"),
+        ("numpy", "numpy"),
+    ):
         try:
-            packages[package] = importlib.metadata.version(package)
+            packages[display_name] = importlib.metadata.version(distribution_name)
         except importlib.metadata.PackageNotFoundError:
-            packages[package] = None
+            packages[display_name] = None
     device = "cpu"
     try:
         import torch

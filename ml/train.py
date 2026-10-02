@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import datetime, timezone
+import hashlib
 import inspect
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -104,7 +106,9 @@ def _metrics_for_prediction(eval_prediction: Any, np: Any) -> dict[str, float]:
     }
 
 
-def _training_arguments(TrainingArguments: Any, config: TrainingConfig, output_dir: Path) -> Any:
+def _training_arguments(
+    TrainingArguments: Any, config: TrainingConfig, output_dir: Path, train_size: int
+) -> Any:
     kwargs = {
         "output_dir": str(output_dir),
         "per_device_train_batch_size": config.train_batch_size,
@@ -112,7 +116,6 @@ def _training_arguments(TrainingArguments: Any, config: TrainingConfig, output_d
         "learning_rate": config.learning_rate,
         "num_train_epochs": config.num_epochs,
         "weight_decay": config.weight_decay,
-        "warmup_ratio": config.warmup_ratio,
         "seed": config.random_seed,
         "data_seed": config.random_seed,
         "save_strategy": "epoch",
@@ -124,6 +127,18 @@ def _training_arguments(TrainingArguments: Any, config: TrainingConfig, output_d
         "report_to": [],
     }
     parameters = inspect.signature(TrainingArguments).parameters
+    if "warmup_ratio" in parameters:
+        kwargs["warmup_ratio"] = config.warmup_ratio
+    elif "warmup_steps" in parameters:
+        # Transformers versions that removed warmup_ratio still accept an
+        # equivalent absolute-step setting. Smoke mode uses its explicit step
+        # limit; full mode uses the standard batch/epoch estimate.
+        estimated_steps = (
+            config.smoke_max_steps
+            if config.smoke_test
+            else max(1, math.ceil(train_size / config.train_batch_size) * math.ceil(config.num_epochs))
+        )
+        kwargs["warmup_steps"] = int(round(config.warmup_ratio * estimated_steps))
     if "eval_strategy" in parameters:
         kwargs["eval_strategy"] = "epoch"
     else:
@@ -133,8 +148,30 @@ def _training_arguments(TrainingArguments: Any, config: TrainingConfig, output_d
     return TrainingArguments(**kwargs)
 
 
+def _trainer_processing_argument(tokenizer: Any) -> dict[str, Any]:
+    """Bridge Trainer's tokenizer/processing_class rename across versions."""
+
+    try:
+        from transformers import Trainer
+
+        parameters = inspect.signature(Trainer.__init__).parameters
+    except (ImportError, ValueError):
+        parameters = {}
+    return {"processing_class" if "processing_class" in parameters else "tokenizer": tokenizer}
+
+
 def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _artifact_integrity(artifact_dir: Path) -> dict[str, dict[str, int | str]]:
+    integrity = {}
+    for path in sorted(artifact_dir.iterdir()):
+        if not path.is_file() or path.name == "model_manifest.json":
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        integrity[path.name] = {"bytes": path.stat().st_size, "sha256": digest}
+    return integrity
 
 
 def train_model(
@@ -182,20 +219,21 @@ def train_model(
     validation_dataset = TextClassificationDataset(validation_records, tokenizer, config.max_length, torch)
     test_dataset = TextClassificationDataset(test_records, tokenizer, config.max_length, torch)
     training_dir = artifact_dir / "_trainer"
-    args = _training_arguments(TrainingArguments, config, training_dir)
+    args = _training_arguments(TrainingArguments, config, training_dir, len(train_records))
 
     def compute_metrics(prediction: Any) -> dict[str, float]:
         return _metrics_for_prediction(prediction, np)
 
+    trainer_kwargs = _trainer_processing_argument(tokenizer)
     trainer = Trainer(
         model=model,
         args=args,
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
-        tokenizer=tokenizer,
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
         callbacks=[EarlyStoppingCallback(early_stopping_patience=config.early_stopping_patience)],
+        **trainer_kwargs,
     )
     trainer.train()
     validation_metrics = trainer.evaluate(eval_dataset=validation_dataset)
@@ -234,23 +272,28 @@ def train_model(
     source_metadata = dataset_report["source_metadata"]
     manifest = {
         "project": "MahaPulse",
-        "task": "3-class Marathi sentiment classification",
+        "task": "sentiment classification",
         "architecture": "AutoModelForSequenceClassification",
+        "base_model": config.model_name,
         "model_name": config.model_name,
         "huggingface_source": config.model_name,
+        "num_labels": 3,
         "model_version": model_version,
         "label_mapping": LABEL_MAPPING,
         "dataset_name": dataset_report["dataset_name"],
         "dataset_source": source_metadata["source_url"],
         "dataset_revision": source_metadata["source_revision"],
+        "upstream_dataset_revision": source_metadata["source_revision"],
         "split_strategy": dataset_report["split_strategy"],
         "preprocessing_version": PREPROCESSING_VERSION,
         "max_length": config.max_length,
+        "training_config": config.as_dict(),
         "training_seed": config.random_seed,
         "smoke_test": config.smoke_test,
         "created_timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "runtime": runtime_info(),
         "evaluation_summary": None if config.smoke_test else detailed_test_metrics,
     }
+    manifest["artifact_integrity"] = _artifact_integrity(artifact_dir)
     _write_json(artifact_dir / "model_manifest.json", manifest)
     return artifact_dir
