@@ -12,6 +12,10 @@ class ServiceMetadata:
     version: str
     device: str | None
     state: str
+    smoke_test: bool | None = None
+    production_ready: bool | None = None
+    base_model: str | None = None
+    preprocessing_version: str | None = None
 
 
 @dataclass(frozen=True)

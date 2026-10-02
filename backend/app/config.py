@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,6 +23,10 @@ class Settings(BaseSettings):
     max_text_length: int = Field(default=100_000, gt=0)
     allowed_origins: list[str] = Field(default_factory=list)
     low_confidence_threshold: float = Field(default=0.60, ge=0, le=1)
+    sentiment_backend: Literal["mock", "muril"] = "mock"
+    sentiment_model_path: str | None = None
+    allow_smoke_model: bool = False
+    model_device: Literal["auto", "cpu", "cuda"] = "auto"
 
     @field_validator("allowed_origins", mode="before")
     @classmethod

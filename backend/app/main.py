@@ -10,6 +10,7 @@ from .config import Settings, get_settings
 from .errors import register_exception_handlers
 from .logging_config import configure_logging
 from .middleware import RequestContextMiddleware
+from .services.factory import create_orchestrator
 from .services.orchestrator import AnalysisOrchestrator
 
 
@@ -25,9 +26,7 @@ def create_app(
         version="0.2.0",
     )
     app.state.settings = runtime_settings
-    app.state.orchestrator = orchestrator or AnalysisOrchestrator.with_mocks(
-        runtime_settings
-    )
+    app.state.orchestrator = orchestrator or create_orchestrator(runtime_settings)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,

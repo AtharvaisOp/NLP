@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 SentimentLabel = Literal["positive", "negative", "neutral"]
-ReadinessState = Literal["ready", "mocked", "not_loaded"]
+ReadinessState = Literal["ready", "mocked", "not_loaded", "not_ready", "unavailable"]
 
 
 class StrictModel(BaseModel):
@@ -86,6 +86,8 @@ class AnalysisResponse(StrictModel):
 class ServiceReadiness(StrictModel):
     state: ReadinessState
     detail: str
+    smoke_test: bool | None = None
+    production_ready: bool | None = None
 
 
 class ReadyResponse(StrictModel):
@@ -98,6 +100,10 @@ class ServiceInfo(StrictModel):
     version: str
     device: str | None = None
     state: ReadinessState
+    smoke_test: bool | None = None
+    production_ready: bool | None = None
+    base_model: str | None = None
+    preprocessing_version: str | None = None
 
 
 class ModelInfoResponse(StrictModel):

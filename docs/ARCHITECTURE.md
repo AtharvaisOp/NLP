@@ -41,16 +41,16 @@ downstream analysis choices and must never leak into the classifier path.
 ## API boundaries
 
 The FastAPI app in `backend/app` is the only service boundary for frontend
-integration. Phase 2 implements this stable contract with deterministic stubs;
-later model adapters can replace those stubs without changing the response
-shape.
+integration. The response contract is stable. The sentiment service can now
+select either the explicit `mock` implementation or a local MuRIL artifact;
+KeyBERT, BERTopic, and summarization remain deterministic stubs.
 
 | Endpoint | Responsibility | Current state |
 | --- | --- | --- |
 | `GET /health` | Lightweight Render liveness check | Implemented; no model dependency |
-| `GET /ready` | Report API/preprocessing readiness and model-service states | Implemented; model services are `mocked` |
-| `GET /v1/model-info` | Return MuRIL/KeyBERT/BERTopic/summary metadata and labels | Implemented; no models loaded |
-| `POST /v1/analyze` | Validate input, run both text paths, call injected services, return stable result | Implemented with deterministic stubs |
+| `GET /ready` | Report API/preprocessing readiness and model-service states | Implemented; reflects mock, ready, or not-ready MuRIL state |
+| `GET /v1/model-info` | Return MuRIL/KeyBERT/BERTopic/summary metadata and labels | Implemented; real artifact metadata when configured |
+| `POST /v1/analyze` | Validate input, run both text paths, call injected services, return stable result | Implemented with configurable mock or MuRIL sentiment |
 | `POST /api/v1/analyze/preview` | Phase 1 preprocessing-preview compatibility route | Preserved |
 | `GET /v1/results/{result_id}` | Retrieve one persisted analysis | Future PostgreSQL phase |
 | `GET /v1/analytics` | Return sentiment/topic/keyword aggregates | Future PostgreSQL phase |
@@ -68,8 +68,28 @@ user interaction.
 `backend/app/services/interfaces.py` defines Protocols for
 `SentimentService`, `KeywordService`, `TopicService`, and `SummaryService`.
 `AnalysisOrchestrator` receives those interfaces through dependency injection.
-The default implementations in `services/mocks.py` are deterministic and
-report `mocked`/`not-loaded` state; they do not claim model performance.
+`services/factory.py` selects the explicit sentiment backend. The MuRIL
+implementation in `services/sentiment/muril.py` validates and lazily loads one
+local artifact per process, while `services/mocks.py` remains the default and
+continues to provide the keyword/topic/summary stubs.
+
+MuRIL artifact loading is local-only and validates project/task, the
+`google/muril-base-cased` base model, canonical labels, preprocessing version,
+model version, tokenizer/model files, smoke policy, and recorded integrity
+hashes. `model_text` is passed to the tokenizer with the artifact's recorded
+maximum length; `analysis_text` is never sent to MuRIL. Real inference uses
+the selected device, `model.eval()`, and `torch.inference_mode()`.
+
+`SENTIMENT_BACKEND=mock|muril`, `SENTIMENT_MODEL_PATH`,
+`ALLOW_SMOKE_MODEL`, and `MODEL_DEVICE=auto|cpu|cuda` control the backend.
+Smoke artifacts can be enabled only explicitly and report
+`smoke_test=true`, `production_ready=false`; readiness remains degraded even
+when the smoke service is operational. A failed configured MuRIL service does
+not fall back to mock sentiment.
+
+The local CPU smoke integration measured approximately 24–66 ms for the
+service-level MuRIL inference after the one-time artifact load. This is a
+development observation, not a production performance claim.
 
 Input validation rejects blank text and applies `MAX_TEXT_LENGTH`. CORS is
 controlled by `ALLOWED_ORIGINS`, and `LOW_CONFIDENCE_THRESHOLD` controls the
@@ -130,6 +150,8 @@ backend/
     api/routes.py           Thin health, readiness, and analysis routes
     services/interfaces.py  Protocols for future real model services
     services/mocks.py       Deterministic no-model stubs
+    services/factory.py      Configurable service assembly
+    services/sentiment/      Validated local MuRIL inference service
     services/orchestrator.py Two-path analysis orchestration
     errors.py               Centralized safe JSON exception handlers
     middleware.py           Request IDs and structured access logs

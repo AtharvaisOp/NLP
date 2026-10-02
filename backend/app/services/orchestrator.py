@@ -67,7 +67,18 @@ class AnalysisOrchestrator:
         started = perf_counter()
         prepared = self._prepare(text)
         try:
+            sentiment_started = perf_counter()
             sentiment = self.sentiment_service.predict(prepared.model_text)
+            logging.getLogger(LOGGER_NAME).info(
+                "sentiment inference completed",
+                extra={
+                    "event": "sentiment.inference_completed",
+                    "fields": {
+                        "request_id": request_id,
+                        "inference_ms": round((perf_counter() - sentiment_started) * 1000, 3),
+                    },
+                },
+            )
             keywords = self.keyword_service.extract(prepared.analysis_text)
             topic = self.topic_service.classify(prepared.analysis_text)
             summary = self.summary_service.summarize(prepared.model_text)
@@ -84,9 +95,12 @@ class AnalysisOrchestrator:
             )
             raise ServiceFailure("Analysis services are temporarily unavailable") from exc
 
-        warnings = [
-            "ML service outputs are deterministic mocks; no models are loaded."
-        ]
+        sentiment_metadata = self.sentiment_service.metadata()
+        warnings = []
+        if sentiment_metadata.state == "mocked":
+            warnings.append("ML service outputs are deterministic mocks; no models are loaded.")
+        if sentiment_metadata.smoke_test:
+            warnings.append("Smoke sentiment artifact loaded; predictions are not production performance.")
         return AnalysisResponse(
             request_id=request_id,
             original_text=text,
@@ -107,7 +121,7 @@ class AnalysisOrchestrator:
             ),
             summary=SummaryInfo(text=summary.text, provider=summary.provider),
             meta=AnalysisMeta(
-                model_version=self.sentiment_service.metadata().version,
+                model_version=sentiment_metadata.version,
                 processing_ms=max(0, round((perf_counter() - started) * 1000)),
                 warnings=warnings,
             ),
@@ -125,7 +139,10 @@ class AnalysisOrchestrator:
             "summary": self._readiness(self.summary_service.metadata()),
         }
         status: ReadinessState = "ready"
-        if any(item.state != "ready" for item in services.values()):
+        if any(
+            item.state != "ready" or item.production_ready is False
+            for item in services.values()
+        ):
             status = "mocked"
         return ReadyResponse(status="ready" if status == "ready" else "degraded", services=services)
 
@@ -152,13 +169,17 @@ class AnalysisOrchestrator:
 
     @staticmethod
     def _readiness(metadata) -> ServiceReadiness:
+        if metadata.smoke_test:
+            detail = "Smoke artifact is operational for development; not production-ready"
+        elif metadata.state == "mocked":
+            detail = "Service is mocked and no model is loaded"
+        else:
+            detail = f"{metadata.name} service is {metadata.state}"
         return ServiceReadiness(
             state=metadata.state,
-            detail=(
-                "Service is mocked and no model is loaded"
-                if metadata.state == "mocked"
-                else f"{metadata.name} service is {metadata.state}"
-            ),
+            detail=detail,
+            smoke_test=metadata.smoke_test,
+            production_ready=metadata.production_ready,
         )
 
     @staticmethod
@@ -168,6 +189,10 @@ class AnalysisOrchestrator:
             version=metadata.version,
             device=metadata.device,
             state=metadata.state,
+            smoke_test=metadata.smoke_test,
+            production_ready=metadata.production_ready,
+            base_model=metadata.base_model,
+            preprocessing_version=metadata.preprocessing_version,
         )
 
     @staticmethod
