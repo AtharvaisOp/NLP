@@ -75,8 +75,10 @@
                 <div class="analyzer-status-stack" aria-label="Service status">
                   <div class="analyzer-status-row"><span class="analyzer-status-label">API backend</span><span id="backend-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
                   <div class="analyzer-status-row"><span class="analyzer-status-label">Sentiment model</span><span id="model-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
+                  <div class="analyzer-status-row"><span class="analyzer-status-label">Enrichment</span><span id="enrichment-status" class="analyzer-status-value" data-state="checking">Checking…</span></div>
                 </div>
                 <p id="mock-mode-note" class="analyzer-dev-note" hidden>Development mock mode is active. Results are deterministic samples, not model performance.</p>
+                <p id="service-model-info" class="analyzer-meta" aria-label="Loaded service metadata"></p>
               </div>
             </section>
 
@@ -141,7 +143,7 @@
                     </div>
                   </details>
                   <div class="analyzer-meta" aria-label="Analysis metadata"><span>Request: <span id="request-id">—</span></span><span>Model: <span id="model-version">—</span></span><span>Processing: <span id="processing-ms">—</span></span></div>
-                  <ul id="warning-list" class="analyzer-warning-list" hidden aria-label="Analysis warnings"></ul>
+                  <ul id="warning-list" class="analyzer-warning-list" hidden role="status" aria-live="polite" aria-label="Analysis warnings"></ul>
                 </div>
               </div>
             </section>
