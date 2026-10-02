@@ -23,6 +23,7 @@
 
   /* ── Top navigation links ───────────────────────────────── */
   const TOP_NAV = [
+    { id: 'analyzer',    label: 'Analyzer',     href: 'analyzer/index.html'    },
     { id: 'repository',   label: 'Repository',   href: 'repository/index.html' },
     { id: 'compare',      label: 'Compare',       href: 'compare/index.html'    },
     { id: 'workflows',    label: 'Workflows',     href: 'workflows/index.html'  },
@@ -35,6 +36,7 @@
     {
       label: 'Getting Started',
       items: [
+        { id: 'analyzer',      label: 'Live Analyzer',      href: 'analyzer/index.html',      icon: '✦' },
         { id: 'repository',    label: 'Repository Home',    href: 'repository/index.html',    icon: '⊞' },
         { id: 'design-system', label: 'Design System',      href: 'design-system/index.html', icon: '◈' },
       ],
@@ -252,6 +254,7 @@
         <div>
           <h3 class="footer-col-title">Learn</h3>
           <nav aria-label="Learning resources">
+            <a href="${ROOT}analyzer/index.html"     class="footer-link">Analyzer</a>
             <a href="${ROOT}repository/index.html"    class="footer-link">Repository</a>
             <a href="${ROOT}category/index.html"      class="footer-link">Categories</a>
             <a href="${ROOT}concept/index.html"       class="footer-link">Concepts</a>
