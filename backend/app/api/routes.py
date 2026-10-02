@@ -1,38 +1,59 @@
-"""HTTP routes kept deliberately thin around the ML boundary."""
+"""Thin HTTP routes over the injected analysis orchestrator."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request
 
-from ml.preprocessing import preprocess_text
-
-from ..schemas import AnalysisPreview, AnalyzeRequest, HealthResponse
-
-
-router = APIRouter()
-
-
-@router.get("/health", response_model=HealthResponse, tags=["operations"])
-def health() -> HealthResponse:
-    """Return a lightweight liveness response for Render health checks."""
-
-    return HealthResponse(status="ok", service="mahapulse-api", pipeline="scaffold")
-
-
-@router.post(
-    "/api/v1/analyze/preview",
-    response_model=AnalysisPreview,
-    tags=["analysis"],
+from ..dependencies import get_orchestrator
+from ..schemas import (
+    AnalysisPreview,
+    AnalysisResponse,
+    AnalyzeRequest,
+    HealthResponse,
+    ModelInfoResponse,
+    ReadyResponse,
 )
-def analyze_preview(payload: AnalyzeRequest) -> AnalysisPreview:
-    """Expose the two text contracts before model inference is integrated.
+from ..services.orchestrator import AnalysisOrchestrator
 
-    This endpoint intentionally stops after deterministic preprocessing. The
-    production analyze endpoint will add MuRIL, KeyBERT, BERTopic,
-    summarization, persistence, and analytics behind this boundary.
-    """
 
-    prepared = preprocess_text(payload.text)
-    return AnalysisPreview(
-        model_text=prepared.model_text,
-        analysis_text=prepared.analysis_text,
-        analysis_tokens=prepared.analysis_tokens,
+def create_router() -> APIRouter:
+    router = APIRouter()
+
+    @router.get("/health", response_model=HealthResponse, tags=["operations"])
+    def health() -> HealthResponse:
+        """Return a lightweight liveness response with no model dependency."""
+
+        return HealthResponse(status="ok", service="mahapulse-api", pipeline="phase-2")
+
+    @router.get("/ready", response_model=ReadyResponse, tags=["operations"])
+    def ready(
+        orchestrator: AnalysisOrchestrator = Depends(get_orchestrator),
+    ) -> ReadyResponse:
+        return orchestrator.readiness()
+
+    @router.get("/v1/model-info", response_model=ModelInfoResponse, tags=["operations"])
+    def model_info(
+        orchestrator: AnalysisOrchestrator = Depends(get_orchestrator),
+    ) -> ModelInfoResponse:
+        return orchestrator.model_info()
+
+    @router.post("/v1/analyze", response_model=AnalysisResponse, tags=["analysis"])
+    def analyze(
+        payload: AnalyzeRequest,
+        request: Request,
+        orchestrator: AnalysisOrchestrator = Depends(get_orchestrator),
+    ) -> AnalysisResponse:
+        return orchestrator.analyze(payload.text, request.state.request_id)
+
+    @router.post(
+        "/api/v1/analyze/preview",
+        response_model=AnalysisPreview,
+        tags=["analysis"],
     )
+    def analyze_preview(
+        payload: AnalyzeRequest,
+        orchestrator: AnalysisOrchestrator = Depends(get_orchestrator),
+    ) -> AnalysisPreview:
+        """Keep the Phase 1 preprocessing-preview endpoint compatible."""
+
+        return orchestrator.preview(payload.text)
+
+    return router
