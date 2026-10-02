@@ -66,7 +66,7 @@
     if (!service) return 'Unavailable';
     const state = service.state ? ` · ${service.state}` : '';
     const smoke = service.smoke_test === true || service.production_ready === false;
-    const lifecycle = smoke ? ' · smoke · not production-ready' : '';
+    const lifecycle = smoke ? ' · smoke · not production-ready' : service.state === 'mocked' ? ' · development mock · not production-ready' : '';
     return `${service.name || 'Service'}${service.version ? ` ${service.version}` : ''}${state}${lifecycle}`;
   }
 
@@ -120,7 +120,8 @@
     const readiness = ready.status === 'fulfilled' ? ready.value : null;
     const modelInfo = model.status === 'fulfilled' ? model.value : null;
     const sentimentState = readiness?.services?.sentiment?.state || modelInfo?.sentiment_model?.state;
-    const smoke = modelInfo?.sentiment_model?.smoke_test === true || modelInfo?.sentiment_model?.production_ready === false;
+    const sentimentLifecycle = modelInfo?.sentiment_model || readiness?.services?.sentiment;
+    const smoke = sentimentLifecycle?.smoke_test === true || sentimentLifecycle?.production_ready === false;
     const enrichment = enrichmentSummary(readiness?.services, modelInfo);
     if (health.status === 'fulfilled') {
       const coreReady = sentimentState === 'ready';
@@ -133,21 +134,34 @@
       setIndicator('backend-status', 'offline', 'Unavailable');
     }
     setIndicator('enrichment-status', enrichment.kind, enrichment.label);
+    const optional = { keywords: ['keyword-status', 'keyword_service'], topics: ['topic-status', 'topic_service'], summary: ['summary-status', 'summary_service'] };
+    Object.entries(optional).forEach(([key, [id, infoKey]]) => {
+      const info = modelInfo?.[infoKey];
+      const service = readiness?.services?.[key] || modelInfo?.readiness?.[key] || info;
+      const state = service?.state || 'unavailable';
+      const label = state === 'ready' ? `${info?.name || key} ready`
+        : state === 'mocked' ? `${info?.name || key} · mock`
+          : state === 'disabled' ? 'Disabled'
+            : key === 'topics' && ['unavailable', 'not_loaded', 'not_ready'].includes(state) ? 'BERTopic artifact unavailable' : 'Unavailable';
+      setIndicator(id, state === 'ready' ? 'ready' : ['disabled', 'mocked'].includes(state) ? 'mocked' : 'offline', label);
+    });
+    const database = readiness?.services?.database;
+    setIndicator('database-status', database?.state === 'ready' ? 'ready' : database?.state === 'disabled' ? 'mocked' : 'offline', database?.state === 'ready' ? 'Ready · persistence available' : database?.state === 'disabled' ? 'Not required for stateless mode · batch unavailable' : 'Unavailable · batch needs persistence');
     if (model.status === 'fulfilled') {
       const info = model.value.sentiment_model;
-      setIndicator('model-status', info?.state === 'ready' && !smoke ? 'ready' : 'mocked', serviceLabel(info));
-      const note = $('mock-mode-note');
-      if (note) {
-        const mockActive = config.USE_MOCK_API || sentimentState === 'mocked' || enrichment.label === 'Development mocks active';
-        note.hidden = !mockActive && !smoke;
-        note.textContent = smoke
-          ? 'Smoke sentiment model is active for integration only; it is not production-ready.'
-          : 'Development/mock services are active. Optional enrichment may be disabled or unavailable.';
-      }
+      setIndicator('model-status', info?.state === 'ready' && !smoke ? 'ready' : ['ready', 'mocked'].includes(info?.state) ? 'mocked' : 'offline', serviceLabel(info));
       renderModelInfo(model.value);
     } else {
       setIndicator('model-status', 'offline', 'Not available');
       renderModelInfo(null);
+    }
+    const note = $('mock-mode-note');
+    if (note) {
+      const mockActive = config.USE_MOCK_API || sentimentState === 'mocked' || enrichment.label === 'Development mocks active';
+      note.hidden = !mockActive && !smoke;
+      note.textContent = smoke
+        ? 'Development/Smoke Model · Not Production Ready. Predictions are for integration testing; smoke metrics are not project performance.'
+        : 'Development Mock Services · Not Production Ready. Mock outputs are deterministic demonstrations, not model performance. Optional enrichment may be disabled or unavailable.';
     }
   }
 
@@ -355,6 +369,7 @@
     validateAnalysisResponse: validAnalysisResponse,
     serviceLabel,
     enrichmentSummary,
+    loadServiceStatus,
   };
   if (global.NLP_COMPONENTS_READY) init();
   else document.addEventListener('nlp:ready', init, { once: true });

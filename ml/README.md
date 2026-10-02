@@ -1,9 +1,9 @@
 # MahaPulse ML pipeline
 
-Phase 3 prepares the official L3Cube MahaSent-MD Marathi sentiment dataset,
+The training pipeline prepares the official L3Cube MahaSent-MD Marathi sentiment dataset,
 fine-tunes `google/muril-base-cased` for three classes, evaluates a selected
 checkpoint, and records a versioned artifact. The FastAPI sentiment service
-consumes these artifacts in Phase 4. Phase 5 adds optional KeyBERT, BERTopic,
+consumes these artifacts. Optional KeyBERT, BERTopic,
 and extractive-summary services without changing the sentiment artifact or
 API contract.
 
@@ -50,7 +50,7 @@ text is not lemmatized. `analysis_text` remains a separate downstream path.
 The artifact contains model/tokenizer files plus `config.json`,
 `training_config.json`, `label_mapping.json`, `model_manifest.json`,
 `dataset_report.json`, `metrics.json`, and `predictions.jsonl`. Artifacts are
-ignored by Git. Phase 4 can load the tokenizer/model and manifest while keeping
+ignored by Git. FastAPI loads the tokenizer/model and manifest while keeping
 the existing `/v1/analyze` response contract unchanged.
 
 ## Phase 5 enrichment boundary
@@ -85,3 +85,20 @@ succeeds and the API returns an empty/null enrichment with a safe warning.
 Generated embedding caches and topic artifacts are ignored and must not be
 committed. The current MuRIL smoke artifact remains integration-only, not final
 project performance or production readiness.
+
+## Final integration training gate
+
+The verified `muril-mahasent-md-smoke-v4` artifact was trained only on the
+small local fixture. Its metrics do not measure MahaPulse project performance.
+Full official data is prepared separately under ignored
+`ml/data/processed/mahasent-md`; never substitute fixture data for a full run.
+Use the explicit full-run command after confirming CUDA and resources:
+
+```powershell
+python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
+```
+
+The original working Python environment is preserved. GPU diagnosis uses an
+isolated environment, and a full CPU training job is not launched when CUDA
+is unavailable. See [docs/VALIDATION.md](../docs/VALIDATION.md) for recorded
+hardware, full-data split checks, and the final training decision.

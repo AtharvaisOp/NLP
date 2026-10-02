@@ -1,0 +1,11 @@
+.git
+.env*
+backend
+ml
+docs
+frontend-dev
+.github
+.pytest_cache
+__pycache__
+dist
+*.log

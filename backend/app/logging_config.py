@@ -25,7 +25,10 @@ class JSONFormatter(logging.Formatter):
         if fields:
             payload.update(fields)
         if record.exc_info:
-            payload["exception"] = self.formatException(record.exc_info)
+            # Driver/provider exceptions may contain SQL parameters or input
+            # text. Keep logs useful without storing private request contents.
+            exception = record.exc_info[1]
+            payload["exception_type"] = type(exception).__name__
         return json.dumps(payload, ensure_ascii=False, default=str)
 
 

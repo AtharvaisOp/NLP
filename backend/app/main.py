@@ -9,11 +9,12 @@ from .api.routes import create_router
 from .config import Settings, get_settings
 from .errors import register_exception_handlers
 from .logging_config import configure_logging
-from .middleware import RequestContextMiddleware
+from .middleware import RequestBodyLimitMiddleware, RequestContextMiddleware
 from .services.factory import create_orchestrator
 from .services.orchestrator import AnalysisOrchestrator
 from .db.session import DatabaseManager
 from .storage.persistence import PersistenceService
+from .schemas import ErrorResponse
 
 
 def create_app(
@@ -26,12 +27,19 @@ def create_app(
         title="MahaPulse NLP API",
         description="Stable API boundary for Marathi and Marathi-English NLP analysis.",
         version="0.2.0",
+        responses={
+            404: {"model": ErrorResponse, "description": "Analysis session was not found"},
+            413: {"model": ErrorResponse, "description": "Request body is too large"},
+            422: {"model": ErrorResponse, "description": "Request validation failed"},
+            503: {"model": ErrorResponse, "description": "Required service is unavailable"},
+        },
     )
     app.state.settings = runtime_settings
     app.state.orchestrator = orchestrator or create_orchestrator(runtime_settings)
     app.state.database = DatabaseManager(runtime_settings)
     app.state.persistence = PersistenceService(app.state.database, runtime_settings)
     app.router.add_event_handler("shutdown", app.state.database.dispose)
+    app.add_middleware(RequestBodyLimitMiddleware, settings=runtime_settings)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,

@@ -24,7 +24,7 @@ _CONTROL_RE = re.compile(r"[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\ufeff\u
 # Keep Devanagari, Roman/code-mixed words, numbers, apostrophes, and hyphens.
 # Punctuation is deliberately excluded from analysis tokens, not model_text.
 _TOKEN_RE = re.compile(
-    r"[\u0900-\u097f]+(?:[-'’][\u0900-\u097f]+)*"
+    r"[\u0900-\u0963\u0966-\u097f]+(?:[-'’][\u0900-\u0963\u0966-\u097f]+)*"
     r"|[A-Za-z]+(?:[-'’][A-Za-z]+)*"
     r"|\d+(?:[.,]\d+)?"
 )

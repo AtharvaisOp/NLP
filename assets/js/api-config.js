@@ -9,7 +9,12 @@
     API_BASE_URL: 'http://localhost:8000',
     USE_MOCK_API: false,
     REQUEST_TIMEOUT_MS: 12000,
+    BATCH_TIMEOUT_MS: 600000,
     MAX_TEXT_LENGTH: 100000,
+    MAX_UPLOAD_BYTES: 5000000,
+    MAX_BATCH_ROWS: 1000,
+    DEFAULT_TEXT_COLUMN: 'text',
+    PAGE_SIZE: 25,
   };
   /* Runtime values win; a separately supplied static config may be used by a
      deployment; otherwise the safe localhost default remains in force. */
@@ -34,16 +39,35 @@
     catch { return null; }
   }
 
-  async function request(path, options) {
+  function responseError(payload, status) {
+    const detail = payload?.error?.message || payload?.detail;
+    const message = typeof detail === 'string' ? detail
+      : Array.isArray(detail) ? detail.map(item => item.msg || 'Invalid request').join('; ')
+        : `The analyzer returned HTTP ${status}.`;
+    return apiError(status >= 500 ? 'backend_unavailable' : 'api_error', message, payload, status);
+  }
+
+  async function request(path, options, download = false) {
     const controller = new AbortController();
     const timeout = global.setTimeout(() => controller.abort(), config.REQUEST_TIMEOUT_MS);
-    let response;
     try {
-      response = await global.fetch(config.API_BASE_URL + path, Object.assign({}, options, {
+      const response = await global.fetch(config.API_BASE_URL + path, Object.assign({}, options, {
         signal: controller.signal,
         headers: Object.assign({ Accept: 'application/json' }, options?.headers || {}),
       }));
+      if (download && response.ok) {
+        const blob = await response.blob();
+        const disposition = response.headers.get('Content-Disposition') || '';
+        // Ignore any server-supplied path; provide a safe fallback when CORS hides this header.
+        const match = /filename="?([^";]+)"?/.exec(disposition);
+        return { blob, filename: match ? match[1].replace(/[\\/\r\n]/g, '_') : null };
+      }
+      const payload = parsePayload(await response.text());
+      if (!response.ok) throw responseError(payload, response.status);
+      if (payload === null) throw apiError('invalid_json', 'The analyzer returned an unreadable response.', null, response.status);
+      return payload;
     } catch (error) {
+      if (error?.code) throw error;
       if (error?.name === 'AbortError') {
         throw apiError('timeout', 'The analyzer request timed out. Please try again.', null);
       }
@@ -52,25 +76,36 @@
       global.clearTimeout(timeout);
     }
 
-    const raw = await response.text();
-    const payload = parsePayload(raw);
-    if (!response.ok) {
-      const serverMessage = payload?.error?.message || payload?.detail;
-      throw apiError(
-        response.status >= 500 ? 'backend_unavailable' : 'api_error',
-        serverMessage || `The analyzer returned HTTP ${response.status}.`,
-        payload,
-        response.status,
-      );
-    }
-    if (payload === null) throw apiError('invalid_json', 'The analyzer returned an unreadable response.', null, response.status);
-    return payload;
+  }
+
+  function uploadBatch(file, textColumn, onProgress) {
+    // Batch NLP and persistence always run on the API, including frontend-dev/mock-api.
+    return new Promise((resolve, reject) => {
+      const xhr = new global.XMLHttpRequest();
+      const body = new global.FormData();
+      body.append('file', file);
+      const query = textColumn ? `?text_column=${encodeURIComponent(textColumn)}` : '';
+      xhr.open('POST', config.API_BASE_URL + '/v1/analyze/batch' + query);
+      xhr.timeout = config.BATCH_TIMEOUT_MS;
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.upload.onprogress = event => onProgress?.(event.lengthComputable ? event.loaded / event.total : null);
+      xhr.upload.onload = () => onProgress?.(1);
+      xhr.onerror = () => reject(apiError('network_error', 'The batch backend could not be reached.', null));
+      xhr.ontimeout = () => reject(apiError('timeout', 'The batch request timed out. It may still be processing on the server; avoid immediately uploading it again.', null));
+      xhr.onload = () => {
+        const payload = parsePayload(xhr.responseText);
+        if (xhr.status < 200 || xhr.status >= 300) reject(responseError(payload, xhr.status));
+        else if (payload === null) reject(apiError('invalid_json', 'The batch backend returned an unreadable response.', null, xhr.status));
+        else resolve(payload);
+      };
+      xhr.send(body);
+    });
   }
 
   function mockAnalysis(text) {
     const lower = text.toLocaleLowerCase();
     const isNegative = /वाईट|नाही|निराश|bad|hate|खराब/.test(lower);
-    const isPositive = /छान|चांगले|आवड|मस्त|उत्कृष्ट|good|love/.test(lower);
+    const isPositive = /छान|चांगल|आवड|मस्त|उत्कृष्ट|good|love/.test(lower);
     const codeMixed = /[A-Za-z]/.test(text) && /[\u0900-\u097f]/.test(text);
     const sentiment = isNegative && !isPositive
       ? { label: 'negative', confidence: .91, probabilities: { positive: .03, negative: .91, neutral: .06 } }
@@ -116,6 +151,7 @@
       keywords: { state: 'mocked', detail: 'Development fixture' },
       topics: { state: 'mocked', detail: 'Development fixture' },
       summary: { state: 'mocked', detail: 'Development fixture' },
+      database: { state: 'disabled', detail: 'Browser single-text fixtures have no persistence; batch requests need the HTTP API' },
     };
   }
 
@@ -137,6 +173,13 @@
     ready() { return config.USE_MOCK_API ? Promise.resolve({ status: 'degraded', services: mockReadiness() }) : request('/ready'); },
     modelInfo() { return config.USE_MOCK_API ? Promise.resolve(mockModelInfo()) : request('/v1/model-info'); },
     analyze(text) { return config.USE_MOCK_API ? Promise.resolve(mockAnalysis(text)) : request('/v1/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }); },
+    batch(file, textColumn, onProgress) { return uploadBatch(file, textColumn, onProgress); },
+    session(id, limit = config.PAGE_SIZE, offset = 0) { return request(`/v1/analyses/${encodeURIComponent(id)}?limit=${limit}&offset=${offset}`); },
+    analytics(id) { return request(`/v1/analyses/${encodeURIComponent(id)}/analytics`); },
+    exportSession(id, format) {
+      if (!['csv', 'json'].includes(format)) return Promise.reject(apiError('validation_error', 'Choose CSV or JSON export.', null));
+      return request(`/v1/analyses/${encodeURIComponent(id)}/export?format=${format}`, { headers: { Accept: format === 'csv' ? 'text/csv' : 'application/json' } }, true);
+    },
   };
 
   global.MahaPulseAPI = api;

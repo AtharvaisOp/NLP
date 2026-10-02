@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>महापल्स NLP Workflows — Interactive Pipeline Diagrams</title>
   <meta name="description"
-    content="Interactive महापल्स NLP pipeline visualizations: Marathi text preprocessing (6 steps) and the MahaBERT/IndicBERT representation pipeline.">
+    content="Implemented MahaPulse MuRIL, enrichment, persistence and dashboard workflow, plus educational MahaBERT/IndicBERT model comparisons.">
   <meta name="theme-color" content="#0A0F1E">
 
   <!-- Favicons -->
@@ -285,21 +285,21 @@
             <div class="page-badge">🔄 Interactive</div>
             <h1 class="page-title">महापल्स Pipeline Workflows</h1>
             <p class="page-subtitle">Interactive pipeline diagrams for the महापल्स Marathi Sentiment Analysis system.
-              Click any node to inspect data states, Marathi examples, and Python code.</p>
+              Click nodes to inspect the implemented MuRIL flow or educational model comparisons. Reference predictions and token IDs are illustrative, not measured project performance.</p>
           </div>
 
           <!-- Tabs -->
           <div class="tab-bar" role="tablist" aria-label="Select महापल्स pipeline">
             <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchPipeline(1)" id="tab-p1">1.
-              Marathi Text Preprocessing</button>
-            <button class="tab-btn" role="tab" aria-selected="false" onclick="switchPipeline(2)" id="tab-p2">2. महापल्स
-              Representation Pipeline</button>
+              Implemented MuRIL Pipeline</button>
+            <button class="tab-btn" role="tab" aria-selected="false" onclick="switchPipeline(2)" id="tab-p2">2. Educational
+              MahaBERT / IndicBERT</button>
           </div>
 
           <!-- Viewport Card -->
           <div class="viewport-card">
             <div class="viewport-header">
-              <h2 id="pipeline-title" class="viewport-title">Text Preprocessing Pipeline</h2>
+              <h2 id="pipeline-title" class="viewport-title">Implemented MahaPulse Pipeline</h2>
 
               <!-- Zoom Controls -->
               <div class="zoom-controls">
@@ -355,8 +355,8 @@
             </div>
 
             <!-- Code block -->
-            <h4 style="font-size: .875rem; font-weight: 600; color: var(--text); margin-bottom: .5rem;">Python
-              Implementation</h4>
+            <h4 style="font-size: .875rem; font-weight: 600; color: var(--text); margin-bottom: .5rem;">Code / API
+              Reference</h4>
             <div class="code-block">
               <div class="code-header">
                 <span class="code-lang">Python</span>
@@ -393,29 +393,29 @@
 
       /* ── Pipeline Data Store ───────────────────────────────── */
       const PIPELINES = {
-        // Pipeline 1: Marathi Text Preprocessing Pipeline (महापल्स Steps 1–6)
+        // Pipeline 1: implemented product; examples show contracts, not evaluation metrics.
         1: {
-          title: "Marathi Text Preprocessing Pipeline (Steps 1–6)",
+          title: "Implemented MahaPulse Pipeline (MuRIL → Dashboard)",
           nodes: [
-            { id: "p1-n1", x: 45, y: 75, r: 24, label: "Raw Text", type: "input", title: "Raw Marathi Input", cat: "Preprocessing", desc: "Raw Marathi social media text: may contain HTML, URLs, emojis, @mentions, hashtags, and mixed scripts.", input: 'हे उत्पादन खूप चांगले आहे! 😊 https://en.wikipedia.org/wiki/Marathi_language#Grammar', output: 'Raw unprocessed Marathi string with noise', code: '# Raw Marathi text from scraping or API\ntext = "हे उत्पादन खूप चांगले आहे! 😊 https://en.wikipedia.org/wiki/Marathi_language#Grammar"', link: 'text-cleaning' },
-            { id: "p1-n2", x: 155, y: 75, r: 24, label: "Text Clean", type: "transform", title: "Text Cleaning (Step 1)", cat: "Preprocessing", desc: "Removes HTML tags, URLs, and non-Devanagari characters. The mahaNLP library provides Marathi-specific cleaning utilities.", input: 'हे उत्पादन खूप चांगले आहे! 😊 https://en.wikipedia.org/wiki/Marathi_language#Grammar', output: 'हे उत्पादन खूप चांगले आहे', code: 'import re\n# Remove HTML\ntext = re.sub(r\'<[^>]+>\', \'\', text)\n# Remove URLs\ntext = re.sub(r\'http\\S+\', \'\', text)\n# Keep only Devanagari + spaces\ntext = re.sub(r\'[^\\u0900-\\u097F\\s]\', \'\', text).strip()', link: 'text-cleaning' },
-            { id: "p1-n3", x: 265, y: 75, r: 24, label: "Noise Out", type: "transform", title: "Noise Removal (Step 2)", cat: "Preprocessing", desc: "Strips emojis, @mentions, hashtag markers, and repeated punctuation from Marathi social media text.", input: 'हे @virat खूप #मस्त आहे!!! 🔥', output: 'हे खूप मस्त आहे!', code: 'import re\n# Remove emojis\ntext = re.sub(r\'[\\U00010000-\\U0010FFFF]\', \'\', text, flags=re.UNICODE)\n# Remove @mentions\ntext = re.sub(r\'@\\S+\', \'\', text)\n# Strip # but keep Marathi word\ntext = re.sub(r\'#(\\S+)\', r\'\\1\', text)\n# Collapse repeated punctuation\ntext = re.sub(r\'([!?.]){2,}\', r\'\\1\', text).strip()', link: 'noise-removal' },
-            { id: "p1-n4", x: 375, y: 75, r: 24, label: "Sentences", type: "transform", title: "Sentence Segmentation (Step 3)", cat: "Preprocessing", desc: "Splits Marathi text at sentence boundaries using danda (।) and standard punctuation, with Marathi abbreviation awareness.", input: 'डॉ. राज मुंबईला गेले. हे चांगले आहे का?', output: '["डॉ. राज मुंबईला गेले.", "हे चांगले आहे का?"]', code: 'from mahaNLP.tokenize import MarathiSentenceTokenizer\ntokenizer = MarathiSentenceTokenizer()\nsentences = tokenizer.tokenize(text)', link: 'sentence-segmentation' },
-            { id: "p1-n5", x: 485, y: 75, r: 24, label: "Tokens", type: "transform", title: "Tokenization (Step 4)", cat: "Preprocessing", desc: "Applies MahaBERT WordPiece subword tokenization, handling morphologically complex Marathi words and OOV cases.", input: 'हे उत्पादन खूप चांगले आहे', output: '["[CLS]", "हे", "उत्पादन", "खूप", "चांगले", "आहे", "[SEP]"]', code: 'from transformers import AutoTokenizer\ntokenizer = AutoTokenizer.from_pretrained("l3cube-pune/marathi-bert-v2")\ntokens = tokenizer(sentence, return_tensors="pt")', link: 'tokenization' },
-            { id: "p1-n6", x: 595, y: 75, r: 24, label: "Stop Words", type: "transform", title: "Stop-Word Removal (Step 5)", cat: "Preprocessing", desc: "Filters 400 Marathi stop words (derived from L3Cube MahaCorpus) — retaining only content-bearing sentiment tokens.", input: '["हे", "उत्पादन", "खूप", "चांगले", "आहे", "आणि"]', output: '["उत्पादन", "खूप", "चांगले"]', code: 'from mahaNLP.preprocess import MarathiStopWords\nstop_words = MarathiStopWords().get_stopwords()\nfiltered = [w for w in tokens if w not in stop_words]', link: 'stop-word-removal' },
-            { id: "p1-n7", x: 705, y: 75, r: 24, label: "Lemmatize", type: "transform", title: "Lemmatization (Step 6)", cat: "Preprocessing", desc: "Reduces inflected Marathi words to dictionary base forms using morphological analysis. Preferred over stemming — always yields a valid Marathi word.", input: '["उत्पादन", "खूप", "चांगले", "आवडले"]', output: '["उत्पादन", "खूप", "चांगला", "आवडणे"]', code: 'from mahaNLP.preprocess import MarathiLemmatizer\nlemmatizer = MarathiLemmatizer()\nlemmas = [lemmatizer.lemmatize(token) for token in filtered_tokens]', link: 'lemmatization' },
-            { id: "p1-n8", x: 770, y: 75, r: 24, label: "Clean Out", type: "output", title: "Preprocessed Output", cat: "Preprocessing", desc: "Final clean, lemmatized Marathi token sequence ready for contextual embedding and MahaBERT classification.", input: 'Raw Marathi review text', output: '["उत्पादन", "खूप", "चांगला"]  → fed to MahaBERT', code: '# Preprocessed tokens are now ready for\n# MahaBERT tokenizer and sentiment classification', link: 'contextual-embeddings' }
+            {"id": "p1-n1", "x": 45, "y": 75, "r": 24, "label": "Input", "type": "input", "title": "Text or UTF-8 CSV", "cat": "Input", "desc": "Single mode submits raw text. CSV mode uploads a bounded file with a selected text column; the backend runs the same pipeline for each row.", "input": "हा phone चांगला आहे पण battery खराब आहे.", "output": "Validated raw text / CSV rows", "code": "POST /v1/analyze  # JSON: {\"text\": \"...\"}\nPOST /v1/analyze/batch?text_column=text  # multipart file", "link": "analyzer"},
+            {"id": "p1-n2", "x": 150, "y": 75, "r": 24, "label": "Two Paths", "type": "transform", "title": "Dual Preprocessing", "cat": "Preprocessing", "desc": "model_text uses NFC, safe placeholders and whitespace normalization while preserving negation, code mixing, emojis and punctuation. analysis_text is a separate tokenized path. No classifier stop-word removal or lemmatization.", "input": "हा phone चांगला आहे! 😊", "output": "model_text → classifier / phrases; analysis_text → topics", "code": "from ml.preprocessing import preprocess_text\nprepared = preprocess_text(text)\nprepared.model_text\nprepared.analysis_text", "link": "text-cleaning"},
+            {"id": "p1-n3", "x": 255, "y": 75, "r": 24, "label": "MuRIL", "type": "transform", "title": "MuRIL Sentiment", "cat": "Sentiment", "desc": "The validated local artifact and matching tokenizer predict positive, neutral or negative. The available smoke artifact is Development/Smoke Model — Not Production Ready. Its metrics are not project performance.", "input": "Conservative model_text", "output": "Label, probabilities, confidence and low-confidence flag", "code": "SENTIMENT_BACKEND=muril\nSENTIMENT_MODEL_PATH=.../muril-mahasent-md-smoke-v4\nALLOW_SMOKE_MODEL=true\n# Full training is pending; no fabricated quality metrics.", "link": "transformer-representations"},
+            {"id": "p1-n4", "x": 360, "y": 75, "r": 24, "label": "KeyBERT", "type": "transform", "title": "Optional KeyBERT Keywords", "cat": "Enrichment", "desc": "Extracts phrase candidates from model_text using a cached multilingual embedding model. This is an optional service: failure returns empty keywords and a warning while preserving sentiment.", "input": "model_text", "output": "Keyword phrases and extraction scores", "code": "KEYWORD_BACKEND=keybert\nKEYWORD_MODEL_NAME=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2\n# Cache embeddings before requests; no request-time download.", "link": "contextual-embeddings"},
+            {"id": "p1-n5", "x": 465, "y": 75, "r": 24, "label": "BERTopic", "type": "transform", "title": "Optional Saved BERTopic Transform", "cat": "Enrichment", "desc": "Loads a topic artifact trained offline and transforms analysis_text. There is no per-request training. Missing artifacts are unavailable; outlier -1 is returned as a null topic.", "input": "analysis_text", "output": "Artifact-specific topic / unassigned null", "code": "python -m ml.cli topics train --topic-version bertopic-mahasent-md-v1\n# Online: TOPIC_BACKEND=bertopic and TOPIC_MODEL_PATH=<saved artifact>\n# Disable the service when no artifact is provisioned.", "link": "contextual-embeddings"},
+            {"id": "p1-n6", "x": 570, "y": 75, "r": 24, "label": "Summary", "type": "transform", "title": "Optional Extractive Summary", "cat": "Enrichment", "desc": "Selects source sentences deterministically. One-sentence input intentionally returns no summary. No generative API or aggregate summary is claimed.", "input": "model_text", "output": "Selected source sentences / null", "code": "SUMMARY_BACKEND=extractive\nSUMMARY_MAX_SENTENCES=2\n# Summary failure is isolated from sentiment.", "link": "sentence-segmentation"},
+            {"id": "p1-n7", "x": 675, "y": 75, "r": 24, "label": "Persist", "type": "transform", "title": "PostgreSQL Session Persistence", "cat": "Storage", "desc": "SQLAlchemy persists batch sessions, per-row successes/failures and normalized enrichments. Single analysis is stateless by default. STORE_RAW_TEXT=false omits originals; prepared text still remains stored.", "input": "Analysis records and failed-row state", "output": "Session ID; completed / partial / failed; visible counts", "code": "python -m alembic -c backend/alembic.ini upgrade head\n# DATABASE_URL is a server secret.\nGET /v1/analyses/{session_id}?limit=50&offset=0", "link": "analyzer"},
+            {"id": "p1-n8", "x": 770, "y": 75, "r": 24, "label": "Dashboard", "type": "output", "title": "Analytics and Backend Exports", "cat": "Analytics", "desc": "The dashboard uses backend aggregates and paginated results directly, with successful/failed counts, confidence, keywords, topics, privacy states and CSV/JSON downloads. Aggregate summary is intentionally unavailable.", "input": "Persisted session", "output": "Session dashboard, document pages, safe UTF-8 exports", "code": "GET /v1/analyses/{session_id}/analytics\nGET /v1/analyses/{session_id}/export?format=csv\nGET /v1/analyses/{session_id}/export?format=json", "link": "analyzer"}
           ]
         },
-        // Pipeline 2: महापल्स Representation Pipeline (Steps 7–8)
+        // Pipeline 2: retained educational comparison; not the implemented classifier.
         2: {
-          title: "महापल्स Representation & Classification Pipeline (Steps 7–8)",
+          title: "Educational MahaBERT / IndicBERT Representation Comparison",
           nodes: [
             { id: "p2-n1", x: 60, y: 75, r: 24, label: "Tokens In", type: "input", title: "Lemmatized Marathi Tokens", cat: "Representation", desc: "Receives the cleaned, lemmatized Marathi token sequence from the preprocessing pipeline.", input: '["उत्पादन", "खूप", "चांगला"]', output: 'Token sequence ready for MahaBERT tokenizer', code: '# Tokens from the preprocessing pipeline (Steps 1–6)\nlemmatized_tokens = ["उत्पादन", "खूप", "चांगला"]\nsentence = " ".join(lemmatized_tokens)', link: 'lemmatization' },
             { id: "p2-n2", x: 210, y: 75, r: 24, label: "Tokenize", type: "transform", title: "MahaBERT WordPiece Tokenization", cat: "Representation", desc: "Applies MahaBERT's WordPiece tokenizer (trained on 24.8M Marathi sentences) to convert text into subword token IDs.", input: 'हे उत्पादन खूप चांगले आहे', output: '[101, 2345, 6789, 1234, 4567, 890, 102]  (token IDs)', code: 'from transformers import AutoTokenizer\ntokenizer = AutoTokenizer.from_pretrained("l3cube-pune/marathi-bert-v2")\ninputs = tokenizer(sentence, return_tensors="pt", truncation=True, max_length=512)', link: 'tokenization' },
             { id: "p2-n3", x: 380, y: 75, r: 24, label: "Contextual\nEmbeds", type: "transform", title: "Contextual Embeddings (Step 7)", cat: "Representation", desc: "MahaBERT encoder produces 768-dim contextual vectors per token. The [CLS] token output is used as the sentence-level representation.", input: 'Token ID sequence [101, 2345, ...]', output: 'CLS embedding: shape [1, 768]  — encodes full sentence meaning', code: 'from transformers import AutoModel\nimport torch\nmodel = AutoModel.from_pretrained("l3cube-pune/marathi-bert-v2")\nwith torch.no_grad():\n    outputs = model(**inputs)\ncls_embedding = outputs.last_hidden_state[:, 0, :]\nprint(cls_embedding.shape)  # torch.Size([1, 768])', link: 'contextual-embeddings' },
             { id: "p2-n4", x: 560, y: 75, r: 24, label: "Fine-tune", type: "transform", title: "MahaBERT / IndicBERT Fine-tuning (Step 8)", cat: "Representation", desc: "A linear classification head is added on top of the [CLS] embedding. The model is fine-tuned on a labelled Marathi sentiment dataset for 3–5 epochs.", input: 'CLS embedding [1, 768]', output: 'Logits: [Negative=0.94, Neutral=0.04, Positive=0.02]', code: 'from transformers import AutoModelForSequenceClassification\nmodel = AutoModelForSequenceClassification.from_pretrained(\n    "l3cube-pune/marathi-bert-v2", num_labels=3\n)\n# Fine-tune with Trainer API on Marathi sentiment dataset', link: 'transformer-representations' },
-            { id: "p2-n5", x: 730, y: 75, r: 24, label: "Sentiment", type: "output", title: "Sentiment Classification Output", cat: "Representation", desc: "Softmax over 3 classes produces the final महापल्स sentiment prediction: Positive, Negative, or Neutral.", input: 'Logits: [0.94, 0.04, 0.02]', output: 'Predicted: NEGATIVE  (confidence: 94%)', code: 'import torch\nprobs = torch.softmax(outputs.logits, dim=-1)\nlabels = ["Negative", "Neutral", "Positive"]\nprediction = labels[probs.argmax()]\nprint(f"Sentiment: {prediction} ({probs.max():.0%})")\n# Sentiment: Negative (94%)', link: 'transformer-representations' }
+            { id: "p2-n5", x: 730, y: 75, r: 24, label: "Sentiment", type: "output", title: "Sentiment Classification Output", cat: "Representation", desc: "This educational softmax example illustrates three-class prediction. It is not an output of the implemented MuRIL artifact and is not project evaluation.", input: 'Logits: [0.94, 0.04, 0.02]', output: 'Predicted: NEGATIVE  (confidence: 94%)', code: 'import torch\nprobs = torch.softmax(outputs.logits, dim=-1)\nlabels = ["Negative", "Neutral", "Positive"]\nprediction = labels[probs.argmax()]\nprint(f"Sentiment: {prediction} ({probs.max():.0%})")\n# Sentiment: Negative (94%)', link: 'transformer-representations' }
           ]
         }
       };
@@ -472,7 +472,9 @@
         const linkContainer = document.getElementById('step-related-links');
         if (linkContainer && node.link) {
           const formattedLabel = node.link.replace(/-/g, ' ').toUpperCase();
-          if (node.link === 'repository') {
+          if (node.link === 'analyzer') {
+            linkContainer.innerHTML = '<a href="../analyzer/" class="tag">OPEN ANALYZER</a>';
+          } else if (node.link === 'repository') {
             linkContainer.innerHTML = `<a href="../repository/index.html" class="tag">REPOSITORY HOME</a>`;
           } else {
             linkContainer.innerHTML = `<a href="../concept/index.html?id=${node.link}" class="tag">${formattedLabel}</a>`;

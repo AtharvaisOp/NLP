@@ -1,0 +1,12 @@
+# Fixture-only test/runtime dependencies: intentionally no Torch or model SDKs.
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+pydantic-settings>=2.6,<3
+alembic>=1.13,<2
+python-multipart>=0.0.9,<1
+psycopg[binary]>=3.2,<4
+sqlalchemy>=2.0,<3
+pytest>=8,<9
+httpx>=0.27,<1
+numpy>=1.26,<3
+scikit-learn>=1.4,<2

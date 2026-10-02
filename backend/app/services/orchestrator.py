@@ -234,8 +234,10 @@ class AnalysisOrchestrator:
 
     @staticmethod
     def _readiness(metadata) -> ServiceReadiness:
-        if metadata.smoke_test:
+        if metadata.smoke_test and metadata.state == "ready":
             detail = "Smoke artifact is operational for development; not production-ready"
+        elif metadata.smoke_test:
+            detail = "Smoke artifact is unavailable; not production-ready"
         elif metadata.state == "mocked":
             detail = "Service is mocked and no model is loaded"
         elif metadata.state == "disabled":

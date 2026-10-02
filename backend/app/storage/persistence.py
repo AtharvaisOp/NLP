@@ -390,6 +390,10 @@ def _csv_export(rows: list[dict[str, Any]]) -> bytes:
 
 
 def _safe_csv_cell(value: Any) -> Any:
-    if isinstance(value, str) and value[:1] in {"=", "+", "-", "@"}:
-        return "'" + value
+    if isinstance(value, str):
+        # Spreadsheet importers can ignore leading spaces/control characters
+        # before evaluating formulas. Protect the complete original cell.
+        significant = value.lstrip(" \t\r\n\v\f\ufeff")
+        if value[:1] in {"\t", "\r", "\n"} or significant[:1] in {"=", "+", "-", "@"}:
+            return "'" + value
     return value

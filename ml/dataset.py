@@ -408,6 +408,14 @@ def acquire_official_dataset(raw_dir: Path, revision: str = "main") -> tuple[Pat
             capture_output=True,
             text=True,
         )
+        # --no-checkout leaves both the index and worktree empty; sparse-checkout
+        # configures paths but cannot populate an index that has not been read.
+        subprocess.run(
+            ["git", "-C", str(clone_dir), "checkout", "--detach", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
     except (OSError, subprocess.CalledProcessError) as exc:
         detail = getattr(exc, "stderr", "") or str(exc)
         raise DatasetPreparationError(f"Could not acquire official MahaSent-MD source: {detail}") from exc
