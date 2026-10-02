@@ -19,7 +19,7 @@ function json(res, status, payload) {
 }
 
 function service(name) {
-  return { name, version: 'mock-dev-v1', device: 'not-loaded', state: 'mocked' };
+  return { name, version: 'mock-v0', device: 'not-loaded', state: 'mocked' };
 }
 
 function readJson(req) {
@@ -52,11 +52,12 @@ function makeAnalysis(text) {
   const letters = [...text].filter(char => /[A-Za-z\u0900-\u097f]/.test(char));
   const devanagari = letters.filter(char => /[\u0900-\u097f]/.test(char)).length;
   const latin = letters.filter(char => /[A-Za-z]/.test(char)).length;
-  const nullTopic = /topic[- ]?null|no[- ]?topic/.test(lower);
-  const nullSummary = /summary[- ]?null|no[- ]?summary/.test(lower);
+  const nullTopic = !/topic[- ]?assigned/.test(lower) || /topic[- ]?null|no[- ]?topic/.test(lower);
+  const nullSummary = !/summary[- ]?available/.test(lower) || /summary[- ]?null|no[- ]?summary/.test(lower);
   const emptyKeywords = /empty[- ]?keywords|no[- ]?keywords/.test(lower);
   const partial = /partial|enrichment[- ]?warning/.test(lower);
-  const warnings = partial ? ['Keyword/topic enrichment is partial in the development fixture.'] : [];
+  const warnings = ['ML service outputs are deterministic mocks; no models are loaded.'];
+  if (partial) warnings.push('Keyword/topic enrichment is partial in the development fixture.');
   return {
     request_id: `mock-${Buffer.from(text).toString('base64url').slice(0, 16) || 'empty'}`,
     original_text: text,
@@ -67,7 +68,7 @@ function makeAnalysis(text) {
     keywords: emptyKeywords ? [] : [{ text: 'अनुभव', score: 0.91 }, { text: codeMixed ? 'app' : 'उत्पादन', score: 0.73 }],
     topic: nullTopic ? { id: null, label: null, probability: null } : { id: 7, label: 'उत्पादन अनुभव', probability: 0.82 },
     summary: nullSummary ? { text: null, provider: null } : { text: 'Mock summary for frontend verification.', provider: 'mock-summary' },
-    meta: { model_version: 'mock-dev-v1', processing_ms: 4, warnings },
+    meta: { model_version: 'mock-v0', processing_ms: 4, warnings },
   };
 }
 

@@ -65,7 +65,9 @@
   function serviceLabel(service) {
     if (!service) return 'Unavailable';
     const state = service.state ? ` · ${service.state}` : '';
-    return `${service.name || 'Service'}${service.version ? ` ${service.version}` : ''}${state}`;
+    const smoke = service.smoke_test === true || service.production_ready === false;
+    const lifecycle = smoke ? ' · smoke · not production-ready' : '';
+    return `${service.name || 'Service'}${service.version ? ` ${service.version}` : ''}${state}${lifecycle}`;
   }
 
   async function loadServiceStatus() {
@@ -83,7 +85,8 @@
     }
     if (model.status === 'fulfilled') {
       const info = model.value.sentiment_model;
-      setIndicator('model-status', info?.state === 'ready' ? 'ready' : 'mocked', serviceLabel(info));
+      const smoke = info?.smoke_test === true || info?.production_ready === false;
+      setIndicator('model-status', info?.state === 'ready' && !smoke ? 'ready' : 'mocked', serviceLabel(info));
       const note = $('mock-mode-note');
       if (note) note.hidden = !config.USE_MOCK_API;
     } else {
@@ -284,7 +287,7 @@
     loadServiceStatus();
   }
 
-  global.MahaPulseAnalyzer = { analyze, renderProbabilities, renderTopic, renderSummary, validateAnalysisResponse: validAnalysisResponse };
+  global.MahaPulseAnalyzer = { analyze, renderProbabilities, renderTopic, renderSummary, validateAnalysisResponse: validAnalysisResponse, serviceLabel };
   if (global.NLP_COMPONENTS_READY) init();
   else document.addEventListener('nlp:ready', init, { once: true });
 })(window);
