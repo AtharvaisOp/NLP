@@ -18,6 +18,7 @@ from backend.app.services.interfaces import (
 )
 from backend.app.services.mocks import MockSentimentService
 from backend.app.services.orchestrator import AnalysisOrchestrator
+from ml.preprocessing import build_analysis_tokens
 
 
 def settings(**overrides) -> Settings:
@@ -53,6 +54,12 @@ def test_keybert_result_mapping_preserves_unicode_and_normalizes_scores() -> Non
 def test_keybert_empty_text_is_safe() -> None:
     service = KeyBERTKeywordService(settings(keyword_backend="keybert"))
     assert service.extract("   ") == []
+
+
+def test_keyword_candidates_keep_marathi_words_and_negation_intact() -> None:
+    tokens = build_analysis_tokens("हा मोबाईल चांगला नाही। पण battery backup खराब आहे॥")
+    assert tokens == ("हा", "मोबाईल", "चांगला", "नाही", "पण", "battery", "backup", "खराब", "आहे")
+    assert "ईल" not in tokens and "गल" not in tokens and "आह" not in tokens
 
 
 class FakeTopicModel:

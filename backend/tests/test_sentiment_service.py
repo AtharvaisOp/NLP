@@ -105,7 +105,11 @@ def make_artifact(tmp_path: Path, *, smoke_test: bool = True) -> Path:
     (artifact / "label_mapping.json").write_text(
         json.dumps({"canonical_to_id": manifest["label_mapping"]}), encoding="utf-8"
     )
-    for filename in ("config.json", "tokenizer_config.json", "tokenizer.json", "model.safetensors"):
+    (artifact / "config.json").write_text(json.dumps({
+        "label2id": manifest["label_mapping"],
+        "id2label": {str(value): key for key, value in manifest["label_mapping"].items()},
+    }), encoding="utf-8")
+    for filename in ("tokenizer_config.json", "tokenizer.json", "model.safetensors"):
         (artifact / filename).write_text("{}", encoding="utf-8")
     return artifact
 
@@ -250,3 +254,21 @@ def test_invalid_artifact_is_not_ready(tmp_path: Path) -> None:
     service = make_service(artifact)
 
     assert service.metadata().state == "not_ready"
+
+
+def test_artifact_rejects_classifier_config_with_swapped_labels(tmp_path: Path) -> None:
+    artifact = make_artifact(tmp_path)
+    config = json.loads((artifact / "config.json").read_text(encoding="utf-8"))
+    config["label2id"] = {"negative": 2, "neutral": 1, "positive": 0}
+    (artifact / "config.json").write_text(json.dumps(config), encoding="utf-8")
+    assert make_service(artifact).metadata().state == "not_ready"
+
+
+def test_artifact_integrity_paths_cannot_escape_artifact_directory(tmp_path: Path) -> None:
+    artifact = make_artifact(tmp_path)
+    outside = tmp_path / "private.json"
+    outside.write_text("{}", encoding="utf-8")
+    manifest = json.loads((artifact / "model_manifest.json").read_text(encoding="utf-8"))
+    manifest["artifact_integrity"] = {"../private.json": {"bytes": 2, "sha256": "irrelevant"}}
+    (artifact / "model_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert make_service(artifact).metadata().state == "not_ready"

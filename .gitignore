@@ -14,3 +14,10 @@ uploads/
 ml/data/raw/
 ml/data/processed/
 ml/artifacts/
+.vercel/
+.training-venv/
+dist/
+*.log
+
+.vercel
+.env*

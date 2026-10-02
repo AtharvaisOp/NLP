@@ -10,6 +10,7 @@ from __future__ import annotations
 from threading import RLock
 from typing import Any
 
+from ml.preprocessing import build_analysis_tokens
 from ...config import Settings
 from ...exceptions import ServiceFailure
 from ..interfaces import KeywordResult, ServiceMetadata
@@ -24,6 +25,7 @@ class KeyBERTKeywordService:
         self.settings = settings
         self._lock = RLock()
         self._keybert: Any | None = None
+        self._vectorizer: Any | None = None
         self._device: str | None = None
         self._error: str | None = None
 
@@ -59,6 +61,7 @@ class KeyBERTKeywordService:
                 top_n=self.settings.keyword_top_n,
                 use_mmr=self.settings.keyword_use_mmr,
                 diversity=self.settings.keyword_diversity,
+                vectorizer=self._vectorizer,
             )
         except Exception as exc:  # noqa: BLE001 - converted at service boundary
             raise KeyBERTServiceError("KeyBERT extraction failed") from exc
@@ -82,6 +85,7 @@ class KeyBERTKeywordService:
                 import torch
                 from keybert import KeyBERT
                 from sentence_transformers import SentenceTransformer
+                from sklearn.feature_extraction.text import CountVectorizer
 
                 device = self._select_device(torch, self.settings.model_device)
                 embedding_model = SentenceTransformer(
@@ -90,6 +94,17 @@ class KeyBERTKeywordService:
                     local_files_only=True,
                 )
                 self._keybert = KeyBERT(model=embedding_model)
+                # Python's default \w token pattern splits Marathi combining
+                # marks into syllable fragments. Candidate n-grams must use
+                # the shared Unicode-safe tokenizer while embeddings still
+                # receive the complete conservative model_text.
+                self._vectorizer = CountVectorizer(
+                    tokenizer=build_analysis_tokens,
+                    token_pattern=None,
+                    lowercase=False,
+                    ngram_range=(self.settings.keyword_ngram_min, self.settings.keyword_ngram_max),
+                    stop_words=None,
+                )
                 self._device = device
                 return self._keybert
             except KeyBERTServiceError:

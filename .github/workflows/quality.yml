@@ -1,0 +1,48 @@
+name: MahaPulse lightweight quality gate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures-and-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SENTIMENT_BACKEND: mock
+      KEYWORD_BACKEND: mock
+      TOPIC_BACKEND: mock
+      SUMMARY_BACKEND: mock
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/requirements-ci.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install fixture dependencies (no deep-learning runtime)
+        run: python -m pip install -r scripts/requirements-ci.txt
+      - name: Backend and ML fixtures
+        run: python -m pytest -q backend/tests ml/tests
+      - name: Python compile and API/CLI imports
+        run: |
+          python -m compileall -q backend ml
+          python -c "from backend.app.main import app; from ml.cli import build_parser; assert app.openapi(); assert build_parser()"
+      - name: Static routes, links and JavaScript syntax
+        run: node scripts/check-static.mjs
+      - name: Frontend contract and DOM guards
+        run: node scripts/run-frontend-tests.mjs
+      - name: Whitespace sanity
+        run: |
+          git diff --check
+          git diff --check HEAD^ HEAD

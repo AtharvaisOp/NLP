@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
+import json
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
     default_text_column: str = "text"
     max_pagination_limit: int = Field(default=100, gt=0, le=1_000)
     max_text_length: int = Field(default=100_000, gt=0)
-    allowed_origins: list[str] = Field(default_factory=list)
+    allowed_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
     low_confidence_threshold: float = Field(default=0.60, ge=0, le=1)
     sentiment_backend: Literal["mock", "muril"] = "mock"
     sentiment_model_path: str | None = None
@@ -62,7 +63,24 @@ class Settings(BaseSettings):
     @classmethod
     def parse_allowed_origins(cls, value: object) -> object:
         if isinstance(value, str):
-            return [origin.strip() for origin in value.split(",") if origin.strip()]
+            value = json.loads(value) if value.strip().startswith("[") else value.split(",")
+        if isinstance(value, list):
+            origins = [origin.strip().rstrip("/") for origin in value if origin.strip()]
+            if "*" in origins:
+                raise ValueError("allowed_origins must list explicit frontend origins")
+            return origins
+        return value
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_postgresql_driver(cls, value: object) -> object:
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return None
+            for prefix in ("postgres://", "postgresql://"):
+                if value.startswith(prefix):
+                    return "postgresql+psycopg://" + value[len(prefix):]
         return value
 
 

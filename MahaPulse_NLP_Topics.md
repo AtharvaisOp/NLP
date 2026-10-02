@@ -1,4 +1,13 @@
-# महापल्स — NLP Topics Reference
+# महापल्स — Educational NLP Topics Reference
+
+> **Implementation note:** this document preserves educational NLP concepts
+> and MahaBERT/IndicBERT comparisons. The implemented product uses conservative
+> dual preprocessing → MuRIL sentiment → optional KeyBERT → saved BERTopic
+> transform → extractive summary → persistence → analytics/dashboard/export.
+> Classifier input preserves Latin code mixing, negation, emojis and punctuation;
+> it is not stop-word filtered or lemmatized. The validated MuRIL artifact is
+> development/smoke only (`production_ready=false`); full training is pending.
+> See [README](README.md) and [architecture](docs/ARCHITECTURE.md) for the runtime.
 
 ## Project
 
@@ -28,12 +37,11 @@ and decision support for regional language data [3].
 
 ---
 
-## NLP Topics Used in महापल्स
+## Educational NLP Topics
 
-The following topics represent the complete, ordered NLP pipeline that
-महापल्स uses — from raw text to sentiment classification. Every topic
-below is directly applied in the system; no background or optional topics
-are included.
+The following topics explain common preprocessing and representation
+techniques. Their example sequence is educational; it does not describe the
+mandatory runtime preprocessing or classifier implemented in MahaPulse.
 
 ---
 
@@ -42,7 +50,8 @@ are included.
 Text preprocessing is the foundational step for any NLP system. Because
 Marathi is written in the Devanagari script and is morphologically rich,
 specialized preprocessing is required before any model can process it [4].
-महापल्स applies the following six steps in sequence.
+The following six techniques are reference material. MahaPulse prepares separate
+conservative model_text and tokenized analysis_text representations instead.
 
 ### 1.1 Text Cleaning
 
@@ -104,8 +113,8 @@ semantic accuracy during feature extraction and model training [8].
 ## 2. Language Representation
 
 After preprocessing, text must be converted into numerical representations
-that a machine learning model can process. महापल्स uses contextual
-embeddings — the state-of-the-art approach for transformer-based systems.
+that a machine learning model can process. MahaPulse uses MuRIL's contextual
+representations for sentiment and separate multilingual embeddings for keywords.
 
 ### 2.1 Contextual Embeddings
 
@@ -131,10 +140,10 @@ Its encoder produces rich, bidirectional contextual representations of
 input text. All BERT-family models (including IndicBERT and MahaBERT) are
 built on this architecture.
 
-### 3.2 MahaBERT / IndicBERT (Fine-tuned for महापल्स)
+### 3.2 MahaBERT / IndicBERT (Educational Model Comparisons)
 
-महापल्स uses one of the following two pre-trained models (selected based
-on evaluation performance):
+The following models are educational alternatives. They are not the implemented
+MahaPulse classifier or automatic fallback providers:
 
 - **MahaBERT** — A monolingual BERT model pre-trained on the L3Cube
   MahaCorpus, a large Marathi-specific corpus. As a dedicated Marathi
@@ -146,14 +155,16 @@ on evaluation performance):
   including Marathi, developed by AI4Bharat. It is suitable for
   cross-lingual transfer and general Indic NLP tasks [11].
 
-The selected model is fine-tuned on a labelled Marathi sentiment dataset
-using the Hugging Face Transformers library.
+These models can be fine-tuned in independent experiments. The implemented
+training CLI fine-tunes `google/muril-base-cased` on MahaSent-MD and records
+artifact provenance and lifecycle state.
 
 ---
 
-## महापल्स NLP Pipeline (Summary)
+## Educational Example Sequence (Summary)
 
-The complete pipeline in execution order:
+The reference sequence below demonstrates traditional techniques. It is not
+the implemented MuRIL classifier path; see the implementation note above.
 
 | Step | Topic | Purpose |
 |------|-------|---------|

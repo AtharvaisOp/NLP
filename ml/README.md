@@ -85,3 +85,20 @@ succeeds and the API returns an empty/null enrichment with a safe warning.
 Generated embedding caches and topic artifacts are ignored and must not be
 committed. The current MuRIL smoke artifact remains integration-only, not final
 project performance or production readiness.
+
+## Final integration training gate
+
+The verified `muril-mahasent-md-smoke-v4` artifact was trained only on the
+small local fixture. Its metrics do not measure MahaPulse project performance.
+Full official data is prepared separately under ignored
+`ml/data/processed/mahasent-md`; never substitute fixture data for a full run.
+Use the explicit full-run command after confirming CUDA and resources:
+
+```powershell
+python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
+```
+
+The original working Python environment is preserved. GPU diagnosis uses an
+isolated environment, and a full CPU training job is not launched when CUDA
+is unavailable. See [docs/VALIDATION.md](../docs/VALIDATION.md) for recorded
+hardware, full-data split checks, and the final training decision.

@@ -1,0 +1,47 @@
+# Demo defaults. Real MuRIL requires an immutable artifact and measured RAM.
+services:
+  - type: web
+    name: mahapulse-staging-api
+    runtime: python
+    region: singapore
+    plan: free
+    branch: feat/mahapulse-final
+    buildCommand: sh deploy/build.sh
+    startCommand: sh deploy/start.sh
+    healthCheckPath: /health
+    numInstances: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: APP_ENV
+        value: staging
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mahapulse-staging-db
+          property: connectionString
+      - key: STORE_RAW_TEXT
+        value: 'false'
+      - key: SENTIMENT_BACKEND
+        value: mock
+      - key: ALLOW_SMOKE_MODEL
+        value: 'false'
+      - key: MODEL_DEVICE
+        value: cpu
+      - key: KEYWORD_BACKEND
+        value: mock
+      - key: TOPIC_BACKEND
+        value: disabled
+      - key: SUMMARY_BACKEND
+        value: extractive
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: OMP_NUM_THREADS
+        value: '1'
+      - key: TOKENIZERS_PARALLELISM
+        value: 'false'
+databases:
+  - name: mahapulse-staging-db
+    region: singapore
+    plan: free
+    postgresMajorVersion: '17'
+    ipAllowList: []
