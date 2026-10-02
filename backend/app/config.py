@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     )
 
     app_env: str = "development"
+    database_url: str | None = None
+    store_raw_text: bool = True
+    persist_single_analysis: bool = False
+    max_upload_bytes: int = Field(default=5_000_000, gt=0)
+    max_batch_rows: int = Field(default=1_000, gt=0)
+    default_text_column: str = "text"
+    max_pagination_limit: int = Field(default=100, gt=0, le=1_000)
     max_text_length: int = Field(default=100_000, gt=0)
     allowed_origins: list[str] = Field(default_factory=list)
     low_confidence_threshold: float = Field(default=0.60, ge=0, le=1)

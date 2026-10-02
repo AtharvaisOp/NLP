@@ -12,6 +12,8 @@ from .logging_config import configure_logging
 from .middleware import RequestContextMiddleware
 from .services.factory import create_orchestrator
 from .services.orchestrator import AnalysisOrchestrator
+from .db.session import DatabaseManager
+from .storage.persistence import PersistenceService
 
 
 def create_app(
@@ -27,6 +29,9 @@ def create_app(
     )
     app.state.settings = runtime_settings
     app.state.orchestrator = orchestrator or create_orchestrator(runtime_settings)
+    app.state.database = DatabaseManager(runtime_settings)
+    app.state.persistence = PersistenceService(app.state.database, runtime_settings)
+    app.router.add_event_handler("shutdown", app.state.database.dispose)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,

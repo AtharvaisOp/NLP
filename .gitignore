@@ -6,6 +6,11 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.db
+*.sqlite
+*.sqlite3
+exports/
+uploads/
 ml/data/raw/
 ml/data/processed/
 ml/artifacts/

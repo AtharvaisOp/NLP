@@ -137,3 +137,96 @@ class ErrorBody(StrictModel):
 class ErrorResponse(StrictModel):
     error: ErrorBody
     request_id: str
+
+
+class BatchAnalysisResponse(StrictModel):
+    session_id: str
+    status: Literal["completed", "partial", "failed"]
+    total_documents: int = Field(ge=0)
+    successful_documents: int = Field(ge=0)
+    failed_documents: int = Field(ge=0)
+    processing_ms: int = Field(ge=0)
+    model_version: str
+
+
+class PersistedDocumentResponse(StrictModel):
+    id: str
+    row_index: int = Field(ge=0)
+    status: Literal["success", "failed"]
+    original_text: str | None = None
+    model_text: str | None = None
+    analysis_text: str | None = None
+    language: LanguageInfo | None = None
+    sentiment: SentimentInfo | None = None
+    keywords: list[KeywordInfo] = Field(default_factory=list)
+    topic: TopicInfo = Field(default_factory=TopicInfo)
+    summary: SummaryInfo = Field(default_factory=SummaryInfo)
+    processing_ms: int | None = Field(default=None, ge=0)
+    warnings: list[str] = Field(default_factory=list)
+    error_code: str | None = None
+    error_message: str | None = None
+
+
+class SessionInfo(StrictModel):
+    id: str
+    source_type: Literal["single", "batch"]
+    filename: str | None = None
+    created_at: str
+    completed_at: str | None = None
+    status: Literal["processing", "completed", "partial", "failed"]
+    total_documents: int = Field(ge=0)
+    successful_documents: int = Field(ge=0)
+    failed_documents: int = Field(ge=0)
+    model_version: str
+
+
+class AnalysisSessionResponse(StrictModel):
+    session: SessionInfo
+    documents: list[PersistedDocumentResponse]
+    total_documents: int = Field(ge=0)
+    limit: int = Field(ge=0)
+    offset: int = Field(ge=0)
+
+
+class SentimentAggregate(StrictModel):
+    count: int = Field(ge=0)
+    percentage: float = Field(ge=0, le=100)
+
+
+class ConfidenceAnalytics(StrictModel):
+    average: float | None = Field(default=None, ge=0, le=1)
+    minimum: float | None = Field(default=None, ge=0, le=1)
+    maximum: float | None = Field(default=None, ge=0, le=1)
+    low_confidence_count: int = Field(ge=0)
+
+
+class LanguageAnalytics(StrictModel):
+    code_mixed_count: int = Field(ge=0)
+    code_mixed_percentage: float = Field(ge=0, le=100)
+
+
+class KeywordAggregate(StrictModel):
+    text: str
+    count: int = Field(ge=0)
+    average_score: float = Field(ge=0, le=1)
+
+
+class TopicAggregate(StrictModel):
+    id: int | None = None
+    label: str | None = None
+    count: int = Field(ge=0)
+    percentage: float = Field(ge=0, le=100)
+
+
+class AnalyticsResponse(StrictModel):
+    session_id: str
+    total: int = Field(ge=0)
+    successful: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    sentiment: dict[str, SentimentAggregate]
+    confidence: ConfidenceAnalytics
+    language: LanguageAnalytics
+    keywords: list[KeywordAggregate]
+    topics: list[TopicAggregate]
+    null_topic_count: int = Field(ge=0)
+    summary: None = None

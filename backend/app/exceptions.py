@@ -21,3 +21,8 @@ class InputValidationError(APIError):
 class ServiceFailure(APIError):
     status_code = 503
     code = "service_unavailable"
+
+
+class ResourceNotFound(APIError):
+    status_code = 404
+    code = "not_found"

@@ -54,9 +54,10 @@ services with mock and disabled modes retained for lightweight development.
 | `GET /v1/model-info` | Return MuRIL/KeyBERT/BERTopic/summary metadata and labels | Implemented; real artifact metadata when configured |
 | `POST /v1/analyze` | Validate input, run both text paths, call injected services, return stable result | Implemented with configurable mock or MuRIL sentiment |
 | `POST /api/v1/analyze/preview` | Phase 1 preprocessing-preview compatibility route | Preserved |
-| `GET /v1/results/{result_id}` | Retrieve one persisted analysis | Future PostgreSQL phase |
-| `GET /v1/analytics` | Return sentiment/topic/keyword aggregates | Future PostgreSQL phase |
-| `GET /v1/export` | Stream filtered JSON or CSV result data | Future PostgreSQL phase |
+| `POST /v1/analyze/batch` | Bounded synchronous CSV analysis and persistence | Implemented; database required |
+| `GET /v1/analyses/{session_id}` | Paginated persisted session documents | Implemented; database required |
+| `GET /v1/analyses/{session_id}/analytics` | Deterministic successful-result aggregates | Implemented; database required |
+| `GET /v1/analyses/{session_id}/export` | Session JSON/CSV export | Implemented; database required |
 
 The analysis response always contains `request_id`, original and prepared text,
 language ratios/code-mixing metadata, sentiment label/confidence/probabilities,
@@ -131,6 +132,37 @@ response `low_confidence` flag. Request IDs are generated or safely propagated
 through `X-Request-ID`, logged as structured JSON, and returned in both normal
 responses and safe JSON errors. Stack traces are logged server-side only.
 
+## Phase 6 persistence and batch boundary
+
+Persistence is an explicit SQLAlchemy 2.x/Alembic layer under
+`backend/app/db` and `backend/app/storage`. PostgreSQL is the production target;
+temporary SQLite is supported for deterministic local tests. The initial
+migration creates normalized `analysis_sessions`, `analysis_documents`,
+`sentiment_results`, `keyword_results`, `topic_results`, and `summary_results`
+tables with session, label, timestamp, and topic indexes. Application startup
+does not create tables; deployment runs `alembic upgrade head`.
+
+`POST /v1/analyze` remains stateless by default. `PERSIST_SINGLE_ANALYSIS=true`
+opts into a single session/document write without changing its response schema.
+`POST /v1/analyze/batch` requires a configured database, accepts bounded UTF-8
+CSV, and processes each row through the existing `AnalysisOrchestrator`.
+Individual failures are stored safely and produce `completed`, `partial`, or
+`failed` session status. Batch/history/analytics/export endpoints return safe
+database service errors if the configured database is unavailable.
+
+`GET /v1/analyses/{session_id}` provides bounded pagination;
+`/analytics` calculates percentages against successful documents only, and
+`/export` supports JSON and UTF-8 CSV. Null topics are counted separately,
+empty keywords do not affect aggregates, and zero-success sessions return null
+confidence aggregates with zero percentages. CSV cells beginning with
+spreadsheet formula prefixes are apostrophe-prefixed before export.
+
+`STORE_RAW_TEXT=false` omits only `original_text`; model/analysis paths and
+result metadata remain available as documented for review. Weights and
+embeddings are never stored. Normal logs contain request/session identifiers,
+not full user text. Uploads and generated database/export files are ignored by
+Git.
+
 ## Deployment topology
 
 ```text
@@ -180,6 +212,8 @@ backend/
     main.py                 FastAPI application entry point
     config.py               Environment-backed runtime settings
     schemas.py              HTTP request/response contracts
+    db/                     SQLAlchemy engine and normalized models
+    storage/                Repository, persistence, and batch boundaries
     dependencies.py         FastAPI service dependency providers
     api/routes.py           Thin health, readiness, and analysis routes
     services/interfaces.py  Protocols for future real model services
@@ -190,6 +224,8 @@ backend/
     services/orchestrator.py Two-path analysis orchestration
     errors.py               Centralized safe JSON exception handlers
     middleware.py           Request IDs and structured access logs
+  alembic.ini               Migration configuration
+  alembic/                  Versioned database migrations
   requirements.txt          Backend runtime dependencies
   requirements-dev.txt      Pytest/httpx test dependencies
   tests/                    FastAPI contract tests

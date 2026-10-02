@@ -3,7 +3,8 @@
 This directory is the API boundary for the MahaPulse analysis service. The
 frontend-facing response contract remains unchanged. MuRIL sentiment is the
 required service; keyword, topic, and summary enrichments are independently
-selectable and may be mocked or disabled. PostgreSQL is not used.
+selectable and may be mocked or disabled. Phase 6 adds normalized SQLAlchemy
+persistence, bounded CSV batches, analytics, and export.
 
 ## Endpoints
 
@@ -11,6 +12,10 @@ selectable and may be mocked or disabled. PostgreSQL is not used.
 - `GET /ready` — API/preprocessing readiness plus model-service states.
 - `GET /v1/model-info` — model/service metadata and readiness states.
 - `POST /v1/analyze` — stable analysis response contract over the two text paths.
+- `POST /v1/analyze/batch` — bounded synchronous UTF-8 CSV processing.
+- `GET /v1/analyses/{session_id}` — paginated persisted results.
+- `GET /v1/analyses/{session_id}/analytics` — deterministic session aggregates.
+- `GET /v1/analyses/{session_id}/export?format=csv|json` — safe result export.
 - `POST /api/v1/analyze/preview` — Phase 1 preprocessing-preview compatibility route.
 
 ## Local run
@@ -111,6 +116,39 @@ create background workers or pretend to cancel a running model call.
 unavailable states. Loading the current MuRIL smoke artifact still keeps the
 overall service degraded and is never production readiness or model
 performance.
+
+## Persistence and batches
+
+Production persistence uses PostgreSQL through SQLAlchemy 2.x and psycopg. The
+schema is managed with Alembic; no tables are created automatically at API
+startup:
+
+```bash
+alembic -c backend/alembic.ini upgrade head
+alembic -c backend/alembic.ini downgrade base
+```
+
+`DATABASE_URL` enables database-backed history, batches, analytics, and export.
+When it is unset, `/v1/analyze` remains stateless and `/ready` reports the
+database as disabled/not-required. `PERSIST_SINGLE_ANALYSIS=false` is the
+default; enabling it requires a configured database and persists one session
+without changing the response body. Batch/history/analytics/export require a
+database and return safe service errors when it is unavailable.
+
+`POST /v1/analyze/batch` accepts a `.csv` multipart upload with a default
+`text` column. Use `?text_column=review` for another column. Uploads are
+bounded by `MAX_UPLOAD_BYTES` and `MAX_BATCH_ROWS`, parsed as UTF-8 (including
+an optional BOM), and processed synchronously through the same
+`AnalysisOrchestrator` as single analysis. Rows fail independently; session
+status is `completed`, `partial`, or `failed`.
+
+The normalized schema stores sessions, documents, sentiment, keywords, topics,
+and summaries. It does not store weights or embeddings. `STORE_RAW_TEXT=true`
+stores the original input for review/export; when false, `original_text` is
+null while the documented processed/result metadata may remain. User text is
+not written to normal application logs. CSV export protects cells beginning
+with `=`, `+`, `-`, or `@` against spreadsheet formula execution and preserves
+Marathi UTF-8.
 
 On this local Windows CPU environment, the first KeyBERT load took about 13.4
 seconds and increased resident memory by about 702 MB. The two requested local
