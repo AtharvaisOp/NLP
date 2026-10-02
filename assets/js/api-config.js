@@ -11,8 +11,12 @@
     REQUEST_TIMEOUT_MS: 12000,
     MAX_TEXT_LENGTH: 100000,
   };
-  const supplied = global.MAHAPULSE_RUNTIME_CONFIG || global.MAHAPULSE_CONFIG || {};
-  const config = Object.assign({}, defaults, supplied);
+  /* Runtime values win; a separately supplied static config may be used by a
+     deployment; otherwise the safe localhost default remains in force. */
+  const staticConfig = global.MAHAPULSE_STATIC_CONFIG || {};
+  const legacyConfig = global.MAHAPULSE_CONFIG || {};
+  const runtimeConfig = global.MAHAPULSE_RUNTIME_CONFIG || {};
+  const config = Object.assign({}, defaults, legacyConfig, staticConfig, runtimeConfig);
   config.API_BASE_URL = String(config.API_BASE_URL || defaults.API_BASE_URL).replace(/\/+$/, '');
   global.MAHAPULSE_CONFIG = config;
 

@@ -18,6 +18,24 @@
     return typeof value === 'number' && Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : '—';
   }
 
+  function isFiniteRatio(value) {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+  }
+
+  function validAnalysisResponse(result) {
+    if (!result || typeof result !== 'object') return false;
+    if (![result.request_id, result.original_text, result.model_text, result.analysis_text].every(value => typeof value === 'string')) return false;
+    if (!result.request_id.trim()) return false;
+    const language = result.language;
+    if (!language || typeof language.primary !== 'string' || typeof language.is_code_mixed !== 'boolean' || !isFiniteRatio(language.devanagari_ratio) || !isFiniteRatio(language.latin_ratio)) return false;
+    const sentiment = result.sentiment;
+    if (!sentiment || !['positive', 'negative', 'neutral'].includes(sentiment.label) || !isFiniteRatio(sentiment.confidence) || typeof sentiment.low_confidence !== 'boolean') return false;
+    const probabilities = sentiment.probabilities;
+    if (!probabilities || typeof probabilities !== 'object' || !['positive', 'negative', 'neutral'].every(label => isFiniteRatio(probabilities[label]))) return false;
+    const total = probabilities.positive + probabilities.negative + probabilities.neutral;
+    return Math.abs(total - 1) <= 0.02;
+  }
+
   function setState(kind, title, message) {
     const panel = $('analysis-state');
     if (!panel) return;
@@ -184,6 +202,7 @@
   function classifyError(error) {
     if (error?.code === 'timeout') return ['network', 'Request timed out', error.message];
     if (error?.code === 'backend_unavailable' || error?.code === 'network_error') return ['offline', 'Backend unavailable', error.message];
+    if (error?.code === 'invalid_backend_response') return ['error', 'Invalid backend response', error.message];
     return ['error', 'Analysis failed safely', error?.message || 'The backend returned an unexpected response.'];
   }
 
@@ -208,6 +227,11 @@
     setState('loading', 'Analyzing text', 'Preparing the two text paths and requesting sentiment results…');
     try {
       const result = await api.analyze(raw);
+      if (!validAnalysisResponse(result)) {
+        const invalid = new Error('The backend response is missing required analysis fields.');
+        invalid.code = 'invalid_backend_response';
+        throw invalid;
+      }
       renderResponse(result);
     } catch (error) {
       const [kind, title, message] = classifyError(error);
@@ -260,7 +284,7 @@
     loadServiceStatus();
   }
 
-  global.MahaPulseAnalyzer = { analyze, renderProbabilities, renderTopic, renderSummary };
+  global.MahaPulseAnalyzer = { analyze, renderProbabilities, renderTopic, renderSummary, validateAnalysisResponse: validAnalysisResponse };
   if (global.NLP_COMPONENTS_READY) init();
   else document.addEventListener('nlp:ready', init, { once: true });
 })(window);
