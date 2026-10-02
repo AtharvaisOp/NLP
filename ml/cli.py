@@ -11,6 +11,7 @@ from .config import TrainingConfig, smoke_config
 from .dataset import DatasetPreparationError, acquire_official_dataset, prepare_dataset
 from .evaluate import evaluate_artifact
 from .train import TrainingError, train_model
+from .topics import TopicTrainingConfig, TopicTrainingError, inspect_topic_artifact, train_topic_model
 
 
 def _path(value: str) -> Path:
@@ -52,6 +53,20 @@ def build_parser() -> argparse.ArgumentParser:
 
     inspect = subparsers.add_parser("inspect-artifact", help="print an artifact manifest")
     inspect.add_argument("artifact_dir", type=_path)
+
+    topics = subparsers.add_parser("topics", help="offline BERTopic artifact operations")
+    topic_commands = topics.add_subparsers(dest="topics_command", required=True)
+    topic_train = topic_commands.add_parser("train", help="train BERTopic on a prepared corpus")
+    topic_train.add_argument("--processed-dir", type=_path, default=Path("ml/data/processed/mahasent-md"))
+    topic_train.add_argument("--artifact-root", type=_path, default=Path("ml/artifacts"))
+    topic_train.add_argument("--topic-version", default="bertopic-mahasent-md-v1")
+    topic_train.add_argument("--embedding-model", default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    topic_train.add_argument("--min-topic-size", type=int, default=10)
+    topic_train.add_argument("--nr-topics", type=int)
+    topic_train.add_argument("--random-seed", type=int, default=42)
+    topic_train.add_argument("--smoke", action="store_true")
+    topic_inspect = topic_commands.add_parser("inspect", help="print a topic artifact manifest")
+    topic_inspect.add_argument("artifact_dir", type=_path)
     return parser
 
 
@@ -93,6 +108,26 @@ def _run(args: argparse.Namespace) -> object:
         return evaluate_artifact(args.artifact_dir, args.processed_dir)
     if args.command == "inspect-artifact":
         return json.loads((args.artifact_dir / "model_manifest.json").read_text(encoding="utf-8"))
+    if args.command == "topics":
+        if args.topics_command == "inspect":
+            return inspect_topic_artifact(args.artifact_dir)
+        config = TopicTrainingConfig(
+            embedding_model=args.embedding_model,
+            min_topic_size=args.min_topic_size,
+            nr_topics=args.nr_topics,
+            random_seed=args.random_seed,
+            smoke_test=args.smoke,
+        )
+        return {
+            "artifact_dir": str(
+                train_topic_model(
+                    args.processed_dir,
+                    args.artifact_root,
+                    config,
+                    args.topic_version,
+                )
+            )
+        }
     raise ValueError(f"Unknown command: {args.command}")
 
 
@@ -100,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         result = _run(args)
-    except (DatasetPreparationError, TrainingError, OSError, ValueError) as exc:
+    except (DatasetPreparationError, TrainingError, TopicTrainingError, OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, default=str))

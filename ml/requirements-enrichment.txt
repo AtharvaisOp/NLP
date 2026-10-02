@@ -1,0 +1,5 @@
+# Optional Phase 5 dependencies. Keep these out of the default test/runtime
+# install so mock mode remains lightweight and offline.
+keybert>=0.8,<1
+bertopic>=0.16,<1
+sentence-transformers>=5,<7

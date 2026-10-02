@@ -27,6 +27,29 @@ class Settings(BaseSettings):
     sentiment_model_path: str | None = None
     allow_smoke_model: bool = False
     model_device: Literal["auto", "cpu", "cuda"] = "auto"
+    keyword_backend: Literal["mock", "keybert", "disabled"] = "mock"
+    keyword_model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    keyword_top_n: int = Field(default=5, ge=1, le=50)
+    keyword_ngram_min: int = Field(default=1, ge=1, le=5)
+    keyword_ngram_max: int = Field(default=2, ge=1, le=5)
+    keyword_use_mmr: bool = False
+    keyword_diversity: float = Field(default=0.5, ge=0, le=1)
+    keyword_timeout_seconds: float = Field(default=2.0, gt=0)
+    topic_backend: Literal["mock", "bertopic", "disabled"] = "mock"
+    topic_model_path: str | None = None
+    topic_embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    topic_timeout_seconds: float = Field(default=2.0, gt=0)
+    summary_backend: Literal["mock", "extractive", "disabled"] = "mock"
+    summary_max_sentences: int = Field(default=2, ge=1, le=5)
+    summary_timeout_seconds: float = Field(default=1.0, gt=0)
+
+    @field_validator("keyword_ngram_max")
+    @classmethod
+    def ngram_max_must_cover_min(cls, value: int, info) -> int:
+        minimum = info.data.get("keyword_ngram_min", 1)
+        if value < minimum:
+            raise ValueError("keyword_ngram_max must be >= keyword_ngram_min")
+        return value
 
     @field_validator("allowed_origins", mode="before")
     @classmethod

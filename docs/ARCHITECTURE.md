@@ -20,11 +20,12 @@ Marathi / Marathi-English input
         │       └── MuRIL sentiment classifier → Positive / Negative / Neutral
         │
         └── analysis_text: deeper cleaning + tokens
-                ├── KeyBERT → keywords
-                ├── BERTopic → topics
+                ├── BERTopic artifact transform → topics (optional)
                 └── EDA / analytics inputs
 
-model_text + derived results → summarization → PostgreSQL result record
+model_text → KeyBERT candidate generation (optional; preserves useful phrases)
+
+model_text + derived results → provider-isolated summarization → PostgreSQL result record
 PostgreSQL aggregates → analytics/dashboard API → export (JSON / CSV)
 ```
 
@@ -43,7 +44,8 @@ downstream analysis choices and must never leak into the classifier path.
 The FastAPI app in `backend/app` is the only service boundary for frontend
 integration. The response contract is stable. The sentiment service can now
 select either the explicit `mock` implementation or a local MuRIL artifact;
-KeyBERT, BERTopic, and summarization remain deterministic stubs.
+KeyBERT, BERTopic, and summarization are independently selectable optional
+services with mock and disabled modes retained for lightweight development.
 
 | Endpoint | Responsibility | Current state |
 | --- | --- | --- |
@@ -68,10 +70,42 @@ user interaction.
 `backend/app/services/interfaces.py` defines Protocols for
 `SentimentService`, `KeywordService`, `TopicService`, and `SummaryService`.
 `AnalysisOrchestrator` receives those interfaces through dependency injection.
-`services/factory.py` selects the explicit sentiment backend. The MuRIL
+`services/factory.py` selects each explicit backend independently. The MuRIL
 implementation in `services/sentiment/muril.py` validates and lazily loads one
-local artifact per process, while `services/mocks.py` remains the default and
-continues to provide the keyword/topic/summary stubs.
+local artifact per process. KeyBERT, BERTopic, and summary implementations are
+lazy or local deterministic services; `services/mocks.py` remains available for
+lightweight tests.
+
+Sentiment is required for `/v1/analyze`. Keyword, topic, and summary calls are
+separate optional boundaries. Each failure leaves sentiment and successful
+enrichments intact, returns `[]` or null for the failed component, and adds a
+safe service-specific warning. The synchronous timeout settings are elapsed
+time budgets for observability, not a background queue or cancellation system.
+
+KeyBERT uses the cached multilingual
+[`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)
+embedding model, selected because its model documentation covers 50 languages
+and it is already compatible with the repository's local sentence-transformer
+cache. KeyBERT's [embedding-based extraction API](https://maartengr.github.io/KeyBERT/guides/embeddings.html) is used directly. Keyword
+candidate generation uses `model_text` to preserve meaningful Marathi and
+Marathi-English phrases. The optional embedding package/model is never loaded
+in mock mode and is never downloaded on a request path.
+
+BERTopic is corpus-level, so training lives in `ml/topics.py` and the CLI:
+`python -m ml.cli topics train ...`. The online service only loads a saved
+`ml/artifacts/topics/<topic_version>/` artifact and calls `transform`. Topic
+IDs and stored labels are artifact-version-specific; outlier topic `-1` is
+represented as a null result. No topic model is fitted per request.
+
+Summary providers implement the same `SummaryService` protocol. The current
+extractive provider selects source sentences deterministically and returns
+null for one-sentence inputs; it does not fabricate or call a generative API.
+This isolates a future LLM provider without changing routes or schemas.
+
+The local CPU KeyBERT smoke added approximately 702 MB resident memory and
+took about 13.4 seconds to load; two post-load extractions took about 110 ms
+and 43 ms. This is a development observation and an explicit Render sizing
+risk when MuRIL and BERTopic are loaded in the same process.
 
 MuRIL artifact loading is local-only and validates project/task, the
 `google/muril-base-cased` base model, canonical labels, preprocessing version,
@@ -152,6 +186,7 @@ backend/
     services/mocks.py       Deterministic no-model stubs
     services/factory.py      Configurable service assembly
     services/sentiment/      Validated local MuRIL inference service
+    services/enrichment/     Optional KeyBERT, BERTopic, disabled, and extractive services
     services/orchestrator.py Two-path analysis orchestration
     errors.py               Centralized safe JSON exception handlers
     middleware.py           Request IDs and structured access logs
@@ -163,10 +198,11 @@ ml/
   dataset.py                Verified MahaSent-MD acquisition, validation, and manifests
   config.py                 Centralized MuRIL training configuration
   reproducibility.py        Seeds and runtime/package provenance
+  topics.py                 Offline BERTopic training and artifact inspection
   metrics.py                Held-out evaluation and prediction records
   train.py                  Lazy-dependency MuRIL Trainer pipeline
   evaluate.py               Artifact evaluation on the held-out test split
-  cli.py                    prepare/train/evaluate/inspect-artifact commands
+  cli.py                    prepare/train/evaluate/topics/inspect commands
   requirements.txt          Optional training dependencies
   tests/                    Dependency-light pipeline tests and Marathi fixtures
 ml/data/                    Ignored raw and processed dataset outputs
@@ -179,7 +215,9 @@ assets/, */index.html       Existing Part 1 static site; routes preserved
 
 Future model adapters should be added under `ml/` behind explicit interfaces
 for MuRIL, KeyBERT, BERTopic, summarization, and analytics rather than making
-the FastAPI routes import model internals directly.
+the FastAPI routes import model internals directly. Optional enrichment
+dependencies are listed separately in `ml/requirements-enrichment.txt` so the
+default test/API installation stays lightweight.
 
 ## Phase 3 dataset and training boundary
 

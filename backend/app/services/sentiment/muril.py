@@ -206,6 +206,8 @@ class MurilSentimentService:
                 production_ready=False,
                 base_model=EXPECTED_BASE_MODEL,
                 preprocessing_version=PREPROCESSING_VERSION,
+                backend="muril",
+                provider="MuRIL",
             )
         return ServiceMetadata(
             name="MuRIL",
@@ -216,6 +218,8 @@ class MurilSentimentService:
             production_ready=not metadata.smoke_test,
             base_model=metadata.base_model,
             preprocessing_version=metadata.preprocessing_version,
+            backend="muril",
+            provider="MuRIL",
         )
 
     def predict(self, model_text: str) -> SentimentResult:

@@ -2,8 +2,10 @@
 
 Phase 3 prepares the official L3Cube MahaSent-MD Marathi sentiment dataset,
 fine-tunes `google/muril-base-cased` for three classes, evaluates a selected
-checkpoint, and records a versioned artifact. The FastAPI service is not wired
-to these artifacts yet; that is a Phase 4 concern.
+checkpoint, and records a versioned artifact. The FastAPI sentiment service
+consumes these artifacts in Phase 4. Phase 5 adds optional KeyBERT, BERTopic,
+and extractive-summary services without changing the sentiment artifact or
+API contract.
 
 The default MuRIL checkpoint is `google/muril-base-cased`, verified against the
 MuRIL model evaluated in the L3Cube MahaSent-MD research paper and retained as
@@ -26,6 +28,8 @@ python -m ml.cli train --smoke
 python -m ml.cli train --full --model-version muril-mahasent-md-v1
 python -m ml.cli evaluate --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1
 python -m ml.cli inspect-artifact ml/artifacts/sentiment/muril-mahasent-md-v1
+python -m ml.cli topics train --processed-dir ml/data/processed/mahasent-md --topic-version bertopic-mahasent-md-v1
+python -m ml.cli topics inspect ml/artifacts/topics/bertopic-mahasent-md-v1
 ```
 
 `prepare` downloads only the verified upstream repository and writes raw data
@@ -48,3 +52,36 @@ The artifact contains model/tokenizer files plus `config.json`,
 `dataset_report.json`, `metrics.json`, and `predictions.jsonl`. Artifacts are
 ignored by Git. Phase 4 can load the tokenizer/model and manifest while keeping
 the existing `/v1/analyze` response contract unchanged.
+
+## Phase 5 enrichment boundary
+
+KeyBERT is optional and uses
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, a cached
+multilingual embedding model selected for Marathi and Marathi-English support.
+Install `ml/requirements-enrichment.txt` only for real enrichment work. The
+backend loads it once per process with local-only model loading; it never
+downloads an embedding model during a request. Keyword candidates use the
+conservative `model_text` path rather than assuming the deeper analysis path is
+always semantically better.
+
+BERTopic training is offline and corpus-level. `ml/topics.py` consumes the
+prepared train split and writes ignored artifacts under
+`ml/artifacts/topics/<topic_version>/`, including a manifest, topic labels,
+training configuration, and preprocessing/dataset provenance. The backend
+`BertopicTopicService` only loads an existing artifact and calls `transform`.
+Topic IDs are artifact-version-specific; an outlier (`-1`) is represented as a
+null topic.
+
+The extractive summary provider is deterministic, UTF-8 safe, and only returns
+sentences selected from the input. One-sentence inputs return a null summary.
+Its provider-isolated `SummaryService` interface leaves room for a future
+generative provider without route or schema changes.
+
+Use `KEYWORD_BACKEND=mock|keybert|disabled`,
+`TOPIC_BACKEND=mock|bertopic|disabled`, and
+`SUMMARY_BACKEND=mock|extractive|disabled`. Sentiment is required; enrichments
+are optional. If an enrichment is unavailable or fails, sentiment still
+succeeds and the API returns an empty/null enrichment with a safe warning.
+Generated embedding caches and topic artifacts are ignored and must not be
+committed. The current MuRIL smoke artifact remains integration-only, not final
+project performance or production readiness.

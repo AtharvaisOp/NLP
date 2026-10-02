@@ -16,6 +16,9 @@ class ServiceMetadata:
     production_ready: bool | None = None
     base_model: str | None = None
     preprocessing_version: str | None = None
+    backend: str | None = None
+    provider: str | None = None
+    embedding_model: str | None = None
 
 
 @dataclass(frozen=True)

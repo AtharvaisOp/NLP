@@ -25,6 +25,8 @@ class MockSentimentService:
             version=MOCK_VERSION,
             device="not-loaded",
             state="mocked",
+            backend="mock",
+            provider="MuRIL",
         )
 
     def predict(self, model_text: str) -> SentimentResult:
@@ -43,6 +45,8 @@ class MockKeywordService:
             version=MOCK_VERSION,
             device="not-loaded",
             state="mocked",
+            backend="mock",
+            provider="KeyBERT",
         )
 
     def extract(self, analysis_text: str) -> list[KeywordResult]:
@@ -60,6 +64,8 @@ class MockTopicService:
             version=MOCK_VERSION,
             device="not-loaded",
             state="mocked",
+            backend="mock",
+            provider="BERTopic",
         )
 
     def classify(self, analysis_text: str) -> TopicResult:
@@ -74,6 +80,7 @@ class MockSummaryService:
             version=MOCK_VERSION,
             device="not-loaded",
             state="mocked",
+            backend="mock",
         )
 
     def summarize(self, model_text: str) -> SummaryResult:

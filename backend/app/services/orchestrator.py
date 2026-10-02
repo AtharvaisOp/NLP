@@ -79,17 +79,14 @@ class AnalysisOrchestrator:
                     },
                 },
             )
-            keywords = self.keyword_service.extract(prepared.analysis_text)
-            topic = self.topic_service.classify(prepared.analysis_text)
-            summary = self.summary_service.summarize(prepared.model_text)
         except ServiceFailure:
             raise
         except Exception as exc:
             logging.getLogger(LOGGER_NAME).exception(
-                "analysis service failed",
+                "sentiment service failed",
                 extra={
-                    "event": "analysis.service_failed",
-                    "fields": {"request_id": request_id},
+                    "event": "sentiment.service_failed",
+                    "fields": {"request_id": request_id, "service": "sentiment"},
                 },
                 exc_info=exc,
             )
@@ -101,6 +98,9 @@ class AnalysisOrchestrator:
             warnings.append("ML service outputs are deterministic mocks; no models are loaded.")
         if sentiment_metadata.smoke_test:
             warnings.append("Smoke sentiment artifact loaded; predictions are not production performance.")
+        keywords = self._optional_keywords(prepared.model_text, request_id, warnings)
+        topic = self._optional_topic(prepared.analysis_text, request_id, warnings)
+        summary = self._optional_summary(prepared.model_text, request_id, warnings)
         return AnalysisResponse(
             request_id=request_id,
             original_text=text,
@@ -126,6 +126,71 @@ class AnalysisOrchestrator:
                 warnings=warnings,
             ),
         )
+
+    def _optional_keywords(
+        self, model_text: str, request_id: str, warnings: list[str]
+    ) -> list:
+        started = perf_counter()
+        try:
+            # Candidate generation uses model_text so Marathi phrases, negation,
+            # punctuation context, and Roman code-mixing remain available.
+            result = self.keyword_service.extract(model_text)
+        except Exception as exc:  # noqa: BLE001 - optional boundary isolation
+            self._log_optional_failure("keywords", request_id, exc)
+            warnings.append("Keyword enrichment unavailable.")
+            return []
+        self._append_timeout_warning(
+            "Keyword", perf_counter() - started, self.settings.keyword_timeout_seconds, warnings
+        )
+        return result
+
+    def _optional_topic(
+        self, analysis_text: str, request_id: str, warnings: list[str]
+    ):
+        started = perf_counter()
+        try:
+            result = self.topic_service.classify(analysis_text)
+        except Exception as exc:  # noqa: BLE001 - optional boundary isolation
+            self._log_optional_failure("topics", request_id, exc)
+            warnings.append("Topic enrichment unavailable.")
+            return TopicInfo(id=None, label=None, probability=None)
+        self._append_timeout_warning(
+            "Topic", perf_counter() - started, self.settings.topic_timeout_seconds, warnings
+        )
+        return result
+
+    def _optional_summary(
+        self, model_text: str, request_id: str, warnings: list[str]
+    ):
+        started = perf_counter()
+        try:
+            result = self.summary_service.summarize(model_text)
+        except Exception as exc:  # noqa: BLE001 - optional boundary isolation
+            self._log_optional_failure("summary", request_id, exc)
+            warnings.append("Summary enrichment unavailable.")
+            return SummaryInfo(text=None, provider=None)
+        self._append_timeout_warning(
+            "Summary", perf_counter() - started, self.settings.summary_timeout_seconds, warnings
+        )
+        return result
+
+    @staticmethod
+    def _log_optional_failure(service: str, request_id: str, exc: Exception) -> None:
+        logging.getLogger(LOGGER_NAME).exception(
+            "optional enrichment failed",
+            extra={
+                "event": "enrichment.service_failed",
+                "fields": {"request_id": request_id, "service": service},
+            },
+            exc_info=exc,
+        )
+
+    @staticmethod
+    def _append_timeout_warning(
+        service: str, elapsed: float, budget: float, warnings: list[str]
+    ) -> None:
+        if elapsed > budget:
+            warnings.append(f"{service} enrichment exceeded its configured time budget.")
 
     def readiness(self) -> ReadyResponse:
         services = {
@@ -173,6 +238,8 @@ class AnalysisOrchestrator:
             detail = "Smoke artifact is operational for development; not production-ready"
         elif metadata.state == "mocked":
             detail = "Service is mocked and no model is loaded"
+        elif metadata.state == "disabled":
+            detail = "Service is disabled by configuration"
         else:
             detail = f"{metadata.name} service is {metadata.state}"
         return ServiceReadiness(
@@ -193,6 +260,9 @@ class AnalysisOrchestrator:
             production_ready=metadata.production_ready,
             base_model=metadata.base_model,
             preprocessing_version=metadata.preprocessing_version,
+            backend=metadata.backend,
+            provider=metadata.provider,
+            embedding_model=metadata.embedding_model,
         )
 
     @staticmethod
