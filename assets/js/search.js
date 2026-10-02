@@ -46,6 +46,7 @@
     { type:'compare', title:'One-Hot Encoding vs Word Embeddings',        category:'Language Representation',href:'compare/index.html?id=onehot-vs-embeddings' },
 
     /* ── Pages ── */
+    { type:'page', title:'MahaPulse Analyzer', category:'Live Marathi sentiment analysis', href:'analyzer/index.html', tags:['analyzer','sentiment','marathi','live','model'] },
     { type:'page', title:'Repository Dashboard', category:'Browse all NLP concepts',        href:'repository/index.html' },
     { type:'page', title:'NLP Pipeline Workflow',category:'Interactive step-by-step visual', href:'workflows/index.html' },
     { type:'page', title:'Applications',         category:'Real-world NLP use cases',        href:'applications/index.html' },
