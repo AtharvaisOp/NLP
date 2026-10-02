@@ -13,6 +13,9 @@ import re
 import unicodedata
 
 
+PREPROCESSING_VERSION = "model-text-v1"
+
+
 _URL_RE = re.compile(r"(?i)\b(?:https?://|www\.)[^\s<>\"]+")
 _EMAIL_RE = re.compile(r"(?i)\b[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+\b")
 _MENTION_RE = re.compile(r"(?<!\w)@[\w_]+")

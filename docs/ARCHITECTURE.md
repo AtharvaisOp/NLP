@@ -138,7 +138,17 @@ backend/
   tests/                    FastAPI contract tests
 ml/
   preprocessing.py          Two-path deterministic preprocessing contract
-  tests/                    Dependency-light contract tests
+  dataset.py                Verified MahaSent-MD acquisition, validation, and manifests
+  config.py                 Centralized MuRIL training configuration
+  reproducibility.py        Seeds and runtime/package provenance
+  metrics.py                Held-out evaluation and prediction records
+  train.py                  Lazy-dependency MuRIL Trainer pipeline
+  evaluate.py               Artifact evaluation on the held-out test split
+  cli.py                    prepare/train/evaluate/inspect-artifact commands
+  requirements.txt          Optional training dependencies
+  tests/                    Dependency-light pipeline tests and Marathi fixtures
+ml/data/                    Ignored raw and processed dataset outputs
+ml/artifacts/               Ignored versioned tokenizer/model artifacts
 docs/
   ARCHITECTURE.md           System, API, deployment, and mismatch record
 assets/, */index.html       Existing Part 1 static site; routes preserved
@@ -148,3 +158,42 @@ assets/, */index.html       Existing Part 1 static site; routes preserved
 Future model adapters should be added under `ml/` behind explicit interfaces
 for MuRIL, KeyBERT, BERTopic, summarization, and analytics rather than making
 the FastAPI routes import model internals directly.
+
+## Phase 3 dataset and training boundary
+
+The reproducible preparation command is `python -m ml.cli prepare`. With no
+`--local-path`, it clones only the verified L3Cube MarathiNLP upstream source
+and selects `L3Cube-MahaSent-MD/MahaSent_All`. The inspected official files are
+`MahaSent_All_Train.csv`, `MahaSent_All_Val.csv`, and `MahaSent_All_Test.csv`,
+with `Unnamed: 0,text,label` columns and raw labels `-1`, `0`, and `1`.
+Those authoritative splits are preserved. For an explicit local source without
+all three split markers, the pipeline uses deterministic stratified 80/10/10
+splitting and records the seed and strategy.
+
+The upstream README identifies CC BY-NC-SA 4.0 and research-only,
+non-commercial share-alike attribution terms. Each preparation writes ignored
+raw/processed output, split manifests, canonical `negative=0`, `neutral=1`,
+`positive=2` mapping, and a `dataset_report.json` containing provenance,
+revision, filenames, timestamp, schema mappings, validation removals,
+duplicates, label counts, and Devanagari/Latin statistics. The pipeline refuses
+ambiguous CSV groups and does not silently substitute another dataset.
+
+MuRIL training is deliberately separate from FastAPI. The intended checkpoint
+`google/muril-base-cased` was verified against the MuRIL model evaluated in the
+L3Cube MahaSent-MD research paper. `ml/train.py` uses
+`AutoTokenizer`, `AutoModelForSequenceClassification`, and Hugging Face
+`Trainer` with the verified `google/muril-base-cased` checkpoint. It consumes
+the shared conservative `model_text` path, never stopword-removing or
+lemmatizing classifier input. `python -m ml.cli train --smoke` is a tiny
+plumbing check and writes `smoke_test=true`; `--full` uses the prepared train
+split, validation-based early stopping, and held-out test evaluation. Neither
+mode is connected to `/v1/analyze` in this phase.
+
+Versioned artifacts are written under ignored
+`ml/artifacts/sentiment/<model_version>/` with tokenizer/model files,
+`training_config.json`, `label_mapping.json`, `model_manifest.json`,
+`dataset_report.json`, `metrics.json`, and prediction records. The manifest
+records the model source, dataset revision, split strategy, preprocessing
+version, seed, runtime package versions, and whether the artifact is smoke-only.
+Phase 4 may load this artifact behind the existing service protocol without
+changing the frontend-facing API schema.
