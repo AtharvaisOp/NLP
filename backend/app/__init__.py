@@ -1,0 +1,1 @@
+"""MahaPulse FastAPI application package."""
