@@ -106,8 +106,8 @@
                   <div class="analyzer-results-grid">
                     <article class="analyzer-result-card analyzer-result-card-wide" aria-labelledby="sentiment-heading">
                       <h3 id="sentiment-heading" class="analyzer-result-heading">Sentiment</h3>
-                      <div class="sentiment-hero"><div id="sentiment-label" class="sentiment-label">—</div><div class="sentiment-confidence"><strong id="sentiment-confidence">—</strong>confidence</div></div>
-                      <div class="probability-list" aria-label="Sentiment probabilities">
+                      <div class="sentiment-hero"><div id="sentiment-label" class="sentiment-label">—</div><div class="sentiment-confidence"><strong id="sentiment-confidence">—</strong><span id="sentiment-score-label">score</span></div></div>
+                      <div id="sentiment-probabilities" class="probability-list" aria-label="Sentiment scores">
                         <div class="probability-row"><span class="probability-name">Positive</span><div class="probability-track"><div id="prob-positive-bar" class="probability-fill positive" role="progressbar" aria-label="Positive probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><span id="prob-positive-value" class="probability-value">—</span></div>
                         <div class="probability-row"><span class="probability-name">Neutral</span><div class="probability-track"><div id="prob-neutral-bar" class="probability-fill neutral" role="progressbar" aria-label="Neutral probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><span id="prob-neutral-value" class="probability-value">—</span></div>
                         <div class="probability-row"><span class="probability-name">Negative</span><div class="probability-track"><div id="prob-negative-bar" class="probability-fill negative" role="progressbar" aria-label="Negative probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div><span id="prob-negative-value" class="probability-value">—</span></div>
@@ -132,13 +132,13 @@
 
                     <article class="analyzer-result-card" aria-labelledby="topic-heading">
                       <h3 id="topic-heading" class="analyzer-result-heading">Topic</h3>
-                      <p id="topic-empty" class="analyzer-empty">Topic unavailable / not assigned.</p>
+                      <p id="topic-empty" class="analyzer-empty">No topic assigned. Topic enrichment is optional and may be disabled.</p>
                       <div id="topic-data" class="analyzer-kpi-list" hidden><div class="analyzer-kpi"><span class="analyzer-kpi-label">ID</span><strong id="topic-id" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Label</span><strong id="topic-label" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Probability</span><strong id="topic-probability" class="analyzer-kpi-value">—</strong></div></div>
                     </article>
 
                     <article class="analyzer-result-card" aria-labelledby="summary-heading">
                       <h3 id="summary-heading" class="analyzer-result-heading">Summary</h3>
-                      <p id="summary-empty" class="analyzer-empty">Summary unavailable for this response.</p>
+                      <p id="summary-empty" class="analyzer-empty">No summary needed or available for this text.</p>
                       <div id="summary-data" hidden><p id="summary-text" class="analyzer-summary">—</p><p class="analyzer-meta">Provider: <span id="summary-provider">—</span></p></div>
                     </article>
                   </div>
@@ -198,7 +198,7 @@
                   <p id="analytics-state" class="analyzer-card-copy" role="status"></p>
                   <div id="analytics-panel" class="batch-analytics-grid" hidden>
                     <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Sentiment distribution</h3><p class="analyzer-card-copy">Percentages reflect successful documents.</p><div id="batch-sentiment-list" class="batch-distribution-list"></div></article>
-                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Confidence</h3><div class="analyzer-kpi-list"><div class="analyzer-kpi"><span class="analyzer-kpi-label">Average</span><strong id="confidence-average" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Low confidence</span><strong id="confidence-low" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Minimum</span><strong id="confidence-min" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Maximum</span><strong id="confidence-max" class="analyzer-kpi-value">—</strong></div></div></article>
+                    <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Sentiment score</h3><div class="analyzer-kpi-list"><div class="analyzer-kpi"><span class="analyzer-kpi-label">Average</span><strong id="confidence-average" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Weak signal</span><strong id="confidence-low" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Minimum</span><strong id="confidence-min" class="analyzer-kpi-value">—</strong></div><div class="analyzer-kpi"><span class="analyzer-kpi-label">Maximum</span><strong id="confidence-max" class="analyzer-kpi-value">—</strong></div></div></article>
                     <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Language</h3><p id="batch-language" class="analyzer-summary">—</p><p class="analyzer-card-copy">The API reports code mixing among successful documents; it does not return a separate Marathi-only count.</p></article>
                     <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Top keywords</h3><div id="batch-keywords" class="batch-aggregate-list"></div></article>
                     <article class="analyzer-result-card"><h3 class="analyzer-result-heading">Topic distribution</h3><div id="batch-topics" class="batch-aggregate-list"></div><p id="batch-null-topics" class="analyzer-card-copy"></p></article>
@@ -213,7 +213,7 @@
                   <p id="export-state" class="analyzer-card-copy" role="status" aria-live="polite"></p>
                   <p id="document-state" class="analyzer-card-copy" role="status" aria-live="polite"></p>
                   <p id="raw-text-note" class="analyzer-dev-note" hidden>Some original texts are not stored under the server's privacy policy. Analysis results remain available.</p>
-                  <div class="batch-table-scroll" tabindex="0" role="region" aria-label="Document results table"><table class="batch-results-table"><caption class="sr-only">Persisted CSV document results</caption><thead><tr><th scope="col">Row</th><th scope="col">Original text</th><th scope="col">Sentiment / confidence</th><th scope="col">Keywords</th><th scope="col">Topic</th><th scope="col">Summary</th><th scope="col">Language</th><th scope="col">Time</th><th scope="col">Status</th></tr></thead><tbody id="document-rows"></tbody></table></div>
+                  <div class="batch-table-scroll" tabindex="0" role="region" aria-label="Document results table"><table class="batch-results-table"><caption class="sr-only">Persisted CSV document results</caption><thead><tr><th scope="col">Row</th><th scope="col">Original text</th><th scope="col">Sentiment / score</th><th scope="col">Keywords</th><th scope="col">Topic</th><th scope="col">Summary</th><th scope="col">Language</th><th scope="col">Time</th><th scope="col">Status</th></tr></thead><tbody id="document-rows"></tbody></table></div>
                   <div class="batch-pagination"><button id="previous-page-button" class="btn btn-ghost" type="button" disabled>Previous page</button><span id="document-page-info" class="analyzer-card-copy" aria-live="polite">—</span><button id="next-page-button" class="btn btn-ghost" type="button" disabled>Next page</button></div>
                 </div>
               </section>
@@ -231,8 +231,8 @@
   <script src="../assets/js/search.js?v=2"></script>
   <script src="../assets/js/runtime-config.js?v=1"></script>
   <script src="../assets/js/api-config.js?v=2"></script>
-  <script src="../assets/js/analyzer.js?v=2"></script>
-  <script src="../assets/js/batch-analyzer.js?v=1"></script>
+  <script src="../assets/js/analyzer.js?v=3"></script>
+  <script src="../assets/js/batch-analyzer.js?v=2"></script>
 </body>
 
 </html>

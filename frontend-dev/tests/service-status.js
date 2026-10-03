@@ -3,9 +3,9 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const nodes = new Map();
 const document = { addEventListener() {}, getElementById(id) { if (!nodes.has(id)) nodes.set(id, { dataset: {}, hidden: false, textContent: '' }); return nodes.get(id); } };
-let databaseState = 'ready'; let sentimentState = 'ready'; let modelInfoFails = false;
-const readiness = () => ({ status: 'degraded', services: { sentiment: { state: sentimentState, smoke_test: true, production_ready: false }, keywords: { state: 'ready' }, topics: { state: 'unavailable' }, summary: { state: 'ready' }, database: { state: databaseState } } });
-const model = () => ({ sentiment_model: { name: 'MuRIL', state: sentimentState, smoke_test: true, production_ready: false, version: 'smoke-v4' }, keyword_service: { name: 'KeyBERT', state: 'ready' }, topic_service: { name: 'BERTopic', state: 'unavailable' }, summary_service: { name: 'extractive', state: 'ready' } });
+let databaseState = 'ready'; let sentimentState = 'ready'; let modelInfoFails = false; let smokeTest = true; let modelVersion = 'smoke-v4'; let topicState = 'unavailable';
+const readiness = () => ({ status: 'degraded', services: { sentiment: { state: sentimentState, smoke_test: smokeTest, production_ready: false }, keywords: { state: 'ready' }, topics: { state: topicState }, summary: { state: 'ready' }, database: { state: databaseState } } });
+const model = () => ({ sentiment_model: { name: modelVersion === 'rule-demo-v1' ? 'Rule-based demo' : 'MuRIL', state: sentimentState, smoke_test: smokeTest, production_ready: false, version: modelVersion }, keyword_service: { name: 'KeyBERT', state: 'ready' }, topic_service: { name: 'BERTopic', state: topicState }, summary_service: { name: 'extractive', state: 'ready' } });
 const window = { NLP_COMPONENTS_READY: false, MAHAPULSE_CONFIG: {}, MahaPulseAPI: { health: async () => ({ status: 'ok' }), ready: async () => readiness(), modelInfo: async () => { if (modelInfoFails) throw new Error('Metadata temporarily unavailable'); return model(); } } };
 vm.runInNewContext(fs.readFileSync('assets/js/analyzer.js', 'utf8'), { window, document });
 async function main() {
@@ -21,10 +21,21 @@ async function main() {
   await window.MahaPulseAnalyzer.loadServiceStatus();
   assert.match(nodes.get('database-status').textContent, /stateless mode.*batch unavailable/);
   assert.equal(nodes.get('mock-mode-note').hidden, false, 'readiness smoke flags survive model-info failure');
+  modelInfoFails = false; sentimentState = 'mocked'; smokeTest = false; modelVersion = 'rule-demo-v1'; topicState = 'disabled';
+  await window.MahaPulseAnalyzer.loadServiceStatus();
+  assert.match(nodes.get('model-status').textContent, /Rule-based demo rule-demo-v1.*not production-ready/);
+  assert.doesNotMatch(nodes.get('model-status').textContent, /smoke/, 'false production readiness does not imply smoke');
+  assert.match(nodes.get('backend-status').textContent, /Online.*Rule-based sentiment demo/);
+  assert.match(nodes.get('mock-mode-note').textContent, /normalized demo scores, not calibrated model probabilities/);
+  assert.equal(nodes.get('topic-status').textContent, 'Disabled', 'disabled topics are not an outage');
+  sentimentState = 'ready'; modelVersion = 'full-unpromoted-v1';
+  await window.MahaPulseAnalyzer.loadServiceStatus();
+  assert.match(nodes.get('mock-mode-note').textContent, /Unpromoted Model/);
+  assert.doesNotMatch(nodes.get('model-status').textContent, /smoke/);
   sentimentState = 'unavailable'; databaseState = 'unavailable'; modelInfoFails = false;
   await window.MahaPulseAnalyzer.loadServiceStatus();
   assert.equal(nodes.get('model-status').dataset.state, 'offline');
   assert.match(nodes.get('database-status').textContent, /Unavailable/);
-  console.log('Service status: 11 assertions passed.');
+  console.log('Service status checks passed.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

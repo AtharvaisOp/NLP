@@ -21,8 +21,12 @@ assert.equal(validate({ ...valid, keywords: '<malformed>', topic: '<malformed>',
 assert.equal(validate({ ...valid, sentiment: { ...valid.sentiment, probabilities: { positive: 2, negative: -1, neutral: 0 } } }), false, 'malformed probabilities rejected');
 assert.equal(validate({ ...valid, sentiment: { ...valid.sentiment, label: 'unknown' } }), false, 'invalid sentiment label rejected');
 assert.match(serviceLabel({ name: 'MuRIL', version: 'smoke-v4', state: 'ready', smoke_test: true, production_ready: false }), /not production-ready/, 'smoke lifecycle is explicit');
+assert.doesNotMatch(serviceLabel({ name: 'Rule-based demo', version: 'rule-demo-v1', state: 'mocked', smoke_test: false, production_ready: false }), /smoke/, 'a demo is not a smoke model');
+assert.match(serviceLabel({ name: 'Rule-based demo', version: 'rule-demo-v1', state: 'mocked', smoke_test: false, production_ready: false }), /demo.*not production-ready/, 'demo lifecycle is explicit');
+assert.doesNotMatch(serviceLabel({ name: 'MuRIL', version: 'unpromoted-v1', state: 'ready', smoke_test: false, production_ready: false }), /smoke/, 'an unpromoted full model is not a smoke model');
 assert.equal(enrichmentSummary({ keywords: { state: 'ready' }, topics: { state: 'ready' }, summary: { state: 'ready' } }, null).label, 'Enrichment ready');
 assert.equal(enrichmentSummary({ keywords: { state: 'disabled' }, topics: { state: 'disabled' }, summary: { state: 'disabled' } }, null).label, 'Enrichment disabled');
+assert.equal(enrichmentSummary({ keywords: { state: 'ready' }, topics: { state: 'disabled' }, summary: { state: 'ready' } }, null).label, 'Enrichment ready · some optional services disabled', 'disabled optional topics are not a failure');
 assert.equal(enrichmentSummary({ keywords: { state: 'ready' }, topics: { state: 'unavailable' }, summary: { state: 'ready' } }, null).label, 'Enrichment partial');
 assert.equal(enrichmentSummary({ keywords: { state: 'mocked' }, topics: { state: 'mocked' }, summary: { state: 'mocked' } }, null).label, 'Development mocks active');
 console.log('Analyzer response guard checks passed.');

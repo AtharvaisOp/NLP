@@ -6,6 +6,7 @@
   const config = global.MAHAPULSE_CONFIG;
   const api = global.MahaPulseAPI;
   let submitting = false;
+  let sentimentService = null;
 
   function text(id, value) {
     const node = $(id);
@@ -65,8 +66,10 @@
   function serviceLabel(service) {
     if (!service) return 'Unavailable';
     const state = service.state ? ` · ${service.state}` : '';
-    const smoke = service.smoke_test === true || service.production_ready === false;
-    const lifecycle = smoke ? ' · smoke · not production-ready' : service.state === 'mocked' ? ' · development mock · not production-ready' : '';
+    const smoke = service.smoke_test === true;
+    const lifecycle = smoke ? ' · smoke · not production-ready'
+      : service.state === 'mocked' ? ' · demo · not production-ready'
+        : service.production_ready === false ? ' · not production-ready' : '';
     return `${service.name || 'Service'}${service.version ? ` ${service.version}` : ''}${state}${lifecycle}`;
   }
 
@@ -78,7 +81,9 @@
     if (service.device && service.device !== 'not-loaded') parts.push(service.device);
     if (service.embedding_model) parts.push(`embedding ${service.embedding_model}`);
     if (service.provider && service.provider !== service.name) parts.push(service.provider);
-    if (service.smoke_test === true || service.production_ready === false) parts.push('smoke · not production-ready');
+    if (service.smoke_test === true) parts.push('smoke · not production-ready');
+    else if (service.state === 'mocked') parts.push('demo · not production-ready');
+    else if (service.production_ready === false) parts.push('not production-ready');
     return `${label}: ${parts.join(' · ')}`;
   }
 
@@ -95,7 +100,7 @@
       return { kind: 'mocked', label: 'Enrichment partial' };
     }
     if (states.some(state => state === 'mocked')) return { kind: 'mocked', label: 'Development mocks active' };
-    if (states.some(state => state === 'disabled')) return { kind: 'mocked', label: 'Enrichment partial · some disabled' };
+    if (states.some(state => state === 'disabled')) return { kind: 'ready', label: 'Enrichment ready · some optional services disabled' };
     return { kind: 'mocked', label: 'Enrichment status unavailable' };
   }
 
@@ -121,15 +126,18 @@
     const modelInfo = model.status === 'fulfilled' ? model.value : null;
     const sentimentState = readiness?.services?.sentiment?.state || modelInfo?.sentiment_model?.state;
     const sentimentLifecycle = modelInfo?.sentiment_model || readiness?.services?.sentiment;
-    const smoke = sentimentLifecycle?.smoke_test === true || sentimentLifecycle?.production_ready === false;
+    sentimentService = sentimentLifecycle;
+    const smoke = sentimentLifecycle?.smoke_test === true;
+    const unpromoted = sentimentLifecycle?.production_ready === false;
+    const ruleDemo = sentimentLifecycle?.version === 'rule-demo-v1' || sentimentLifecycle?.provider === 'lexicon';
     const enrichment = enrichmentSummary(readiness?.services, modelInfo);
     if (health.status === 'fulfilled') {
       const coreReady = sentimentState === 'ready';
       const coreLabel = coreReady
-        ? (smoke ? 'Core sentiment smoke' : 'Core sentiment ready')
-        : sentimentState === 'mocked' ? 'Core sentiment mocked' : 'Core sentiment unavailable';
+        ? (smoke ? 'Core sentiment smoke' : unpromoted ? 'Core sentiment ready · not production-ready' : 'Core sentiment ready')
+        : sentimentState === 'mocked' ? (ruleDemo ? 'Rule-based sentiment demo' : 'Core sentiment mocked') : 'Core sentiment unavailable';
       const suffix = enrichment.label;
-      setIndicator('backend-status', coreReady && !smoke && enrichment.kind === 'ready' ? 'ready' : 'mocked', `Online · ${coreLabel} · ${suffix}`);
+      setIndicator('backend-status', coreReady && !smoke && !unpromoted && enrichment.kind === 'ready' ? 'ready' : 'mocked', `Online · ${coreLabel} · ${suffix}`);
     } else {
       setIndicator('backend-status', 'offline', 'Unavailable');
     }
@@ -149,7 +157,7 @@
     setIndicator('database-status', database?.state === 'ready' ? 'ready' : database?.state === 'disabled' ? 'mocked' : 'offline', database?.state === 'ready' ? 'Ready · persistence available' : database?.state === 'disabled' ? 'Not required for stateless mode · batch unavailable' : 'Unavailable · batch needs persistence');
     if (model.status === 'fulfilled') {
       const info = model.value.sentiment_model;
-      setIndicator('model-status', info?.state === 'ready' && !smoke ? 'ready' : ['ready', 'mocked'].includes(info?.state) ? 'mocked' : 'offline', serviceLabel(info));
+      setIndicator('model-status', info?.state === 'ready' && !smoke && !unpromoted ? 'ready' : ['ready', 'mocked'].includes(info?.state) ? 'mocked' : 'offline', serviceLabel(info));
       renderModelInfo(model.value);
     } else {
       setIndicator('model-status', 'offline', 'Not available');
@@ -157,11 +165,13 @@
     }
     const note = $('mock-mode-note');
     if (note) {
-      const mockActive = config.USE_MOCK_API || sentimentState === 'mocked' || enrichment.label === 'Development mocks active';
-      note.hidden = !mockActive && !smoke;
+      const mockActive = config?.USE_MOCK_API || sentimentState === 'mocked' || enrichment.label === 'Development mocks active';
+      note.hidden = !mockActive && !smoke && !unpromoted;
       note.textContent = smoke
         ? 'Development/Smoke Model · Not Production Ready. Predictions are for integration testing; smoke metrics are not project performance.'
-        : 'Development Mock Services · Not Production Ready. Mock outputs are deterministic demonstrations, not model performance. Optional enrichment may be disabled or unavailable.';
+        : ruleDemo ? 'Rule-based demo · Not Production Ready. Marathi/English word rules produce normalized demo scores, not calibrated model probabilities. Negation, sarcasm and context can be missed. Optional enrichment may be disabled.'
+          : sentimentState === 'ready' && unpromoted ? 'Unpromoted Model · Not Production Ready. The loaded model has not passed all production promotion gates.'
+            : 'Development Mock Services · Not Production Ready. Mock outputs are deterministic demonstrations, not model performance. Optional enrichment may be disabled or unavailable.';
     }
   }
 
@@ -249,18 +259,30 @@
     const sentiment = result.sentiment || {};
     const meta = result.meta || {};
     const warnings = Array.isArray(meta.warnings) ? meta.warnings : [];
+    const demo = config?.USE_MOCK_API || /^(?:mock(?:-|$)|rule-demo(?:-|$))/.test(meta.model_version || '')
+      || (sentimentService?.state === 'mocked' && (!sentimentService.version || sentimentService.version === meta.model_version));
     text('sentiment-label', sentiment.label);
     text('sentiment-confidence', percent(sentiment.confidence));
+    text('sentiment-score-label', demo ? 'demo score' : 'model score');
+    const probabilities = $('sentiment-probabilities');
+    if (probabilities) probabilities.setAttribute('aria-label', demo ? 'Normalized sentiment demo scores, not calibrated probabilities' : 'Sentiment model probabilities');
+    ['positive', 'neutral', 'negative'].forEach(label => {
+      const bar = $(`prob-${label}-bar`);
+      if (bar) bar.setAttribute('aria-label', `${label} ${demo ? 'demo score' : 'model probability'}`);
+    });
     renderProbabilities(sentiment.probabilities);
     const confidenceWarning = $('confidence-warning');
-    if (confidenceWarning) confidenceWarning.hidden = !sentiment.low_confidence;
+    if (confidenceWarning) {
+      confidenceWarning.hidden = !sentiment.low_confidence;
+      confidenceWarning.textContent = demo ? 'Weak demo signal: these rule scores are not calibrated predictions.' : 'Low model score: treat this prediction as uncertain.';
+    }
     text('language-primary', language.primary);
     text('language-devanagari', percent(language.devanagari_ratio));
     text('language-latin', percent(language.latin_ratio));
     text('language-mixed', language.is_code_mixed ? 'Yes · code-mixed' : 'No');
     renderKeywords(result.keywords);
-    const topicUnavailable = renderTopic(result.topic);
-    const summaryUnavailable = renderSummary(result.summary);
+    renderTopic(result.topic);
+    renderSummary(result.summary);
     text('pipeline-original', result.original_text);
     text('pipeline-model', result.model_text);
     text('pipeline-analysis', result.analysis_text);
@@ -268,8 +290,10 @@
     text('model-version', meta.model_version);
     text('processing-ms', typeof meta.processing_ms === 'number' ? `${meta.processing_ms} ms` : null);
     renderWarnings(warnings);
-    const partial = warnings.length > 0 || topicUnavailable || summaryUnavailable || !Array.isArray(result.keywords) || result.keywords.length === 0;
-    setState(partial ? 'partial' : 'success', partial ? 'Partial enrichment result' : 'Analysis complete', partial ? 'Sentiment and language results are available; optional enrichment may not be assigned yet.' : 'The response was returned by the MahaPulse analysis contract.');
+    // Demo/smoke disclosures are not service failures. Null optional outputs are
+    // normal for disabled topics, outliers and short texts needing no summary.
+    const partial = warnings.some(warning => !/rule-based (?:sentiment )?demo|deterministic mocks|mock api mode|smoke sentiment artifact|normalized demo scores/i.test(warning));
+    setState(partial ? 'partial' : 'success', partial ? 'Partial enrichment result' : demo ? 'Demo analysis complete' : 'Analysis complete', partial ? 'Sentiment and language results are available; an optional service reported a warning. See the details below.' : demo ? 'Demo scores are shown, not trained-model predictions. Missing optional outputs do not mean the API failed.' : 'The response was returned by the MahaPulse analysis contract. Optional outputs may be absent.');
     $('results-panel')?.removeAttribute('hidden');
   }
 

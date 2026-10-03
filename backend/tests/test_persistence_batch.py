@@ -57,6 +57,8 @@ def test_batch_marathi_code_mixed_persistence_analytics_and_exports(tmp_path: Pa
     assert len(body["documents"]) == 2
     assert body["documents"][0]["original_text"].startswith("हा मोबाईल")
     assert body["documents"][0]["language"]["primary"] == "mr"
+    assert [row["sentiment"]["label"] for row in body["documents"]] == ["positive", "negative"]
+    assert body["session"]["model_version"] == "rule-demo-v1"
 
     second_page = client.get(f"/v1/analyses/{session_id}", params={"limit": 2, "offset": 2})
     assert len(second_page.json()["documents"]) == 2
@@ -69,6 +71,9 @@ def test_batch_marathi_code_mixed_persistence_analytics_and_exports(tmp_path: Pa
     assert analytics_body["successful"] == 4
     assert sum(item["count"] for item in analytics_body["sentiment"].values()) == 4
     assert sum(item["percentage"] for item in analytics_body["sentiment"].values()) == pytest.approx(100)
+    assert {label: item["count"] for label, item in analytics_body["sentiment"].items()} == {
+        "positive": 1, "negative": 2, "neutral": 1,
+    }
     assert analytics_body["language"]["code_mixed_count"] == 1
     assert analytics_body["null_topic_count"] == 4
 
