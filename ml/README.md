@@ -130,7 +130,7 @@ Use `KEYWORD_BACKEND=mock|keybert|disabled`,
 are optional. If an enrichment is unavailable or fails, sentiment still
 succeeds and the API returns an empty/null enrichment with a safe warning.
 Generated embedding caches and topic artifacts are ignored and must not be
-committed. The current MuRIL smoke artifact remains integration-only, not final
+committed. The historical MuRIL smoke artifact remains integration-only, not final
 project performance or production readiness.
 
 ## Historical smoke artifact and full-run lifecycle
@@ -151,9 +151,25 @@ python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --ar
 
 The original working Python environment is preserved. The isolated training
 executable is `C:\Users\athar\.codex\mahapulse-training-cuda\Scripts\python.exe`.
-The full lifecycle uses Python 3.13.4, PyTorch 2.11.0+cu128, CUDA 12.8 and
+The completed full lifecycle used Python 3.13.4, PyTorch 2.11.0+cu128, CUDA 12.8 and
 Transformers 5.15.0 on an RTX 3050 Laptop GPU with 6 GiB VRAM. Its recorded
 configuration uses batch size 4, evaluation batch size 8, 256-token truncation,
-three epochs, learning rate 2e-5 and seed 42. See
+three epochs, learning rate 2e-5 and seed 42. It completed 35,799 optimizer
+steps and selected `_trainer/checkpoint-23866` (epoch 2) by validation macro
+F1 `0.7997525380776924`; epoch 3 did not improve that metric. The single final
+held-out test pass produced accuracy `0.8010083036773428`, macro F1
+`0.8005925770515055` and weighted F1 `0.8005915632499007`.
+Accepted training took approximately 62 minutes 14 seconds, including the
+first two epochs and successful resumed third epoch, excluding discarded
+replays and idle time. No CUDA OOM or batch-size reduction occurred.
+
+The final ignored artifact is `ml/artifacts/sentiment/muril-mahasent-md-v1`,
+with `smoke_test=false` and 6,744 final predictions containing canonical labels,
+confidence and all three probabilities. Recorded SHA-256 for the
+950,257,668-byte `model.safetensors` is
+`c3c1855edc451d884c93ab5f360a60979ea46cf5e8fa2c62b9087ef028c1bdec`.
+Its manifest now has `production_ready=true` after the independent reload,
+integrity and real API validation gates passed. This is local artifact
+promotion, not a claim that the free hosted mock demo serves the full model. See
 [docs/VALIDATION.md](../docs/VALIDATION.md) for completed training, selected
 checkpoint, separate validation/test metrics and runtime gates.

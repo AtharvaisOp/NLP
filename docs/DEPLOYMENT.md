@@ -129,8 +129,11 @@ were idempotent and persisted sessions survived service replacement.
 ## Resource observations and remaining gates
 
 Render mock + PostgreSQL process memory measured about **88 MiB** against a
-512 MiB limit. Local real MuRIL + KeyBERT warmed to about 1,248 MiB, with a
-1,452 MiB peak; these local values are not cloud inference measurements.
+512 MiB limit. Historical local smoke MuRIL + KeyBERT warmed to about
+1,248 MiB, with a 1,452 MiB peak. The newly trained full model's isolated local
+CUDA API measured about 1,637.61 MiB warm working set and 1,809.28 MiB peak;
+its separate reload-plus-API validation process peaked at about 2,410 MiB.
+These are local observations, not cloud inference measurements.
 One worker and disabled unavailable services are already configured. A larger
 instance must be measured before enabling real model inference in the cloud.
 
@@ -139,10 +142,17 @@ The free PostgreSQL database expires **2 November 2026, 00:13 IST**
 expiry, or explicitly upgrade the dedicated database. Free web-service cold
 starts can delay the first request after inactivity.
 
-Production remains gated on a complete `muril-mahasent-md-v1` non-smoke training
-run, untouched held-out evaluation, independent artifact reload, real deployed
-inference and a suitable sustained PostgreSQL/runtime deployment. A fitted
-BERTopic corpus artifact is also absent. No project accuracy/F1 is reported.
+The non-smoke `muril-mahasent-md-v1` training and untouched held-out evaluation
+are now complete locally: test accuracy is 0.801008 and macro F1 0.800593.
+The detailed validation record separates these real-model results from this
+hosted mock demo. The full artifact passed independent reload, integrity and
+real local API gates and is promoted with `production_ready=true`; cloud
+production additionally requires
+immutable artifact provisioning, a suitable sustained PostgreSQL/runtime
+deployment and real deployed end-to-end checks. The existing 512 MiB free
+service is not a safe real-model target, remains explicitly mocked and was not
+upgraded. Topics are optional and a fitted corpus artifact is not a sentiment
+promotion prerequisite.
 
 For a future real deployment, upload model files to immutable external artifact
 storage; configure `MODEL_ARTIFACT_URL` and `MODEL_ARTIFACT_SHA256` in Render.

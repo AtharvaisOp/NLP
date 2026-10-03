@@ -6,23 +6,28 @@ bounded CSV batches, persisted documents, session analytics, and backend CSV/JSO
 downloads. Educational routes, shared navigation, search, and themes remain
 available alongside `/analyzer/`.
 
-**Development/demo model gate:** the validated artifact is
-`muril-mahasent-md-smoke-v4`, with `smoke_test=true` and
-`production_ready=false`. It proves loading, Unicode handling, inference, and
-API integration. Its metrics are **not project accuracy**. Full model training
-remains pending until complete training and untouched test evaluation produce
-a non-smoke artifact. [The validation record](docs/VALIDATION.md) contains actual
-runtime/deployment results and outstanding gates.
+**Fully trained local model:** `muril-mahasent-md-v1` completed three epochs
+on all 47,730 training records, selected its checkpoint using validation macro
+F1, and evaluated the untouched 6,744-row test split exactly once. Final test
+accuracy is **80.10%** and macro F1 is **0.800593**. The artifact has
+`smoke_test=false`, `production_ready=true` after the real API/reload/integrity
+gates passed. [The validation record](docs/VALIDATION.md) separates validation and
+final test metrics, provenance, runtime and deployment limits.
+
+The older `muril-mahasent-md-smoke-v4` remains historical integration evidence
+with `smoke_test=true`, `production_ready=false`. Its fixture metrics are
+**not project accuracy** and are not substituted for the full-model results.
 
 The selected free cloud demo uses **mock sentiment and mock keywords**,
 disabled topics, real extractive summary, and validated PostgreSQL persistence.
 Try the [live dashboard](https://mahapulse-staging.vercel.app/analyzer/).
 [Deployment evidence and operational limits](docs/DEPLOYMENT.md) include the
 validated PostgreSQL runtime and the free database's expiry date.
-Local smoke MuRIL/KeyBERT checks remain separate from the hosted demo.
-The real local pipeline measured about 1.45 GB resident memory; a paid instance
-was not selected. Neither hosted mock predictions nor local smoke results
-establish model quality.
+Local full-model and historical smoke checks remain separate from the hosted
+demo. Earlier real MuRIL/KeyBERT measurements reached 1,452 MiB peak
+resident memory; the 512 MiB free Render instance is not a safe full-model
+target and was not upgraded. Neither hosted mock predictions nor local smoke
+results establish model quality.
 
 ## Architecture and repository
 
@@ -296,8 +301,10 @@ not satisfy these gates. Actual URLs/restart/timing outcomes are documented in
 
 ## Limitations
 
-Full MuRIL training/evaluation is pending. Real topics require a provisioned
-BERTopic artifact. Aggregate summaries, queued/streaming batches,
+Full MuRIL training and held-out evaluation are complete locally; real-model
+hosting still requires suitable memory, artifact provisioning and deployed
+validation. Real topics require a provisioned BERTopic artifact.
+Aggregate summaries, queued/streaming batches,
 authentication/ownership, automatic retention, and global history listing are
 not implemented. Sentiment truncates to the artifact's tokenizer limit even
 within the character limit. Educational examples, mocks and smoke predictions

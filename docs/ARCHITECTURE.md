@@ -50,6 +50,12 @@ Loading is local-only; inference uses `model.eval()` and
 The historical `muril-mahasent-md-smoke-v4` artifact has `smoke_test=true`,
 `production_ready=false`. It requires `ALLOW_SMOKE_MODEL=true` and leaves
 readiness degraded; its fixture metrics establish integration only.
+The real `muril-mahasent-md-v1` has now completed three epochs on all 47,730
+train rows and one final evaluation on the untouched 6,744-row test split.
+Validation macro F1 selected epoch-2 checkpoint 23,866; final test accuracy is
+0.801008 and macro F1 0.800593. Its full lifecycle gates have passed and its
+manifest records `smoke_test=false`, `production_ready=true`. These local
+results are separate from smoke evidence and do not imply a cloud deployment.
 Full artifacts start with `smoke_test=false`, `production_ready=false`.
 Training selects on validation macro F1, then performs a single final held-out
 test prediction pass. `ml.cli promote-artifact` verifies required files,
@@ -146,9 +152,10 @@ Uvicorn binds `0.0.0.0`/`$PORT`; each extra worker duplicates model memory.
 Training is offline and never runs in startup.
 
 The selected free cloud demo explicitly uses mock sentiment/keywords, disabled
-topics and real extractive summary with PostgreSQL. Local real smoke-model
-validation is a separate result. The measured local model/enrichment process
-used about 1.45 GB RSS, beyond a small free instance; the user selected the
+topics and real extractive summary with PostgreSQL. The full locally trained
+artifact and historical smoke-model validation are separate results; no
+full-model deployment is implied. The earlier local model/enrichment process
+peaked at 1,452 MiB RSS, beyond the 512 MiB free instance; the user selected the
 free mock demo instead of paying for a larger instance. There is no silent
 sentiment fallback or promotion of the smoke artifact.
 

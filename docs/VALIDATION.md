@@ -43,18 +43,260 @@ NumPy 2.4.1 and scikit-learn 1.9.0, with
 audit found approximately 5,725 MiB free VRAM and 28.5 GiB free disk
 (30,625,177,600 bytes); these are available-at-audit values, not peak usage.
 
-The intended full configuration is MuRIL base cased, three epochs, train batch
+The completed full configuration is MuRIL base cased, three epochs, train batch
 4, evaluation batch 8, maximum length 256 tokens, learning rate 2e-5,
 weight decay 0.01, warmup ratio 0.1, seed 42 and early-stopping patience 2.
 Checkpoint selection is based solely on validation macro F1. The test split
 is loaded for final evaluation only after training and selection finish;
 integration examples never modify the metrics.
 
+## Completed full MuRIL training
+
+`muril-mahasent-md-v1` completed all **three epochs / 35,799 optimizer steps**
+on the full official train split. No test data was used for fitting, early
+stopping or checkpoint selection. The selected model is
+`_trainer/checkpoint-23866`, saved at epoch 2, because its validation macro F1
+was the highest. Epoch 3 had higher loss and slightly lower macro F1 and was
+not selected. Early-stopping patience was 2; training reached its configured
+three-epoch limit.
+
+| Epoch | Mean logged minibatch training loss | Validation loss | Validation accuracy | Validation macro F1 |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 0.744801 | 0.578433 | 0.793651 | 0.793927 |
+| 2 (selected) | 0.591203 | 0.683378 | 0.799223 | 0.799753 |
+| 3 | 0.471525 | 0.874623 | 0.799392 | 0.799409 |
+
+Training-loss values above are arithmetic means of the 11,933 recorded
+minibatch losses per epoch in Trainer state, not held-out metrics or an
+example-weighted loss estimate. The resumed Trainer's final `train_loss`
+summary uses the restored cumulative step denominator, so it is not presented
+as the full-run loss.
+
+Effective arguments additionally record gradient accumulation 1 (effective
+batch 4), fused PyTorch AdamW, linear scheduling, 3,580 warmup steps, gradient
+clipping at 1.0, seed/data seed 42, and `fp16=false`, `bf16=false`. The cached
+base-model revision was `afd9f36c7923d54e97903922ff1b260d091d202f`.
+No architecture substitution, CUDA OOM or batch-size reduction occurred.
+
+Training interruptions were recovered from the valid epoch-2 checkpoint with
+optimizer/scheduler/RNG state, rather than discarding the accepted first two
+epochs. All attempt logs remain under ignored `ml/artifacts/training-logs/`.
+
+| Duration/resource observation | Value and scope |
+| --- | --- |
+| Accepted first two epochs | 41 min 05 s (2,465 s, original log through checkpoint 23,866) |
+| Successful resumed third epoch | 21 min 08.8 s (1,268.788447 s, `training_summary`) |
+| Accepted training total | Approximately 62 min 14 s (3,733.788447 s) |
+| Discarded interrupted/replayed work | Approximately 24 min; not part of the accepted training path |
+| All active attempts | Approximately 86 min 21 s; idle/interruption wall time excluded |
+| Successful resume peak CUDA allocation | 3,833,539,584 bytes |
+| Successful resume peak CUDA reservation | 4,114,612,224 bytes |
+| Free disk recorded after training | 20,931,956,736 bytes (about 19.5 GiB) |
+
+The artifact's `training_duration_seconds` is the successful resumed call's
+duration, not the duration of the preceding two accepted epochs. The timing
+breakdown avoids treating hours of user interruption/idle time as GPU compute.
+
+## Final validation metrics (selected checkpoint)
+
+These metrics use **5,922 validation examples**, not the test set. Values are
+rounded to six decimals here; `metrics.json` retains full precision.
+
+| Metric | Validation |
+| --- | ---: |
+| Loss | 0.683378 |
+| Accuracy | 0.799223 |
+| Macro precision | 0.800178 |
+| Macro recall | 0.799515 |
+| Macro F1 | 0.799753 |
+| Weighted F1 | 0.799393 |
+
+## FINAL HELD-OUT TEST METRICS
+
+Only after training and validation-based selection completed, the selected
+checkpoint made **one final prediction pass on all 6,744 untouched test
+examples**. The final test manifest SHA-256 matches the pre-training audit.
+No further `evaluate` command was run. Integration validation checks existing
+prediction evidence without running test inference again.
+
+| Metric | Final held-out test |
+| --- | ---: |
+| Accuracy | 0.801008 |
+| Macro precision | 0.800774 |
+| Macro recall | 0.801004 |
+| Macro F1 | 0.800593 |
+| Weighted F1 | 0.800592 |
+
+| Canonical class | Precision | Recall | F1 | Support |
+| --- | ---: | ---: | ---: | ---: |
+| Negative (0) | 0.808179 | 0.852379 | 0.829691 | 2,249 |
+| Neutral (1) | 0.746337 | 0.725089 | 0.735560 | 2,248 |
+| Positive (2) | 0.847806 | 0.825545 | 0.836528 | 2,247 |
+
+Confusion matrix: rows are actual labels, columns are predicted labels, both
+in canonical **negative / neutral / positive** order.
+
+| Actual \ Predicted | Negative | Neutral | Positive |
+| --- | ---: | ---: | ---: |
+| Negative | 1,917 | 267 | 65 |
+| Neutral | 350 | 1,630 | 268 |
+| Positive | 105 | 287 | 1,855 |
+
+These are genuine held-out corpus results, not smoke metrics or scores
+inferred from the four integration examples. Neutral remains the weakest
+class by F1; confidence values are not calibrated correctness guarantees.
+
+## Full artifact integrity and promotion
+
+The local artifact is `ml/artifacts/sentiment/muril-mahasent-md-v1` with
+`project=MahaPulse`, `base_model=google/muril-base-cased`,
+`smoke_test=false`, `production_ready=true`, the canonical 0/1/2 mapping,
+the verified dataset revision, `model-text-v1` and the real training config.
+Promotion occurred only after all five lifecycle gates passed: full training,
+held-out evaluation, independent reload, integrity and real API integration.
+
+It contains model weights/config, saved tokenizer, `label_mapping.json`,
+`model_manifest.json`, `dataset_report.json`, `training_config.json`,
+`metrics.json` and `predictions.jsonl`. Complete SHA-256/byte verification
+passed for all **10 top-level payload files**. The manifest is excluded from
+its own checksum list; `_trainer/` is retained local recovery history, not
+promoted model payload. Tokenizer and classifier independently reloaded with
+`local_files_only=True`. The final promoted manifest SHA-256 is
+`212310dd94d68b4d0d2be29053af8359f1381ff49228167932e7b70bbf95eebb`,
+recorded separately rather than included in its own hash map.
+
+The tokenizer's vocabulary-index-hole and heuristic Mistral warnings originate
+from the cached base tokenizer. The saved artifact preserves all 197,258
+vocabulary entries exactly and produces the same token IDs for the four
+normalized examples as the base tokenizer. No tokenizer rewrite, architectural
+change or metric adjustment was made to suppress those upstream warnings.
+
+| Payload | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `model.safetensors` | 950,257,668 | `c3c1855edc451d884c93ab5f360a60979ea46cf5e8fa2c62b9087ef028c1bdec` |
+| `metrics.json` | 1,578 | `f6cf977d1ab107b46346749ff9712128d4b4af8c6310c3f73e068f07bb067b13` |
+| `predictions.jsonl` | 3,576,642 | `fcb8b9bdccd059116a165f109f6c1c787ce90c115ebfe667d5e2b6b98459349f` |
+
+The 6,744 prediction records include true/predicted canonical labels,
+confidence and three probabilities. Promotion independently recomputed their
+confusion matrix, aggregate and per-class metrics to check saved evidence;
+that verification is not another test inference pass. Weights, data and
+validation databases/exports remain ignored and are not committed.
+
+## Full-model local API, batch and security validation
+
+Passing prepromotion evidence is saved outside the artifact at
+`ml/artifacts/validation/muril-mahasent-md-v1/prepromotion-local/validation_report.json`.
+The offline run independently reloaded the local tokenizer/classifier on
+CUDA, then exercised real FastAPI lifespan/startup with `SENTIMENT_BACKEND=muril`,
+the full artifact, `ALLOW_SMOKE_MODEL=false`, real cached KeyBERT and extractive
+summary. Topics were explicitly disabled. No mocked sentiment fallback or
+request-time model download was used.
+
+The four required examples retained their UTF-8 original/model text, returned
+three canonical probabilities summing approximately to one, and matched
+independent local inference. They are integration examples, not test metrics:
+
+| Example | Actual returned label | Confidence |
+| --- | --- | ---: |
+| `हा मोबाईल खूप चांगला आहे.` | positive | 0.995345 |
+| `ही सेवा अत्यंत खराब आहे.` | negative | 0.989481 |
+| `आज दुकान सकाळी दहा वाजता उघडले.` | neutral | 0.986274 |
+| `हा phone चांगला आहे पण battery backup खराब आहे.` | negative | 0.988530 |
+
+The five-row UTF-8 CSV, including a deliberate blank row, returned **partial:
+5 total / 4 successes / 1 expected failure**. SQLite was migrated with Alembic
+to `0001_initial_analysis_schema` before persistence. Retrieval pages returned
+2/2/1 rows in order with the failed row retained. Analytics correctly recorded
+positive 1, negative 2, neutral 1, one code-mixed document, real keyword counts
+and four null topics. CSV and JSON each exported all five rows with original
+Marathi text intact. This establishes local SQLite behavior with the real
+artifact; the earlier PostgreSQL checks remain explicitly hosted-mock evidence.
+
+Health, readiness, model info, all eight OpenAPI paths and single analysis
+passed. CORS allowed the configured local origin and rejected an untrusted
+origin; empty/extra-field inputs, missing sessions, bad export formats,
+pagination and body bounds returned the expected safe errors (including 413
+for an oversized body). Disabled optional topics leave overall `/ready`
+degraded even when the promoted sentiment is production-ready.
+
+Prepromotion ASGI measurements were 2.062 s for independent reload, 1.189 s
+for readiness, approximately 36–60 ms for the three subsequent short single
+requests, and 225 ms HTTP time for the five-row batch (220 ms reported
+processing). Total validation took 40.139 s. These are local single-process
+observations, not cloud latency or throughput claims. Sampling at 50 ms
+recorded 2,410.23 MiB peak process RSS and 1,689.08 MiB final RSS, with CUDA
+peak allocation 1,375.2 MiB/reservation 1,424 MiB. Independent reload and the
+API execute in the same validation process, so this peak is not an isolated
+steady-state API memory benchmark. Even historical isolated inference
+measurements exceeded the free Render limit; it remains mocked and unchanged.
+
+Post-promotion verification also passed, with evidence at
+`ml/artifacts/validation/muril-mahasent-md-v1/promoted-local/validation_report.json`.
+It confirmed `smoke_test=false`, `production_ready=true`, all payload hashes
+and unchanged final-test prediction evidence, independently reloaded the
+artifact on CUDA, and repeated the application/batch/export/security checks
+with real cached KeyBERT. The new batch again returned 5/4/1, with 268 ms
+reported processing (271 ms HTTP time). This validation took 45.997 s and
+sampled 2,404.17 MiB peak / 1,691.29 MiB final process RSS. Neither validation
+report is a deployment or another held-out evaluation.
+
+A separate **one-worker live Uvicorn HTTP** check then passed
+`scripts/smoke-api.py` against the same promoted CUDA artifact, cached KeyBERT,
+extractive summary and migrated SQLite. Its saved evidence is
+`ml/artifacts/training-logs/muril-mahasent-md-v1-live-api-smoke.json`.
+Health, readiness, model info, four examples, the long input, safe empty/input
+validation, 5/4/1 batch, retrieval, analytics and five-row CSV/JSON exports
+passed without mock sentiment or smoke flags. The live OpenAPI also included
+the compatibility preview route. A multi-sentence Marathi check returned two
+original source sentences from the real extractive summarizer with no warning.
+
+| Live local HTTP/process observation | Measured value |
+| --- | ---: |
+| Cold readiness including real model/enrichment loading | 27,456.83 ms |
+| Subsequent short-example HTTP requests | 68.09–91.03 ms |
+| Five-row batch HTTP time / reported processing | 326.58 ms / 307 ms |
+| Warm isolated API working set | 1,717,161,984 bytes (about 1,637.61 MiB) |
+| Peak API working set | 1,897,164,800 bytes (about 1,809.28 MiB) |
+
+Sentiment, KeyBERT, extractive summary and database were ready; overall
+readiness was degraded only because topics were deliberately disabled.
+Sentiment metadata reported `smoke_test=false`, `production_ready=true`.
+After verification the validation server was stopped to release GPU/RAM; its
+temporary local port is not an advertised hosted deployment. The real cached
+MiniLM embedding revision was `e8f8c211226b894fcb81acc59f3b34ba3efd5f42`.
+
+## Optional BERTopic secondary lifecycle
+
+After sentiment training, final evaluation, promotion and real API validation
+were safely complete, a separate isolated environment was prepared for the
+missing BERTopic dependencies without modifying the working or CUDA training
+environment. The offline `bertopic-mahasent-md-v1` fit is in progress on all
+47,730 prepared **train** documents; sentiment validation/test splits are not
+used for topic fitting. The local sentiment API checks deliberately disabled
+topics. Topic completion/reload/transform remains a separate optional result,
+not a condition for promoting the completed sentiment artifact, and no topic
+quality or latency metric is asserted while fitting is incomplete.
+
+## Current lightweight tests and initial CI
+
+The full Python fixture suite passed **138 tests, zero failures**. All
+**7 frontend test files** passed with zero failures. Python compile/import,
+JavaScript/static route/link checks and Git whitespace checks passed. CI
+keeps models offline and does not train, download the full artifact or
+require a GPU. Deterministic checks also reject tracked weights/full datasets.
+
+The initial implementation commit `a009a51` passed the
+[quality workflow](https://github.com/AtharvaisOp/NLP/actions/runs/37138543023).
+The final documentation/release revision must also pass its own workflow
+before merge; an earlier green commit does not substitute for that check.
+
 ## Historical smoke-model gate
 
 The earlier integration classifier was `muril-mahasent-md-smoke-v4`, based on
-`google/muril-base-cased`. Its manifest has `smoke_test=true`; the live API
-correctly reports `production_ready=false` and overall readiness `degraded`.
+`google/muril-base-cased`. Its manifest has `smoke_test=true`; that historical
+local API correctly reported `production_ready=false` and overall readiness
+`degraded`.
 It was trained on the local fixture, not the full MahaSent-MD corpus. No
 accuracy, precision, recall, F1, or confusion-matrix values from this smoke
 artifact are project performance.
