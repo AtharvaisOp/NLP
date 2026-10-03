@@ -152,7 +152,9 @@ immutable artifact provisioning, a suitable sustained PostgreSQL/runtime
 deployment and real deployed end-to-end checks. The existing 512 MiB free
 service is not a safe real-model target, remains explicitly mocked and was not
 upgraded. Topics are optional and a fitted corpus artifact is not a sentiment
-promotion prerequisite.
+promotion prerequisite. The local `bertopic-mahasent-md-v1` fit and independent
+backend-provider sample transforms have also passed, but the free hosted demo
+continues to disable topics and has not been provisioned with that artifact.
 
 For a future real deployment, upload model files to immutable external artifact
 storage; configure `MODEL_ARTIFACT_URL` and `MODEL_ARTIFACT_SHA256` in Render.

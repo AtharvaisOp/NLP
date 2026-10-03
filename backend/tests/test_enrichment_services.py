@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from fastapi.testclient import TestClient
 
@@ -89,6 +92,40 @@ def test_bertopic_outlier_is_honestly_unassigned() -> None:
     )
     service._model = FakeTopicModel([-1], [[1.0]])
     assert service.classify("एक वेगळा मजकूर") == TopicResult(None, None, None)
+
+
+@pytest.mark.parametrize(
+    ("compact", "outliers", "probabilities"),
+    [
+        (True, 1, [[0.1, 0.2, 0.3, 0.7]]),
+        (False, 1, [[0.1, 0.2, 0.7]]),
+        (True, 0, [[0.1, 0.2, 0.7]]),
+        (True, 1, [0.7]),
+    ],
+)
+def test_bertopic_score_matches_assigned_topic_in_compact_and_full_models(
+    compact: bool, outliers: int, probabilities: list
+) -> None:
+    """Compact cosine rows include -1; HDBSCAN membership rows do not."""
+    service = BertopicTopicService(settings(topic_backend="bertopic"))
+    fake = FakeTopicModel([2], probabilities)
+    fake._outliers = outliers
+    fake.hdbscan_model = (
+        type("BaseCluster", (), {"__module__": "bertopic.cluster._base"})()
+        if compact
+        else SimpleNamespace()
+    )
+    service._model = fake
+    service._topic_labels = {2: "सेवा, अनुभव"}
+
+    assert service.classify("सेवेचा अनुभव चांगला आहे") == TopicResult(
+        id=2, label="सेवा, अनुभव", probability=0.7
+    )
+
+
+@pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf")])
+def test_bertopic_nonfinite_score_is_not_returned_to_api(score: float) -> None:
+    assert BertopicTopicService._probability_for([[score]], 0) is None
 
 
 def test_missing_topic_artifact_is_unavailable(tmp_path: Path) -> None:

@@ -271,16 +271,64 @@ MiniLM embedding revision was `e8f8c211226b894fcb81acc59f3b34ba3efd5f42`.
 After sentiment training, final evaluation, promotion and real API validation
 were safely complete, a separate isolated environment was prepared for the
 missing BERTopic dependencies without modifying the working or CUDA training
-environment. The offline `bertopic-mahasent-md-v1` fit is in progress on all
-47,730 prepared **train** documents; sentiment validation/test splits are not
-used for topic fitting. The local sentiment API checks deliberately disabled
-topics. Topic completion/reload/transform remains a separate optional result,
-not a condition for promoting the completed sentiment artifact, and no topic
-quality or latency metric is asserted while fitting is incomplete.
+environment. The offline `bertopic-mahasent-md-v1` fit completed successfully
+on all 47,730 prepared **train** documents; sentiment validation/test splits
+were not used for topic fitting. Its ignored artifact is
+`ml/artifacts/topics/bertopic-mahasent-md-v1`, with `smoke_test=false`,
+492 non-outlier topic IDs, `model-text-v1` preprocessing and source revision
+`8ee29fa1329d6a841030eb46659d3c10614b5e59`. Fitting took approximately
+12 min 22 s, from 22:47:02 to 22:59:24 on 3 October 2026 (Asia/Calcutta).
 
-## Current lightweight tests and initial CI
+The isolated dependency target is
+`C:\Users\athar\.codex\mahapulse-topic-deps`, containing BERTopic 0.17.4,
+UMAP 0.5.12, HDBSCAN 0.8.44 and PyNNDescent 0.6.0. The launcher's scoped
+`PYTHONPATH` exposes these packages without altering the normal or dedicated
+CUDA environment. Seeded UMAP preserves the existing default geometry while
+explicitly recording fit/transform seed 42; minimum topic size is 10, with no
+forced topic count. Cached real multilingual MiniLM supplies the embeddings.
 
-The full Python fixture suite passed **138 tests, zero failures**. All
+The compact safetensors artifact stores topic embeddings. Its online reload
+uses nearest-topic cosine similarity, not the training-time UMAP/HDBSCAN
+membership computation. The API's bounded `probability` field is consequently
+an assigned-topic similarity score, not a calibrated membership probability;
+training-time density/outlier behavior is not claimed to be preserved. The
+adapter selects the correct score column when the compact matrix includes an
+outlier column, with seven new fixture regressions covering this distinction.
+
+Independent offline reload and four-sample transformation verification passed,
+including the backend's real `BertopicTopicService` on CUDA. Evidence is saved
+at `ml/artifacts/validation/bertopic-mahasent-md-v1/validation_report.json`.
+The provider reported version `bertopic-mahasent-md-v1`, state `ready` and
+returned valid artifact-specific labels. For the four integration examples
+listed above, the returned topic IDs/scores were:
+
+| Example | Topic ID | Assigned-topic cosine similarity |
+| --- | ---: | ---: |
+| Positive input | 57 | 0.553566 |
+| Negative input | 28 | 0.727581 |
+| Neutral input | 106 | 0.449970 |
+| Code-mixed input | 57 | 0.401196 |
+
+The training metadata accounts for all 47,730 documents, including 25,129
+training-time outliers (`-1`); topic count/outlier coverage is not a semantic
+quality score. Six saved files total approximately 2.5 MB, with recorded
+SHA-256/bytes. The 757,336-byte `model/topic_embeddings.safetensors` SHA-256 is
+`bf207b050f3ac897d8c709961720b45179e5bc4d6e45c2f1e32a637d63fab730`.
+All topic files stay outside Git. Reload/backend verification took 14.079 s
+excluding imports. Observed fitting peak Windows RSS was 3,265,798,144 bytes
+(about 3.04 GiB), with a 1,125 MiB GPU-memory peak and no CUDA OOM.
+
+The primary sentiment API checks deliberately disabled topics. Topic fitting
+and optional provider verification occurred only after the sentiment artifact
+was already production-ready and did not block that promotion. The evidence
+verifies the original MuRIL weights SHA-256 unchanged; sentiment metrics and
+prediction hashes also remain unchanged. These topic examples are integration
+checks, not another sentiment test evaluation or a topic-quality benchmark.
+
+## Current lightweight tests and CI evidence
+
+The full Python fixture suite passed **145 tests, zero failures** in 11.63 s
+(two warnings). All
 **7 frontend test files** passed with zero failures. Python compile/import,
 JavaScript/static route/link checks and Git whitespace checks passed. CI
 keeps models offline and does not train, download the full artifact or
@@ -288,8 +336,12 @@ require a GPU. Deterministic checks also reject tracked weights/full datasets.
 
 The initial implementation commit `a009a51` passed the
 [quality workflow](https://github.com/AtharvaisOp/NLP/actions/runs/37138543023).
-The final documentation/release revision must also pass its own workflow
-before merge; an earlier green commit does not substitute for that check.
+The full-model documentation commit `f54677d` also passed its
+[quality workflow](https://github.com/AtharvaisOp/NLP/actions/runs/37140192398).
+Release [PR #5](https://github.com/AtharvaisOp/NLP/pull/5) targets `main` from
+`feat/mahapulse-production-ml`. Every subsequent head, including the final
+topic adapter/documentation change, must pass its own workflow before merge;
+an earlier green commit does not substitute for that check.
 
 ## Historical smoke-model gate
 

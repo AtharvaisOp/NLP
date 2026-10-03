@@ -242,6 +242,13 @@ python -m pip install -r ml/requirements-enrichment.txt
 python -m ml.cli topics train --processed-dir ml/data/processed/mahasent-md --topic-version bertopic-mahasent-md-v1
 ```
 
+The local `bertopic-mahasent-md-v1` fit has also completed on all 47,730 train
+documents, producing 492 non-outlier topic IDs outside Git. It is optional,
+passed independent reload/four-sample backend transformation, uses separate
+dependency/artifact provisioning and was not enabled in the
+primary sentiment API checks or hosted mock demo. Compact reload reports
+topic-embedding similarity, not calibrated topic membership probability.
+
 ## Testing and CI
 
 ```bash
@@ -303,7 +310,8 @@ not satisfy these gates. Actual URLs/restart/timing outcomes are documented in
 
 Full MuRIL training and held-out evaluation are complete locally; real-model
 hosting still requires suitable memory, artifact provisioning and deployed
-validation. Real topics require a provisioned BERTopic artifact.
+validation. The fitted topic model is also validated locally; real topic
+hosting needs separate BERTopic artifact/dependency provisioning.
 Aggregate summaries, queued/streaming batches,
 authentication/ownership, automatic retention, and global history listing are
 not implemented. Sentiment truncates to the artifact's tokenizer limit even

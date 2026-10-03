@@ -77,6 +77,17 @@ artifact and call `transform`. IDs/labels depend on that artifact; outlier `-1`
 becomes null. Missing artifacts are unavailable states. No request path
 downloads weights or fits a model.
 
+The local `bertopic-mahasent-md-v1` was fitted on all 47,730 train documents
+after sentiment promotion and saved outside Git, with 492 non-outlier topic
+IDs. Independent offline reload and four-sample backend-provider transformation
+passed. Compact safetensors reload uses nearest-topic embedding cosine similarity;
+its bounded API `probability` is an assigned-topic score, not calibrated
+membership probability. Training-time UMAP/HDBSCAN density/outlier behavior is
+not promised after compact reload. The adapter distinguishes compact cosine
+score matrices from full membership matrices when an outlier column exists.
+Primary sentiment API validation deliberately leaves topics disabled; enabling
+the optional provider needs its artifact, cached embeddings and dependencies.
+
 Extractive summary selects source sentences deterministically and returns null
 for one-sentence input; no generative API is called. Future summary providers
 can implement the same protocol. Enrichment failures preserve other results

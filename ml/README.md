@@ -119,6 +119,17 @@ training configuration, and preprocessing/dataset provenance. The backend
 Topic IDs are artifact-version-specific; an outlier (`-1`) is represented as a
 null topic.
 
+The full local `bertopic-mahasent-md-v1` fit is now saved outside Git after
+training on all 47,730 official train documents, with `smoke_test=false` and
+492 non-outlier topic IDs. It completed after the sentiment artifact was safely
+promoted; independent offline reload and four-sample checks, including the real
+backend topic provider, passed as a separate optional gate. Its
+compact safetensors reload assigns by topic-embedding cosine similarity rather
+than rerunning training-time UMAP/HDBSCAN membership. The API's `probability`
+is a bounded assigned-topic similarity score, not a calibrated membership
+probability, and density-based outlier behavior is not promised. See the
+validation record for the isolated dependencies and final reload outcome.
+
 The extractive summary provider is deterministic, UTF-8 safe, and only returns
 sentences selected from the input. One-sentence inputs return a null summary.
 Its provider-isolated `SummaryService` interface leaves room for a future
