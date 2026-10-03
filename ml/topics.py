@@ -52,6 +52,7 @@ def train_topic_model(
         from bertopic import BERTopic
         from sentence_transformers import SentenceTransformer
         from sklearn.feature_extraction.text import CountVectorizer
+        from umap import UMAP
 
         random.seed(config.random_seed)
         try:
@@ -71,6 +72,19 @@ def train_topic_model(
         )
         topic_model = BERTopic(
             embedding_model=embedding_model,
+            # Global seeds alone do not control UMAP's parallel random state.
+            # Preserve BERTopic's default geometry with explicit seeded fitting
+            # and transformation for reproducible topic artifacts.
+            umap_model=UMAP(
+                n_neighbors=15,
+                n_components=5,
+                min_dist=0.0,
+                metric="cosine",
+                low_memory=True,
+                random_state=config.random_seed,
+                transform_seed=config.random_seed,
+                n_jobs=1,
+            ),
             min_topic_size=config.min_topic_size,
             nr_topics=config.nr_topics,
             calculate_probabilities=True,

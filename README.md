@@ -6,23 +6,28 @@ bounded CSV batches, persisted documents, session analytics, and backend CSV/JSO
 downloads. Educational routes, shared navigation, search, and themes remain
 available alongside `/analyzer/`.
 
-**Development/demo model gate:** the validated artifact is
-`muril-mahasent-md-smoke-v4`, with `smoke_test=true` and
-`production_ready=false`. It proves loading, Unicode handling, inference, and
-API integration. Its metrics are **not project accuracy**. Full model training
-remains pending until complete training and untouched test evaluation produce
-a non-smoke artifact. [The validation record](docs/VALIDATION.md) contains actual
-runtime/deployment results and outstanding gates.
+**Fully trained local model:** `muril-mahasent-md-v1` completed three epochs
+on all 47,730 training records, selected its checkpoint using validation macro
+F1, and evaluated the untouched 6,744-row test split exactly once. Final test
+accuracy is **80.10%** and macro F1 is **0.800593**. The artifact has
+`smoke_test=false`, `production_ready=true` after the real API/reload/integrity
+gates passed. [The validation record](docs/VALIDATION.md) separates validation and
+final test metrics, provenance, runtime and deployment limits.
+
+The older `muril-mahasent-md-smoke-v4` remains historical integration evidence
+with `smoke_test=true`, `production_ready=false`. Its fixture metrics are
+**not project accuracy** and are not substituted for the full-model results.
 
 The selected free cloud demo uses **mock sentiment and mock keywords**,
 disabled topics, real extractive summary, and validated PostgreSQL persistence.
 Try the [live dashboard](https://mahapulse-staging.vercel.app/analyzer/).
 [Deployment evidence and operational limits](docs/DEPLOYMENT.md) include the
 validated PostgreSQL runtime and the free database's expiry date.
-Local smoke MuRIL/KeyBERT checks remain separate from the hosted demo.
-The real local pipeline measured about 1.45 GB resident memory; a paid instance
-was not selected. Neither hosted mock predictions nor local smoke results
-establish model quality.
+Local full-model and historical smoke checks remain separate from the hosted
+demo. Earlier real MuRIL/KeyBERT measurements reached 1,452 MiB peak
+resident memory; the 512 MiB free Render instance is not a safe full-model
+target and was not upgraded. Neither hosted mock predictions nor local smoke
+results establish model quality.
 
 ## Architecture and repository
 
@@ -189,20 +194,42 @@ preserve attribution. Local sources need explicit `--local-path`.
 python -m ml.cli prepare
 python -m ml.cli train --smoke --model-version muril-mahasent-md-smoke-v4
 python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
-python -m ml.cli evaluate --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --processed-dir ml/data/processed/mahasent-md
 python -m ml.cli inspect-artifact ml/artifacts/sentiment/muril-mahasent-md-v1
 ```
 
 Before full training, verify complete splits, disk, PyTorch CUDA availability,
 GPU name and VRAM. Use a separate training environment for CUDA changes and
 keep working runtimes intact. Do not blindly start multi-hour CPU training.
-Checkpoint selection uses validation data. Only complete non-smoke training
-and untouched test evaluation may report accuracy, macro precision/recall/F1,
-weighted F1, per-class metrics, and confusion matrix.
+Checkpoint selection uses validation macro F1 and early stopping. The full
+training command completes checkpoint selection before loading the held-out
+test split, then performs its final test prediction pass exactly once. Do not
+follow a successful full run with `evaluate`: that would repeat the final test
+evaluation. Validation and final test metrics are separate in `metrics.json`.
+Recover an interrupted run with `--resume-from-checkpoint` pointing to a valid
+`_trainer/checkpoint-*` directory belonging to the same artifact version.
 
 Versioned artifacts include tokenizer/model files, label map, training config,
-manifest, dataset report, metrics and predictions. Validate hashes and reload
-independently, then run an API smoke before promotion. Transfer artifacts via
+manifest, dataset report, metrics and predictions. Full training initially
+writes `smoke_test=false` and `production_ready=false`. Validate SHA-256 hashes,
+reload independently, then run real API single/batch/analytics/export checks
+before explicitly promoting the artifact:
+
+```powershell
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto
+$validationReport = Read-Host "Path to the passing prepromotion validation_report.json printed above"
+python -m ml.cli promote-artifact --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --validation-report $validationReport --api-integration-validated
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto --expect-promoted
+```
+
+Promotion independently verifies required files, hashes, held-out prediction
+evidence, an artifact-bound passing API validation report and local
+tokenizer/model reload before setting `production_ready=true`. The validator
+uses local-only models and a freshly migrated SQLite database, saves its
+evidence outside the artifact, and does not repeat held-out evaluation.
+Use `--device cpu` when CUDA is unavailable. `$validationReport` must identify
+the actual passing prepromotion report; a boolean attestation alone is rejected.
+Disabled optional topics still make overall `/ready` degraded even when
+sentiment is production-ready. Transfer artifacts via
 controlled external storage/build-time download or a persistent deployment disk.
 Do not commit weights, data, caches, databases or credentials. A fresh clone
 requires separate artifact provisioning for real inference. No training runs
@@ -214,6 +241,13 @@ BERTopic has a separate offline lifecycle:
 python -m pip install -r ml/requirements-enrichment.txt
 python -m ml.cli topics train --processed-dir ml/data/processed/mahasent-md --topic-version bertopic-mahasent-md-v1
 ```
+
+The local `bertopic-mahasent-md-v1` fit has also completed on all 47,730 train
+documents, producing 492 non-outlier topic IDs outside Git. It is optional,
+passed independent reload/four-sample backend transformation, uses separate
+dependency/artifact provisioning and was not enabled in the
+primary sentiment API checks or hosted mock demo. Compact reload reports
+topic-embedding similarity, not calibrated topic membership probability.
 
 ## Testing and CI
 
@@ -274,8 +308,11 @@ not satisfy these gates. Actual URLs/restart/timing outcomes are documented in
 
 ## Limitations
 
-Full MuRIL training/evaluation is pending. Real topics require a provisioned
-BERTopic artifact. Aggregate summaries, queued/streaming batches,
+Full MuRIL training and held-out evaluation are complete locally; real-model
+hosting still requires suitable memory, artifact provisioning and deployed
+validation. The fitted topic model is also validated locally; real topic
+hosting needs separate BERTopic artifact/dependency provisioning.
+Aggregate summaries, queued/streaming batches,
 authentication/ownership, automatic retention, and global history listing are
 not implemented. Sentiment truncates to the artifact's tokenizer limit even
 within the character limit. Educational examples, mocks and smoke predictions

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from threading import RLock
 from typing import Any
@@ -54,7 +55,19 @@ class BertopicTopicService:
             topic_id = int(topics[0])
             if topic_id == -1:
                 return TopicResult(id=None, label=None, probability=None)
-            probability = self._probability_for(probabilities, topic_id)
+            # Compact safetensors artifacts use cosine similarity, with an
+            # initial outlier column when -1 exists. Full HDBSCAN membership
+            # matrices exclude that column. Match BERTopic's actual lite
+            # transform mode rather than offsetting every probability matrix.
+            cluster_type = type(getattr(model, "hdbscan_model", None))
+            cosine_mode = (
+                cluster_type.__module__ == "bertopic.cluster._base"
+                and cluster_type.__name__ == "BaseCluster"
+            )
+            outlier_column = int(getattr(model, "_outliers", 0)) if cosine_mode else 0
+            probability = self._probability_for(
+                probabilities, topic_id, outlier_column=outlier_column
+            )
             return TopicResult(
                 id=topic_id,
                 label=self._topic_labels.get(topic_id),
@@ -160,19 +173,30 @@ class BertopicTopicService:
         return result
 
     @staticmethod
-    def _probability_for(probabilities: Any, topic_id: int) -> float | None:
+    def _probability_for(
+        probabilities: Any, topic_id: int, *, outlier_column: int = 0
+    ) -> float | None:
+        """Map the assigned topic's score, not a calibrated probability.
+
+        BERTopic's compact reload returns cosine similarities, which need not
+        sum to one. Keep the existing API's bounded score contract.
+        """
         if probabilities is None:
             return None
         values = probabilities.tolist() if hasattr(probabilities, "tolist") else probabilities
-        if isinstance(values, list) and values and isinstance(values[0], (list, tuple)):
+        is_matrix = isinstance(values, (list, tuple)) and bool(values) and isinstance(
+            values[0], (list, tuple)
+        )
+        if is_matrix:
             values = values[0]
         if isinstance(values, (float, int)):
-            return max(0.0, min(1.0, float(values)))
-        if not values:
+            score = float(values)
+        elif not values:
             return None
-        if 0 <= topic_id < len(values):
-            return max(0.0, min(1.0, float(values[topic_id])))
-        return max(0.0, min(1.0, float(max(values))))
+        else:
+            index = topic_id + outlier_column if is_matrix else topic_id
+            score = float(values[index]) if 0 <= index < len(values) else float(max(values))
+        return max(0.0, min(1.0, score)) if math.isfinite(score) else None
 
     @staticmethod
     def _select_device(torch_module: Any, configured: str) -> str:

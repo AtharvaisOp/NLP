@@ -47,11 +47,28 @@ version, model/tokenizer files, lifecycle flags and recorded integrity hashes.
 Loading is local-only; inference uses `model.eval()` and
 `torch.inference_mode()`. Configured failures never switch to mock sentiment.
 
-The validated `muril-mahasent-md-smoke-v4` artifact has `smoke_test=true`,
+The historical `muril-mahasent-md-smoke-v4` artifact has `smoke_test=true`,
 `production_ready=false`. It requires `ALLOW_SMOKE_MODEL=true` and leaves
-readiness degraded. Full training plus untouched test evaluation must precede
-production promotion. Weights/artifacts/data stay outside Git and need explicit
-deployment provisioning.
+readiness degraded; its fixture metrics establish integration only.
+The real `muril-mahasent-md-v1` has now completed three epochs on all 47,730
+train rows and one final evaluation on the untouched 6,744-row test split.
+Validation macro F1 selected epoch-2 checkpoint 23,866; final test accuracy is
+0.801008 and macro F1 0.800593. Its full lifecycle gates have passed and its
+manifest records `smoke_test=false`, `production_ready=true`. These local
+results are separate from smoke evidence and do not imply a cloud deployment.
+Full artifacts start with `smoke_test=false`, `production_ready=false`.
+Training selects on validation macro F1, then performs a single final held-out
+test prediction pass. `ml.cli promote-artifact` verifies required files,
+complete SHA-256 coverage, held-out prediction evidence and independent local
+reload. Its required `--validation-report` binds a passing prepromotion report
+from `scripts/validate-production-model.py` to the exact artifact directory,
+version, hashes and manifest. The report exercises real FastAPI startup,
+Marathi/code-mixed inference, migrated SQLite persistence, analytics, both
+exports, OpenAPI, CORS and request limits. Only after those checks pass does
+promotion record all lifecycle gates and
+`production_ready=true`. Weights/artifacts/data stay outside Git and need
+explicit deployment provisioning. Disabled optional topics keep overall
+readiness degraded even when the required sentiment service is ready.
 
 KeyBERT uses cached
 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` embeddings.
@@ -59,6 +76,17 @@ BERTopic is fitted offline in `ml/topics.py`; online requests only load a saved
 artifact and call `transform`. IDs/labels depend on that artifact; outlier `-1`
 becomes null. Missing artifacts are unavailable states. No request path
 downloads weights or fits a model.
+
+The local `bertopic-mahasent-md-v1` was fitted on all 47,730 train documents
+after sentiment promotion and saved outside Git, with 492 non-outlier topic
+IDs. Independent offline reload and four-sample backend-provider transformation
+passed. Compact safetensors reload uses nearest-topic embedding cosine similarity;
+its bounded API `probability` is an assigned-topic score, not calibrated
+membership probability. Training-time UMAP/HDBSCAN density/outlier behavior is
+not promised after compact reload. The adapter distinguishes compact cosine
+score matrices from full membership matrices when an outlier column exists.
+Primary sentiment API validation deliberately leaves topics disabled; enabling
+the optional provider needs its artifact, cached embeddings and dependencies.
 
 Extractive summary selects source sentences deterministically and returns null
 for one-sentence input; no generative API is called. Future summary providers
@@ -135,9 +163,10 @@ Uvicorn binds `0.0.0.0`/`$PORT`; each extra worker duplicates model memory.
 Training is offline and never runs in startup.
 
 The selected free cloud demo explicitly uses mock sentiment/keywords, disabled
-topics and real extractive summary with PostgreSQL. Local real smoke-model
-validation is a separate result. The measured local model/enrichment process
-used about 1.45 GB RSS, beyond a small free instance; the user selected the
+topics and real extractive summary with PostgreSQL. The full locally trained
+artifact and historical smoke-model validation are separate results; no
+full-model deployment is implied. The earlier local model/enrichment process
+peaked at 1,452 MiB RSS, beyond the 512 MiB free instance; the user selected the
 free mock demo instead of paying for a larger instance. There is no silent
 sentiment fallback or promotion of the smoke artifact.
 

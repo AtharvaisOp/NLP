@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import hashlib
 import json
 import logging
 import math
 from pathlib import Path
+import re
 import threading
 from typing import Any
 
 from ml.preprocessing import PREPROCESSING_VERSION
+from ml.artifact_validation import (
+    ArtifactEvidenceError, PRODUCTION_EVIDENCE_FILES, PRODUCTION_LIFECYCLE_GATES,
+    validate_production_evidence, verify_integrity, weight_files,
+)
 
 from ...config import Settings
 from ..interfaces import SentimentResult, ServiceMetadata
@@ -41,6 +45,7 @@ class ArtifactMetadata:
     preprocessing_version: str
     max_length: int
     smoke_test: bool
+    production_ready: bool
     label_mapping: dict[str, int]
 
 
@@ -60,16 +65,10 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
     for filename in EXPECTED_ARTIFACT_FILES:
         if not (path / filename).is_file():
             raise MurilArtifactError("sentiment artifact is missing required metadata")
-    if not any(
-        (path / filename).is_file()
-        for filename in (
-            "model.safetensors",
-            "pytorch_model.bin",
-            "model.safetensors.index.json",
-            "pytorch_model.bin.index.json",
-        )
-    ):
-        raise MurilArtifactError("sentiment artifact is missing model weights")
+    try:
+        weight_files(path)
+    except ArtifactEvidenceError as exc:
+        raise MurilArtifactError(str(exc)) from exc
     if any(not (path / filename).is_file() for filename in EXPECTED_TOKENIZER_FILES):
         raise MurilArtifactError("sentiment artifact is missing tokenizer files")
 
@@ -92,6 +91,39 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
         raise MurilArtifactError("sentiment model config label mapping is incompatible")
     if not isinstance(manifest.get("smoke_test"), bool):
         raise MurilArtifactError("sentiment artifact smoke_test flag is invalid")
+    production_ready = manifest.get("production_ready", False)
+    if not isinstance(production_ready, bool):
+        raise MurilArtifactError("sentiment artifact production_ready flag is invalid")
+    if production_ready and manifest["smoke_test"]:
+        raise MurilArtifactError("smoke sentiment artifacts cannot be production-ready")
+    if production_ready:
+        lifecycle = manifest.get("lifecycle_validation")
+        if not isinstance(lifecycle, dict) or any(
+            lifecycle.get(gate) is not True for gate in PRODUCTION_LIFECYCLE_GATES
+        ):
+            raise MurilArtifactError("sentiment artifact production lifecycle is incomplete")
+        if any(not (path / filename).is_file() for filename in PRODUCTION_EVIDENCE_FILES):
+            raise MurilArtifactError("sentiment artifact production evidence is incomplete")
+        if not isinstance(manifest.get("evaluation_summary"), dict):
+            raise MurilArtifactError("sentiment artifact held-out evaluation is missing")
+        if not isinstance(manifest.get("dataset_revision"), str) or not manifest["dataset_revision"]:
+            raise MurilArtifactError("sentiment artifact dataset revision is missing")
+        api_evidence = manifest.get("api_validation_evidence")
+        if (
+            not isinstance(api_evidence, dict) or api_evidence.get("schema_version") != 1
+            or api_evidence.get("model_version") != manifest.get("model_version")
+            or api_evidence.get("artifact_integrity") != manifest.get("artifact_integrity")
+            or api_evidence.get("independent_local_reload_passed") is not True
+            or api_evidence.get("application_passed") is not True
+            or api_evidence.get("batch_successes") != 4 or api_evidence.get("batch_expected_failures") != 1
+            or api_evidence.get("csv_rows") != 5 or api_evidence.get("json_documents") != 5
+            or any(
+                not isinstance(api_evidence.get(key), str)
+                or re.fullmatch(r"[0-9a-f]{64}", api_evidence[key]) is None
+                for key in ("report_sha256", "tested_manifest_sha256")
+            )
+        ):
+            raise MurilArtifactError("sentiment artifact real API validation evidence is incomplete")
     model_version = manifest.get("model_version")
     preprocessing_version = manifest.get("preprocessing_version")
     max_length = manifest.get("max_length")
@@ -99,32 +131,15 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
         raise MurilArtifactError("sentiment artifact model version is missing")
     if preprocessing_version != PREPROCESSING_VERSION:
         raise MurilArtifactError("sentiment artifact preprocessing version is incompatible")
-    if not isinstance(max_length, int) or max_length <= 0:
+    if type(max_length) is not int or max_length <= 0:
         raise MurilArtifactError("sentiment artifact max length is invalid")
 
-    integrity = manifest.get("artifact_integrity", {})
-    if integrity:
-        if not isinstance(integrity, dict):
-            raise MurilArtifactError("sentiment artifact integrity metadata is invalid")
-        for filename, metadata in integrity.items():
-            file_path = (path / filename).resolve()
-            if file_path.parent != path.resolve():
-                raise MurilArtifactError("sentiment artifact integrity filename is invalid")
-            if not file_path.is_file() or not isinstance(metadata, dict):
-                raise MurilArtifactError("sentiment artifact integrity files are invalid")
-            expected_size = metadata.get("bytes")
-            expected_hash = metadata.get("sha256")
-            if file_path.stat().st_size != expected_size:
-                raise MurilArtifactError("sentiment artifact file size does not match manifest")
-            # A MuRIL weights file is almost 1 GB; hash it without allocating
-            # another weights-sized buffer during a memory-sensitive startup.
-            digest = hashlib.sha256()
-            with file_path.open("rb") as handle:
-                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                    digest.update(chunk)
-            actual_hash = digest.hexdigest()
-            if actual_hash != expected_hash:
-                raise MurilArtifactError("sentiment artifact integrity check failed")
+    try:
+        verify_integrity(path, manifest, production=production_ready)
+        if production_ready:
+            validate_production_evidence(path, manifest)
+    except ArtifactEvidenceError as exc:
+        raise MurilArtifactError(str(exc)) from exc
 
     artifact_metadata = ArtifactMetadata(
         model_version=model_version,
@@ -132,6 +147,7 @@ def _validate_artifact(path: Path, allow_smoke_model: bool) -> ArtifactMetadata:
         preprocessing_version=preprocessing_version,
         max_length=max_length,
         smoke_test=manifest["smoke_test"],
+        production_ready=production_ready,
         label_mapping=dict(mapping),
     )
     if artifact_metadata.smoke_test and not allow_smoke_model:
@@ -227,7 +243,7 @@ class MurilSentimentService:
             device=self._device if loaded else "not-loaded",
             state="ready" if loaded else "not_ready",
             smoke_test=metadata.smoke_test,
-            production_ready=loaded and not metadata.smoke_test,
+            production_ready=loaded and metadata.production_ready,
             base_model=metadata.base_model,
             preprocessing_version=metadata.preprocessing_version,
             backend="muril",
@@ -262,6 +278,8 @@ class MurilSentimentService:
             }
             if len(raw_logits) != len(id_to_label):
                 raise MurilServiceError("MuRIL returned an incompatible number of labels")
+            if any(not math.isfinite(float(value)) for value in raw_logits):
+                raise MurilServiceError("MuRIL returned non-finite classification scores")
             maximum = max(float(value) for value in raw_logits)
             exponentials = [math.exp(float(value) - maximum) for value in raw_logits]
             total = sum(exponentials)

@@ -19,6 +19,8 @@ from backend.app.services.sentiment.muril import (
     MurilServiceError,
 )
 from ml.preprocessing import preprocess_text
+from ml.promotion import promote_artifact
+from ml.tests.artifact_fixtures import write_full_artifact, write_validation_report
 
 
 class FakeTensor:
@@ -85,7 +87,9 @@ class FailingModel(FakeModel):
         raise RuntimeError("private model internals")
 
 
-def make_artifact(tmp_path: Path, *, smoke_test: bool = True) -> Path:
+def make_artifact(
+    tmp_path: Path, *, smoke_test: bool = True, production_ready: bool = False
+) -> Path:
     artifact = tmp_path / "artifact"
     artifact.mkdir()
     manifest = {
@@ -99,6 +103,14 @@ def make_artifact(tmp_path: Path, *, smoke_test: bool = True) -> Path:
         "preprocessing_version": "model-text-v1",
         "max_length": 256,
         "smoke_test": smoke_test,
+        "production_ready": production_ready,
+        "lifecycle_validation": {
+            "training_completed": True,
+            "held_out_test_evaluated": not smoke_test,
+            "artifact_reload_validated": production_ready,
+            "integrity_verified": production_ready,
+            "api_integration_validated": production_ready,
+        },
         "artifact_integrity": {},
     }
     (artifact / "model_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -158,6 +170,25 @@ def test_smoke_artifact_is_accepted_with_explicit_opt_in(tmp_path: Path) -> None
     assert tokenizer.calls[0][0] == preprocess_text("हे product चांगले आहे!!!").model_text
     assert tokenizer.calls[0][1]["truncation"] is True
     assert tokenizer.calls[0][1]["max_length"] == 256
+
+
+def test_full_artifact_requires_explicit_lifecycle_promotion(tmp_path: Path) -> None:
+    service = make_service(make_artifact(tmp_path, smoke_test=False))
+    fake_components(service)
+
+    assert service.metadata().state == "ready"
+    assert service.metadata().smoke_test is False
+    assert service.metadata().production_ready is False
+
+
+def test_production_flag_rejects_incomplete_lifecycle(tmp_path: Path) -> None:
+    artifact = make_artifact(tmp_path, smoke_test=False, production_ready=True)
+    manifest_path = artifact / "model_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["lifecycle_validation"]["api_integration_validated"] = False
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert make_service(artifact).metadata().state == "not_ready"
 
 
 def test_device_selection_auto_cpu_and_explicit_cuda_failure() -> None:
@@ -272,3 +303,58 @@ def test_artifact_integrity_paths_cannot_escape_artifact_directory(tmp_path: Pat
     manifest["artifact_integrity"] = {"../private.json": {"bytes": 2, "sha256": "irrelevant"}}
     (artifact / "model_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     assert make_service(artifact).metadata().state == "not_ready"
+
+
+def test_verified_full_artifact_becomes_ready_after_promotion(tmp_path, monkeypatch):
+    import sys
+
+    artifact = write_full_artifact(tmp_path)
+    report = write_validation_report(artifact, tmp_path)
+    loader = SimpleNamespace(from_pretrained=lambda *args, **kwargs: object())
+    monkeypatch.setitem(sys.modules, "transformers", SimpleNamespace(
+        AutoTokenizer=loader, AutoModelForSequenceClassification=loader,
+    ))
+    promote_artifact(artifact, api_integration_validated=True, validation_report=report)
+    service = make_service(artifact, allow_smoke=False)
+    fake_components(service)
+    metadata = service.metadata()
+    assert metadata.state == "ready"
+    assert metadata.production_ready is True
+    assert metadata.smoke_test is False
+
+
+def test_production_artifact_cannot_drop_weights_from_integrity(tmp_path, monkeypatch):
+    import sys
+
+    artifact = write_full_artifact(tmp_path)
+    report = write_validation_report(artifact, tmp_path)
+    loader = SimpleNamespace(from_pretrained=lambda *args, **kwargs: object())
+    monkeypatch.setitem(sys.modules, "transformers", SimpleNamespace(
+        AutoTokenizer=loader, AutoModelForSequenceClassification=loader,
+    ))
+    promote_artifact(artifact, api_integration_validated=True, validation_report=report)
+    path = artifact / "model_manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    del manifest["artifact_integrity"]["model.safetensors"]
+    # Even consistent API-evidence copies cannot bypass integrity coverage.
+    manifest["api_validation_evidence"]["artifact_integrity"] = manifest["artifact_integrity"]
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    assert make_service(artifact, allow_smoke=False).metadata().state == "not_ready"
+
+
+def test_weights_index_requires_actual_shards(tmp_path):
+    artifact = make_artifact(tmp_path)
+    (artifact / "model.safetensors").unlink()
+    (artifact / "model.safetensors.index.json").write_text(
+        json.dumps({"weight_map": {"classifier.weight": "missing-shard.safetensors"}}),
+        encoding="utf-8",
+    )
+    assert make_service(artifact).metadata().state == "not_ready"
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf")])
+def test_non_finite_model_scores_are_rejected(tmp_path, value):
+    service = make_service(make_artifact(tmp_path))
+    fake_components(service, FakeModel([[value, 0.0, 1.0]]))
+    with pytest.raises(MurilServiceError, match="non-finite"):
+        service.predict("हा phone चांगला आहे")

@@ -6,6 +6,7 @@ import importlib.metadata
 import os
 import platform
 import random
+import shutil
 
 
 def seed_everything(seed: int) -> None:
@@ -40,10 +41,19 @@ def runtime_info() -> dict[str, object]:
         except importlib.metadata.PackageNotFoundError:
             packages[display_name] = None
     device = "cpu"
+    cuda = None
     try:
         import torch
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
+        if device == "cuda":
+            free_bytes, total_bytes = torch.cuda.mem_get_info()
+            cuda = {
+                "runtime": torch.version.cuda,
+                "gpu": torch.cuda.get_device_name(0),
+                "total_vram_bytes": total_bytes,
+                "available_vram_bytes": free_bytes,
+            }
     except ImportError:
         pass
     return {
@@ -51,4 +61,6 @@ def runtime_info() -> dict[str, object]:
         "platform": platform.platform(),
         "device": device,
         "packages": packages,
+        "cuda": cuda,
+        "free_disk_bytes": shutil.disk_usage(os.getcwd()).free,
     }
