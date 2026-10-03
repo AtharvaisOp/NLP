@@ -1,23 +1,68 @@
-# MahaPulse final integration validation
+# MahaPulse training and integration validation
 
-Recorded on **3 October 2026 (Asia/Calcutta)**. These observations describe
-this Windows development machine. They do not claim deployment performance
-or model quality.
+Recorded on **3 October 2026 (Asia/Calcutta)**. Current full-model results and
+historical smoke observations are recorded separately. Local inference does
+not establish deployed cloud performance.
 
-## Readiness and model gate
+## Production-model corpus and CUDA audit
 
-The only validated classifier is `muril-mahasent-md-smoke-v4`, based on
+The `muril-mahasent-md-v1` lifecycle starts from repository main
+`eae3510f3baf3ff607336f0121b4627d0fe2cda3`, not the historical integration
+branch. Its prepared corpus was independently checked against the generated
+metadata and records before training:
+
+| Split | Negative (0) | Neutral (1) | Positive (2) | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Train | 15,964 | 15,970 | 15,796 | 47,730 |
+| Validation | 1,984 | 1,990 | 1,948 | 5,922 |
+| Test | 2,249 | 2,248 | 2,247 | 6,744 |
+| Total | 20,197 | 20,208 | 19,991 | 60,396 |
+
+The source revision is `8ee29fa1329d6a841030eb46659d3c10614b5e59` in
+the official L3Cube MarathiNLP repository. Of 60,864 source rows, preparation
+removed three empty rows and 465 duplicates (65 conflicting-label duplicates
+and 400 same-label duplicates). Official split boundaries are retained. Every
+split contains all three canonical classes; normalized-text intersections
+between every split pair are zero. The classifier uses `model-text-v1`.
+Source terms remain CC BY-NC-SA 4.0 with the upstream research/non-commercial
+restriction; model promotion does not grant commercial data rights.
+
+| Audited file | SHA-256 |
+| --- | --- |
+| `records.jsonl` | `aad15c35df08c5e7f97532fd2f2fd9c2cb5ec5168da40b7f2cfc8d539a8fd04f` |
+| `dataset_report.json` | `362c1e6014840a528efaa4d42feb8c303f5d5976cb1809103055e550eda30dd1` |
+| Test manifest | `feff58f0eca9723257b75764aea3a9bc2d9453a3fa28478a27d829804ee75f50` |
+
+The separate training interpreter is
+`C:\Users\athar\.codex\mahapulse-training-cuda\Scripts\python.exe`;
+the normal working Python environment is unchanged. Its verified runtime is
+Python 3.13.4, PyTorch 2.11.0+cu128, CUDA 12.8, Transformers 5.15.0,
+NumPy 2.4.1 and scikit-learn 1.9.0, with
+`torch.cuda.is_available() == True`. The GPU is NVIDIA GeForce RTX 3050
+6GB Laptop GPU (6,144 MiB total VRAM), driver 596.36. The initial full-run
+audit found approximately 5,725 MiB free VRAM and 28.5 GiB free disk
+(30,625,177,600 bytes); these are available-at-audit values, not peak usage.
+
+The intended full configuration is MuRIL base cased, three epochs, train batch
+4, evaluation batch 8, maximum length 256 tokens, learning rate 2e-5,
+weight decay 0.01, warmup ratio 0.1, seed 42 and early-stopping patience 2.
+Checkpoint selection is based solely on validation macro F1. The test split
+is loaded for final evaluation only after training and selection finish;
+integration examples never modify the metrics.
+
+## Historical smoke-model gate
+
+The earlier integration classifier was `muril-mahasent-md-smoke-v4`, based on
 `google/muril-base-cased`. Its manifest has `smoke_test=true`; the live API
 correctly reports `production_ready=false` and overall readiness `degraded`.
 It was trained on the local fixture, not the full MahaSent-MD corpus. No
 accuracy, precision, recall, F1, or confusion-matrix values from this smoke
 artifact are project performance.
 
-**FULL MODEL TRAINING PENDING.** A complete non-smoke
-`muril-mahasent-md-v1` artifact and untouched test evaluation remain required
-before production classification. Deployment/runtime evidence must also
-include PostgreSQL and deployed end-to-end checks; see
-[DEPLOYMENT.md](DEPLOYMENT.md) for the final cloud record.
+The smoke artifact remains historical integration evidence. Its results must
+not be substituted for `muril-mahasent-md-v1` full-model metrics.
+Deployment/runtime evidence must also include PostgreSQL and deployed
+end-to-end checks; see [DEPLOYMENT.md](DEPLOYMENT.md) for the cloud demo record.
 
 ## Actual API contract
 
@@ -44,7 +89,7 @@ count, and total/successful/failed counts. Aggregate `summary` is intentionally
 `null`; the dashboard must not invent one. Error responses use the documented
 safe `ErrorResponse` envelope.
 
-## Lightweight verification
+## Historical lightweight verification
 
 `python -m pytest backend/tests ml/tests -q`: **66 passed, zero failures**
 (52 backend tests, 14 ML tests). The installed Starlette emits one TestClient
@@ -58,7 +103,7 @@ SQLite persistence, row failure, pagination, analytics, UTF-8 exports,
 privacy policy, request bounds, CSV formulas, safe logs, and CORS/Render URL
 configuration.
 
-## Real local API matrix
+## Historical smoke-artifact local API matrix
 
 The independently loaded smoke artifact served real FastAPI inference on:
 
@@ -94,7 +139,7 @@ real KeyBERT alongside MuRIL and extractive summary. It passed the complete
 matrix after an API restart: the same 4-success/1-failure batch took 235 ms,
 keywords persisted into analytics, and CSV/JSON each exported five rows.
 
-## Enrichment evidence
+## Historical enrichment evidence
 
 Cached real KeyBERT loaded
 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. A real
@@ -118,7 +163,7 @@ multi-sentence input and intentional null summary for single sentences.
 Independent optional keyword/topic/summary failures are tested and do not
 turn required sentiment inference into a system failure.
 
-## Local resource observations
+## Historical local resource observations
 
 First measurement, using the working CPU PyTorch environment and one model
 process (file/system caches influence subsequent starts):
@@ -151,7 +196,7 @@ memory. No alternative classifier, quantization, or ONNX substitution was
 introduced. Streamed hashing avoids a weights-sized (~950 MB) extra buffer
 at startup.
 
-## Full-data and GPU feasibility
+## Historical full-data and GPU feasibility
 
 Hardware inspection found NVIDIA GeForce RTX 3050 Laptop GPU, 6,144 MiB VRAM,
 driver 596.36. NVIDIA-SMI advertises driver CUDA capability 13.2. The working
@@ -178,16 +223,12 @@ The three-step median projects approximately **2.65 hours for three full
 epochs before validation/test evaluation and checkpoint I/O**; this is a
 rough resource estimate, not a promised completion time.
 
-**Decision: full training remains pending.** CUDA and a batch-size-4 memory
-check now work. The resource assessment identified a dedicated multi-hour
-training/evaluation job, which was deferred during final delivery.
-No full CPU job was started,
-no `muril-mahasent-md-v1` artifact exists, and no full evaluation metrics are
-reported. The safe isolated environment can be used for that later run;
-its executable is
+At that earlier delivery, training was deferred after CUDA and batch-size-4
+feasibility checks passed. No full-model metrics were reported for that phase.
+The same isolated environment is used for the subsequent production-model
+lifecycle; its executable is
 `C:\Users\athar\.codex\mahapulse-training-cuda\Scripts\python.exe`.
-The installation and feasibility processes have exited; only the local
-demonstration API remains running for browser verification.
+The installation and feasibility processes exited after those checks.
 
 The original local data was only the 20-row fixture. The official upstream
 data was then acquired from
@@ -209,8 +250,27 @@ The verified full-run command is:
 python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
 ```
 
-Only a genuine full run, independent reload, untouched test evaluation, and
-real API checks can replace the current smoke gate.
+The full command performs validation-based selection and a single final test
+pass internally. It is not followed by a second `evaluate` call. An interrupted
+run can use `--resume-from-checkpoint` on its own valid Trainer checkpoint.
+Promotion follows successful independent reload, integrity and real API
+checks with an artifact-bound passing report:
+
+```powershell
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto
+$validationReport = Read-Host "Path to the passing prepromotion validation_report.json printed above"
+python -m ml.cli promote-artifact --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --validation-report $validationReport --api-integration-validated
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto --expect-promoted
+```
+
+The reports and CSV/database/export evidence are stored outside the sentiment
+artifact under ignored `ml/artifacts/validation/`. Reports verify local-only
+reload, complete SHA-256 coverage, real single/batch inference, migrated SQLite,
+pagination, analytics, CSV/JSON, OpenAPI, CORS and safe request bounds.
+Integration examples are not quality metrics; these checks leave the held-out
+test predictions unchanged. The promotion command requires the actual passing
+prepromotion report as `$validationReport`, not a boolean-only attestation.
+The post-promotion check additionally verifies the production lifecycle flags.
 
 ## Security changes verified
 

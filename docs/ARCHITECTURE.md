@@ -47,11 +47,22 @@ version, model/tokenizer files, lifecycle flags and recorded integrity hashes.
 Loading is local-only; inference uses `model.eval()` and
 `torch.inference_mode()`. Configured failures never switch to mock sentiment.
 
-The validated `muril-mahasent-md-smoke-v4` artifact has `smoke_test=true`,
+The historical `muril-mahasent-md-smoke-v4` artifact has `smoke_test=true`,
 `production_ready=false`. It requires `ALLOW_SMOKE_MODEL=true` and leaves
-readiness degraded. Full training plus untouched test evaluation must precede
-production promotion. Weights/artifacts/data stay outside Git and need explicit
-deployment provisioning.
+readiness degraded; its fixture metrics establish integration only.
+Full artifacts start with `smoke_test=false`, `production_ready=false`.
+Training selects on validation macro F1, then performs a single final held-out
+test prediction pass. `ml.cli promote-artifact` verifies required files,
+complete SHA-256 coverage, held-out prediction evidence and independent local
+reload. Its required `--validation-report` binds a passing prepromotion report
+from `scripts/validate-production-model.py` to the exact artifact directory,
+version, hashes and manifest. The report exercises real FastAPI startup,
+Marathi/code-mixed inference, migrated SQLite persistence, analytics, both
+exports, OpenAPI, CORS and request limits. Only after those checks pass does
+promotion record all lifecycle gates and
+`production_ready=true`. Weights/artifacts/data stay outside Git and need
+explicit deployment provisioning. Disabled optional topics keep overall
+readiness degraded even when the required sentiment service is ready.
 
 KeyBERT uses cached
 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` embeddings.

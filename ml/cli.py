@@ -10,6 +10,7 @@ import sys
 from .config import TrainingConfig, smoke_config
 from .dataset import DatasetPreparationError, acquire_official_dataset, prepare_dataset
 from .evaluate import evaluate_artifact
+from .promotion import PromotionError, promote_artifact
 from .train import TrainingError, train_model
 from .topics import TopicTrainingConfig, TopicTrainingError, inspect_topic_artifact, train_topic_model
 
@@ -46,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument("--warmup-ratio", type=float, default=0.1)
     train_parser.add_argument("--random-seed", type=int, default=42)
     train_parser.add_argument("--early-stopping-patience", type=int, default=2)
+    train_parser.add_argument(
+        "--resume-from-checkpoint",
+        type=_path,
+        help="resume an interrupted run from a validated Trainer checkpoint",
+    )
 
     evaluate = subparsers.add_parser("evaluate", help="evaluate a saved artifact on held-out test data")
     evaluate.add_argument("--artifact-dir", type=_path, required=True)
@@ -53,6 +59,22 @@ def build_parser() -> argparse.ArgumentParser:
 
     inspect = subparsers.add_parser("inspect-artifact", help="print an artifact manifest")
     inspect.add_argument("artifact_dir", type=_path)
+
+    promote = subparsers.add_parser(
+        "promote-artifact", help="verify and promote a full artifact after real API validation"
+    )
+    promote.add_argument("--artifact-dir", type=_path, required=True)
+    promote.add_argument(
+        "--validation-report",
+        type=_path,
+        required=True,
+        help="passing prepromotion report bound to this artifact and its SHA-256 metadata",
+    )
+    promote.add_argument(
+        "--api-integration-validated",
+        action="store_true",
+        help="attest that real FastAPI integration passed before promotion",
+    )
 
     topics = subparsers.add_parser("topics", help="offline BERTopic artifact operations")
     topic_commands = topics.add_subparsers(dest="topics_command", required=True)
@@ -103,11 +125,27 @@ def _run(args: argparse.Namespace) -> object:
         version = args.model_version
         if not smoke and version == "muril-mahasent-md-smoke":
             version = "muril-mahasent-md-full"
-        return {"artifact_dir": str(train_model(args.processed_dir, args.artifact_root, config, version))}
+        return {
+            "artifact_dir": str(
+                train_model(
+                    args.processed_dir,
+                    args.artifact_root,
+                    config,
+                    version,
+                    resume_from_checkpoint=args.resume_from_checkpoint,
+                )
+            )
+        }
     if args.command == "evaluate":
         return evaluate_artifact(args.artifact_dir, args.processed_dir)
     if args.command == "inspect-artifact":
         return json.loads((args.artifact_dir / "model_manifest.json").read_text(encoding="utf-8"))
+    if args.command == "promote-artifact":
+        return promote_artifact(
+            args.artifact_dir,
+            api_integration_validated=args.api_integration_validated,
+            validation_report=args.validation_report,
+        )
     if args.command == "topics":
         if args.topics_command == "inspect":
             return inspect_topic_artifact(args.artifact_dir)
@@ -135,7 +173,14 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         result = _run(args)
-    except (DatasetPreparationError, TrainingError, TopicTrainingError, OSError, ValueError) as exc:
+    except (
+        DatasetPreparationError,
+        TrainingError,
+        TopicTrainingError,
+        PromotionError,
+        OSError,
+        ValueError,
+    ) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True, default=str))

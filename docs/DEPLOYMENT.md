@@ -2,8 +2,9 @@
 
 Validated 3 October 2026 (Asia/Calcutta). Classification: **DEMO/STAGING READY**.
 The user selected the free hosted mock demo. This deployment does not load
-MuRIL weights or KeyBERT embeddings. Local real smoke-model results are
-recorded separately in [VALIDATION.md](VALIDATION.md).
+MuRIL weights or KeyBERT embeddings. Historical smoke-model checks and the
+separate full-model local lifecycle are recorded in
+[VALIDATION.md](VALIDATION.md).
 
 ## Live application
 
@@ -17,8 +18,10 @@ recorded separately in [VALIDATION.md](VALIDATION.md).
 | Render PostgreSQL | `mahapulse-staging-db`, `dpg-davvmlfavr4c73dje56g-a`, PostgreSQL 17 |
 | Vercel project | `mahapulse-staging`, `prj_kKALODMnIEp5kHitKLz3W2Uhme2x` |
 
-Both deployments track `feat/mahapulse-final`. The repository's `main` branch
-was not merged or changed by final delivery. Existing unrelated Render
+At that deployment validation, both deployments tracked `feat/mahapulse-final`
+and `main` had not yet received the integration. The subsequent repository
+release is tracked separately in [VALIDATION.md](VALIDATION.md); this record
+does not assert that a new model was deployed. Existing unrelated Render
 resources were preserved. The connected Vercel deployment tool was unavailable;
 the official authenticated Vercel CLI deployed the existing static project.
 

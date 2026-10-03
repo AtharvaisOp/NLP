@@ -61,13 +61,19 @@ when enabled, `/ready` remains degraded and `/v1/model-info` reports
 `smoke_test=true` and `production_ready=false`. Smoke predictions are not
 project performance and are not production-ready.
 
-To swap in a future full artifact, change only `SENTIMENT_MODEL_PATH`, for
-example:
+To use the full artifact after lifecycle promotion, configure:
 
 ```dotenv
 SENTIMENT_MODEL_PATH=ml/artifacts/sentiment/muril-mahasent-md-v1
 ALLOW_SMOKE_MODEL=false
 ```
+
+Full artifacts initially report `production_ready=false`. Promotion requires
+complete training, final held-out test evidence, independent reload, SHA-256
+integrity and real API integration. See [the validation record](../docs/VALIDATION.md)
+and `python -m ml.cli promote-artifact --help`. A loaded non-smoke classifier
+alone does not satisfy promotion. Optional disabled topics can keep the overall
+`/ready` response degraded even when sentiment is production-ready.
 
 The API response shape does not change. The classifier receives the shared
 `model_text` preprocessing path; `analysis_text` remains reserved for later

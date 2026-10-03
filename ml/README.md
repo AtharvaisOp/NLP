@@ -4,8 +4,8 @@ The training pipeline prepares the official L3Cube MahaSent-MD Marathi sentiment
 fine-tunes `google/muril-base-cased` for three classes, evaluates a selected
 checkpoint, and records a versioned artifact. The FastAPI sentiment service
 consumes these artifacts. Optional KeyBERT, BERTopic,
-and extractive-summary services without changing the sentiment artifact or
-API contract.
+and extractive-summary services enrich results without changing the sentiment
+artifact or API contract.
 
 The default MuRIL checkpoint is `google/muril-base-cased`, verified against the
 MuRIL model evaluated in the L3Cube MahaSent-MD research paper and retained as
@@ -25,8 +25,7 @@ From the repository root:
 python -m ml.cli prepare
 python -m ml.cli prepare --local-path path/to/verified/MahaSent_All
 python -m ml.cli train --smoke
-python -m ml.cli train --full --model-version muril-mahasent-md-v1
-python -m ml.cli evaluate --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1
+python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
 python -m ml.cli inspect-artifact ml/artifacts/sentiment/muril-mahasent-md-v1
 python -m ml.cli topics train --processed-dir ml/data/processed/mahasent-md --topic-version bertopic-mahasent-md-v1
 python -m ml.cli topics inspect ml/artifacts/topics/bertopic-mahasent-md-v1
@@ -37,8 +36,19 @@ under ignored `ml/data/raw/` and prepared manifests under ignored
 `ml/data/processed/`. Training requires the optional dependencies in
 `ml/requirements.txt` and a model download/cache. Smoke mode uses a tiny
 deterministic subset, one epoch, and a small step limit; it validates plumbing
-only and is never project performance. Full mode uses all prepared records,
-validation-based early stopping, and reports held-out test metrics separately.
+only and is never project performance. Full mode uses all prepared train
+records and validation macro F1 for checkpoint selection/early stopping. After
+selection completes, the same command loads the held-out test split and makes
+one final prediction pass, recording its metrics separately from validation.
+Do not run `evaluate` after a completed full run: the final test evaluation is
+already stored. Reserve the separate command for artifacts without finalized
+test evidence.
+
+Recover an interrupted run with the same version/configuration and
+`--resume-from-checkpoint ml/artifacts/sentiment/muril-mahasent-md-v1/_trainer/checkpoint-<step>`.
+The CLI validates checkpoint location and Trainer state/optimizer files; a
+finalized artifact cannot be resumed. Per-run records, effective arguments,
+validation history and checkpoints remain under ignored `_trainer/`.
 
 ## Training contract
 
@@ -51,7 +61,44 @@ The artifact contains model/tokenizer files plus `config.json`,
 `training_config.json`, `label_mapping.json`, `model_manifest.json`,
 `dataset_report.json`, `metrics.json`, and `predictions.jsonl`. Artifacts are
 ignored by Git. FastAPI loads the tokenizer/model and manifest while keeping
-the existing `/v1/analyze` response contract unchanged.
+the existing `/v1/analyze` response contract unchanged. A completed full run
+starts with `smoke_test=false`, `production_ready=false`; training alone does
+not attest that API integration passed.
+
+Verify the manifest's SHA-256/byte metadata, independently reload with
+`AutoTokenizer.from_pretrained(local_artifact, local_files_only=True)` and
+`AutoModelForSequenceClassification.from_pretrained(local_artifact, local_files_only=True)`,
+then validate real FastAPI inference, persistence, analytics and exports.
+After these gates pass:
+
+```powershell
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto
+$validationReport = Read-Host "Path to the passing prepromotion validation_report.json printed above"
+python -m ml.cli promote-artifact --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --validation-report $validationReport --api-integration-validated
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto --expect-promoted
+```
+
+The validator saves an actual `validation_report.json` path in its output;
+`$validationReport` must point to that passing **prepromotion** report, not a
+handwritten attestation. It independently reloads the saved tokenizer/model,
+checks SHA-256 coverage, exercises real FastAPI startup and OpenAPI, validates
+four Marathi/code-mixed examples without treating them as metrics, and runs a
+five-row CSV through fresh Alembic-migrated SQLite persistence, pagination,
+analytics and CSV/JSON export. It also checks CORS and input limits. All model
+loads are local-only; `--keywords auto` enables cached real KeyBERT when
+available, never a mock substitute. Use `--device cpu` when CUDA is unavailable.
+Evidence, the CSV and exports stay under ignored `ml/artifacts/validation/`
+outside the immutable sentiment payload. The final command reruns integration
+with the promoted flags; neither validation pass predicts on the held-out test.
+
+Promotion checks complete held-out prediction evidence, all required top-level
+artifact hashes, required metadata, the report's artifact/version/hash binding
+and independent local reload before writing lifecycle gates and
+`production_ready=true`. It recomputes classification metrics from existing
+test predictions without running a second test inference pass. The manifest is
+excluded from its own hash list. Required sentiment readiness is separate from overall
+readiness: disabled optional topics leave `/ready` degraded with usable
+sentiment. No request-time model download or mock fallback is introduced.
 
 ## Phase 5 enrichment boundary
 
@@ -86,19 +133,27 @@ Generated embedding caches and topic artifacts are ignored and must not be
 committed. The current MuRIL smoke artifact remains integration-only, not final
 project performance or production readiness.
 
-## Final integration training gate
+## Historical smoke artifact and full-run lifecycle
 
 The verified `muril-mahasent-md-smoke-v4` artifact was trained only on the
 small local fixture. Its metrics do not measure MahaPulse project performance.
 Full official data is prepared separately under ignored
-`ml/data/processed/mahasent-md`; never substitute fixture data for a full run.
-Use the explicit full-run command after confirming CUDA and resources:
+`ml/data/processed/mahasent-md`. The verified prepared metadata contains
+60,396 records: 47,730 train, 5,922 validation and 6,744 test, from upstream
+revision `8ee29fa1329d6a841030eb46659d3c10614b5e59`. Every split contains
+negative, neutral and positive, with IDs 0, 1 and 2 respectively; normalized
+texts have zero intersections between split pairs. Use the explicit full-run
+command after confirming CUDA and resources:
 
 ```powershell
 python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
 ```
 
-The original working Python environment is preserved. GPU diagnosis uses an
-isolated environment, and a full CPU training job is not launched when CUDA
-is unavailable. See [docs/VALIDATION.md](../docs/VALIDATION.md) for recorded
-hardware, full-data split checks, and the final training decision.
+The original working Python environment is preserved. The isolated training
+executable is `C:\Users\athar\.codex\mahapulse-training-cuda\Scripts\python.exe`.
+The full lifecycle uses Python 3.13.4, PyTorch 2.11.0+cu128, CUDA 12.8 and
+Transformers 5.15.0 on an RTX 3050 Laptop GPU with 6 GiB VRAM. Its recorded
+configuration uses batch size 4, evaluation batch size 8, 256-token truncation,
+three epochs, learning rate 2e-5 and seed 42. See
+[docs/VALIDATION.md](../docs/VALIDATION.md) for completed training, selected
+checkpoint, separate validation/test metrics and runtime gates.

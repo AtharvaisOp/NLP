@@ -38,6 +38,10 @@ jobs:
         run: |
           python -m compileall -q backend ml
           python -c "from backend.app.main import app; from ml.cli import build_parser; assert app.openapi(); assert build_parser()"
+      - name: Keep datasets and model artifacts out of Git
+        run: |
+          test -z "$(git ls-files 'ml/artifacts/**' 'ml/data/raw/**' 'ml/data/processed/**')"
+          test -z "$(git ls-files | grep -Ei '\.(safetensors|pt|pth|ckpt)$' || true)"
       - name: Static routes, links and JavaScript syntax
         run: node scripts/check-static.mjs
       - name: Frontend contract and DOM guards

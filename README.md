@@ -189,20 +189,42 @@ preserve attribution. Local sources need explicit `--local-path`.
 python -m ml.cli prepare
 python -m ml.cli train --smoke --model-version muril-mahasent-md-smoke-v4
 python -m ml.cli train --full --processed-dir ml/data/processed/mahasent-md --artifact-root ml/artifacts --model-version muril-mahasent-md-v1 --train-batch-size 4 --eval-batch-size 8
-python -m ml.cli evaluate --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --processed-dir ml/data/processed/mahasent-md
 python -m ml.cli inspect-artifact ml/artifacts/sentiment/muril-mahasent-md-v1
 ```
 
 Before full training, verify complete splits, disk, PyTorch CUDA availability,
 GPU name and VRAM. Use a separate training environment for CUDA changes and
 keep working runtimes intact. Do not blindly start multi-hour CPU training.
-Checkpoint selection uses validation data. Only complete non-smoke training
-and untouched test evaluation may report accuracy, macro precision/recall/F1,
-weighted F1, per-class metrics, and confusion matrix.
+Checkpoint selection uses validation macro F1 and early stopping. The full
+training command completes checkpoint selection before loading the held-out
+test split, then performs its final test prediction pass exactly once. Do not
+follow a successful full run with `evaluate`: that would repeat the final test
+evaluation. Validation and final test metrics are separate in `metrics.json`.
+Recover an interrupted run with `--resume-from-checkpoint` pointing to a valid
+`_trainer/checkpoint-*` directory belonging to the same artifact version.
 
 Versioned artifacts include tokenizer/model files, label map, training config,
-manifest, dataset report, metrics and predictions. Validate hashes and reload
-independently, then run an API smoke before promotion. Transfer artifacts via
+manifest, dataset report, metrics and predictions. Full training initially
+writes `smoke_test=false` and `production_ready=false`. Validate SHA-256 hashes,
+reload independently, then run real API single/batch/analytics/export checks
+before explicitly promoting the artifact:
+
+```powershell
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto
+$validationReport = Read-Host "Path to the passing prepromotion validation_report.json printed above"
+python -m ml.cli promote-artifact --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --validation-report $validationReport --api-integration-validated
+python scripts/validate-production-model.py --artifact-dir ml/artifacts/sentiment/muril-mahasent-md-v1 --device cuda --keywords auto --expect-promoted
+```
+
+Promotion independently verifies required files, hashes, held-out prediction
+evidence, an artifact-bound passing API validation report and local
+tokenizer/model reload before setting `production_ready=true`. The validator
+uses local-only models and a freshly migrated SQLite database, saves its
+evidence outside the artifact, and does not repeat held-out evaluation.
+Use `--device cpu` when CUDA is unavailable. `$validationReport` must identify
+the actual passing prepromotion report; a boolean attestation alone is rejected.
+Disabled optional topics still make overall `/ready` degraded even when
+sentiment is production-ready. Transfer artifacts via
 controlled external storage/build-time download or a persistent deployment disk.
 Do not commit weights, data, caches, databases or credentials. A fresh clone
 requires separate artifact provisioning for real inference. No training runs
