@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .demo_sentiment import DEMO_VERSION, demo_sentiment
 from .interfaces import (
     KeywordResult,
     KeywordService,
@@ -21,21 +22,18 @@ MOCK_VERSION = "mock-v0"
 class MockSentimentService:
     def metadata(self) -> ServiceMetadata:
         return ServiceMetadata(
-            name="MuRIL",
-            version=MOCK_VERSION,
-            device="not-loaded",
+            name="Rule-based demo",
+            version=DEMO_VERSION,
+            device="cpu",
             state="mocked",
+            smoke_test=False,
+            production_ready=False,
             backend="mock",
-            provider="MuRIL",
+            provider="lexicon",
         )
 
     def predict(self, model_text: str) -> SentimentResult:
-        del model_text
-        return SentimentResult(
-            label="neutral",
-            confidence=1.0,
-            probabilities={"positive": 0.0, "negative": 0.0, "neutral": 1.0},
-        )
+        return demo_sentiment(model_text)
 
 
 class MockKeywordService:

@@ -37,8 +37,20 @@ For test dependencies, install `backend/requirements-dev.txt` as well.
 
 ## Sentiment backend
 
-The default `SENTIMENT_BACKEND=mock` keeps tests and lightweight development
-free of model loading. To use a local MuRIL artifact, configure:
+The default `SENTIMENT_BACKEND=mock` uses the small offline **rule-based demo**
+(`rule-demo-v1`), not MuRIL. Whole-word Marathi/English sentiment cues, short-range
+negation and contrast words such as `पण`/`but` make results input-dependent.
+Unknown wording or balanced cues produce neutral; sarcasm, complex negation and
+context are not reliably handled. There are no model downloads or GPU requirements.
+
+The existing `confidence`/`probabilities` API fields hold normalized rule weights
+for compatibility, **not calibrated probabilities or model accuracy**. The UI
+calls them demo scores; metadata remains `state=mocked`, `production_ready=false`
+and explicitly names the lexicon provider. Keywords remain mock fixtures unless
+a real provider is configured. A missing optional topic or single-sentence summary
+does not mean the API failed. This demo never substitutes for a failing MuRIL service.
+
+To use a local MuRIL artifact, configure:
 
 ```dotenv
 SENTIMENT_BACKEND=muril

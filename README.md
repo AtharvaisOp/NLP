@@ -18,8 +18,13 @@ The older `muril-mahasent-md-smoke-v4` remains historical integration evidence
 with `smoke_test=true`, `production_ready=false`. Its fixture metrics are
 **not project accuracy** and are not substituted for the full-model results.
 
-The selected free cloud demo uses **mock sentiment and mock keywords**,
+The lightweight configuration uses **rule-based demo sentiment and mock keywords**,
 disabled topics, real extractive summary, and validated PostgreSQL persistence.
+`SENTIMENT_BACKEND=mock` now selects the offline Marathi/English `rule-demo-v1`
+lexicon demo rather than the old always-neutral fixture. Basic negation and
+contrast handling make it input-dependent, but its normalized demo scores are
+not calibrated probabilities or trained-model results. No GPU or model download
+is needed; the real MuRIL adapter and artifact remain unchanged.
 Try the [live dashboard](https://mahapulse-staging.vercel.app/analyzer/).
 [Deployment evidence and operational limits](docs/DEPLOYMENT.md) include the
 validated PostgreSQL runtime and the free database's expiry date.

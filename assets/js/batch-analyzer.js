@@ -156,7 +156,7 @@
       const values = [
         String(row.row_index + 1),
         omitted ? 'Original text not stored (privacy policy)' : row.original_text || 'Empty input',
-        row.sentiment ? `${row.sentiment.label} · ${ratio(row.sentiment.confidence)}${row.sentiment.low_confidence ? ' · Low confidence' : ''}` : 'No prediction',
+        row.sentiment ? `${row.sentiment.label} · ${ratio(row.sentiment.confidence)}${row.sentiment.low_confidence ? ' · Weak signal' : ''}` : 'No prediction',
         Array.isArray(row.keywords) && row.keywords.length ? row.keywords.map(keyword => `${keyword.text} (${ratio(keyword.score)})`).join(', ') : 'Unavailable / no keywords',
         topic,
         row.summary?.text || 'Unavailable',

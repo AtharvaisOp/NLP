@@ -184,7 +184,7 @@ def test_optional_failures_are_isolated_and_warnings_are_aggregated() -> None:
     )
     response = orchestrator.analyze("हा phone चांगला आहे", "enrichment-failure-test")
 
-    assert response.sentiment.label == "neutral"
+    assert response.sentiment.label == "positive"
     assert response.keywords == []
     assert response.topic.id is None
     assert response.topic.label is None

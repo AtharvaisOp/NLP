@@ -51,9 +51,12 @@ def test_model_info_is_structured_and_does_not_claim_loaded_models() -> None:
     body = response.json()
 
     assert response.status_code == 200
-    assert body["sentiment_model"]["name"] == "MuRIL"
-    assert body["sentiment_model"]["version"] == "mock-v0"
+    assert body["sentiment_model"]["name"] == "Rule-based demo"
+    assert body["sentiment_model"]["version"] == "rule-demo-v1"
     assert body["sentiment_model"]["state"] == "mocked"
+    assert body["sentiment_model"]["provider"] == "lexicon"
+    assert body["sentiment_model"]["production_ready"] is False
+    assert body["sentiment_model"]["smoke_test"] is False
     assert body["labels"] == ["positive", "negative", "neutral"]
     assert body["keyword_service"]["name"] == "KeyBERT"
     assert body["topic_service"]["name"] == "BERTopic"
@@ -67,7 +70,10 @@ def test_valid_marathi_analysis_has_stable_response_contract() -> None:
     assert response.status_code == 200
     assert body["original_text"] == "हे उत्पादन चांगले आहे!"
     assert body["language"]["primary"] == "mr"
-    assert body["sentiment"]["label"] in {"positive", "negative", "neutral"}
+    assert body["sentiment"]["label"] == "positive"
+    assert body["sentiment"]["confidence"] < 1
+    assert body["meta"]["model_version"] == "rule-demo-v1"
+    assert "not calibrated" in body["meta"]["warnings"][0]
     assert body["meta"]["warnings"]
 
 
@@ -81,6 +87,7 @@ def test_code_mixed_analysis_reports_both_scripts() -> None:
     assert body["language"]["is_code_mixed"] is True
     assert body["language"]["devanagari_ratio"] > 0
     assert body["language"]["latin_ratio"] > 0
+    assert body["sentiment"]["label"] == "negative"
 
 
 @pytest.mark.parametrize("text", ["", "   \n\t"])

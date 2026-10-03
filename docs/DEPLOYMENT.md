@@ -67,7 +67,8 @@ Runtime settings:
 Readiness is intentionally `degraded`: API, preprocessing, summary and database
 are ready; sentiment/keywords are mocked and topics disabled. Model information
 and the dashboard explicitly say development mocks are not production ready.
-The model version is `mock-v0`; no smoke classifier is deployed on the free tier.
+At this original validation the model version was `mock-v0`; no smoke classifier
+was deployed on the free tier.
 
 `STORE_RAW_TEXT=false` omits original text from persisted documents. Derived
 preprocessed text, extracted phrases and summaries can still contain source
@@ -166,3 +167,24 @@ Do not commit weights or run training in the service startup.
 
 `render.yaml` documents the same dedicated resources. Reuse the existing
 resources rather than applying another Blueprint that creates duplicates.
+
+## Input-aware lightweight demo release
+
+`rule-demo-v1` replaces the old server fixture that ignored every input and
+returned neutral at 100%. It is a small, stdlib-only Marathi/English lexicon
+demo with basic negation and contrast handling, not a compressed or newly trained
+MuRIL model. `SENTIMENT_BACKEND=mock` selects it; model metadata explicitly names
+`Rule-based demo` / `lexicon`, reports `state=mocked`, `smoke_test=false` and
+`production_ready=false`. The compatible numeric API fields are normalized
+demo weights, not calibrated probabilities. The dashboard calls them demo scores
+and does not report absent optional topics/summaries as a backend failure.
+
+Redeployment uses the existing Vercel project and existing free Render API,
+with the API's Git source moved to `main`. Keep the runtime settings above,
+existing PostgreSQL data, one worker and free plans; do not provision another
+service, enable heavyweight NLP backends or change secrets. The original
+deployment observations above are historical, not resource measurements of
+this release. Release checks include 173 Python tests, seven frontend test
+files, static checks and compilation; deployed health, positive/negative/neutral
+examples, five-row batch persistence/analytics and CSV/JSON exports must also
+pass before the redeployment is reported successful.

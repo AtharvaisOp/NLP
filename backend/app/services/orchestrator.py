@@ -95,7 +95,13 @@ class AnalysisOrchestrator:
         sentiment_metadata = self.sentiment_service.metadata()
         warnings = []
         if sentiment_metadata.state == "mocked":
-            warnings.append("ML service outputs are deterministic mocks; no models are loaded.")
+            if sentiment_metadata.provider == "lexicon":
+                warnings.append(
+                    "Rule-based demo; no trained sentiment model is loaded. "
+                    "Scores are normalized rule weights, not calibrated probabilities."
+                )
+            else:
+                warnings.append("ML service outputs are deterministic mocks; no models are loaded.")
         if sentiment_metadata.smoke_test:
             warnings.append("Smoke sentiment artifact loaded; predictions are not production performance.")
         keywords = self._optional_keywords(prepared.model_text, request_id, warnings)
@@ -238,6 +244,8 @@ class AnalysisOrchestrator:
             detail = "Smoke artifact is operational for development; not production-ready"
         elif metadata.smoke_test:
             detail = "Smoke artifact is unavailable; not production-ready"
+        elif metadata.state == "mocked" and metadata.provider == "lexicon":
+            detail = "Rule-based sentiment demo is available; no trained model is loaded"
         elif metadata.state == "mocked":
             detail = "Service is mocked and no model is loaded"
         elif metadata.state == "disabled":
